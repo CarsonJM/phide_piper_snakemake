@@ -1,0 +1,22 @@
+dependencies:
+  - bioconda::perl-common-sense=3.74=pl526_2
+  - bioconda::iphop=1.1.0
+  - conda-forge::biopython=1.79.*
+  - bioconda::blast=2.12.0.*
+  - bioconda::perl-json=2.90*
+  - bioconda::perl-json-xs=2.34
+  - conda-forge::click=8.0.1
+  - bioconda::crisper_recognition_tool=1.2.*
+  - bioconda::diamond=2.0.11.*
+  - bioconda::hmmer=3.3.2.*
+  - conda-forge::joblib=1.0.1.*
+  - conda-forge::libstdcxx-ng=11.2.0.*
+  - conda-forge::pandas=1.3.2.*
+  - conda-forge::perl=5.26.*
+  - bioconda::perl-bioperl=1.6.924.*
+  - bioconda::piler-cr=1.06.*
+  - bioconda::prodigal=2.6.3.*
+  - conda-forge::python=3.8.*
+  - conda-forge::r-ranger=0.13.1.*
+  - conda-forge::scikit-learn=0.22.*
+  - conda-forge::tensorflow=2.7.0.*

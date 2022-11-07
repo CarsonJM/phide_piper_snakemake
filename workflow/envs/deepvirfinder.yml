@@ -1,0 +1,15 @@
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+
+dependencies:
+  - python=3.6
+  - numpy=1.16
+  - theano=1.0.3
+  - keras=2.2.4
+  - scikit-learn
+  - biopython=1.79
+  - h5py=2.10.0
+  - mkl-service=2.3.0
+  - cxx-compiler=1.5.0

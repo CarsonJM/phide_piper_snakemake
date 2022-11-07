@@ -1,0 +1,3 @@
+sample	replicate	R1	R2	contigs
+oral_enriched	rep1	/gscratch/scrubbed/carsonjm/resources/virome_test_data/oral_enriched_1.fastq.gz	/gscratch/scrubbed/carsonjm/resources/virome_test_data/oral_enriched_2.fastq.gz	
+oral_unenriched	rep1	/gscratch/scrubbed/carsonjm/resources/virome_test_data/oral_unenriched_1.fastq.gz	/gscratch/scrubbed/carsonjm/resources/virome_test_data/oral_unenriched_2.fastq.gz	

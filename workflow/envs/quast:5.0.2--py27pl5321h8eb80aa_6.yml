@@ -1,0 +1,7 @@
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+
+dependencies:
+  - quast=5.0.2=py27pl5321h8eb80aa_6

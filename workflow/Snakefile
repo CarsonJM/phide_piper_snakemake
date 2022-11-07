@@ -1,0 +1,108 @@
+# -------------------------------------
+# Snakefile: set up and module organization
+# -------------------------------------
+import pandas as pd
+
+
+# Load sample information and validate
+configfile: "config/config.yaml"
+
+
+samples_df = pd.read_csv(config["samples_df"], sep="\t")
+samples = samples_df["sample"]
+
+
+# load results path
+results = config["results"]
+
+
+# load report
+report: "../report/workflow.rst"
+
+
+# load container for miniconda
+container: "docker://condaforge/mambaforge:4.14.0-0"
+
+
+# -------------------------------------
+# Modularization: rules to include
+# -------------------------------------
+include: "rules/01_read_preprocessing.smk"
+include: "rules/02_virus_enrichment.smk"
+include: "rules/03_read_assembly.smk"
+include: "rules/04_virus_identification.smk"
+include: "rules/05_virus_quality.smk"
+include: "rules/06_virus_dereplication.smk"
+include: "rules/07_virus_diversity.smk"
+include: "rules/08_virus_host.smk"
+include: "rules/09_virus_taxonomy.smk"
+include: "rules/10_virus_lifestyle.smk"
+include: "rules/11_virus_function.smk"
+include: "rules/12_virus_analysis.smk"
+
+
+# -------------------------------------
+# Pipeline outputs
+# -------------------------------------
+def get_final_output(wildcards):
+
+    final_output = []
+
+    if config["input_data"] == "reads":
+        final_output.append(results + "01_READ_PREPROCESSING/fastp_multiqc_report.html")
+        final_output.append(results + "01_READ_PREPROCESSING/kneaddata_analysis.html")
+
+    if config["include_enrichment_module"] and config["input_data"] == "reads":
+        final_output.append(results + "02_VIRUS_ENRICHMENT/virus_enrichment_figure.svg")
+
+    if config["input_data"] == "reads":
+        final_output.append(results + "03_READ_ASSEMBLY/quast_multiqc_report.html")
+
+    if config["input_data"] == "reads" or config["input_data"] == "contigs":
+        final_output.append(
+            results + "04_VIRUS_IDENTIFICATION/virus_identification_boxplot.svg"
+        )
+
+    if (
+        config["input_data"] == "reads"
+        or config["input_data"] == "contigs"
+        or config["input_data"] == "vls"
+    ):
+        final_output.append(results + "05_VIRUS_QUALITY/virus_quality_figure.svg")
+
+    final_output.append(
+        results + "06_VIRUS_DEREPLICATION/virus_dereplication_figure.svg"
+    )
+
+    final_output.append(results + "07_VIRUS_DIVERSITY/virus_diversity_votu_figure.svg")
+    final_output.append(
+        results + "07_VIRUS_DIVERSITY/virus_diversity_genus_figure.html",
+    )
+    final_output.append(results + "07_VIRUS_DIVERSITY/virus_phylogeny.png")
+
+    if config["include_host_module"]:
+        final_output.append(results + "08_VIRUS_HOST/virus_host_taxonomy.csv")
+
+    if config["include_taxonomy_module"]:
+        final_output.append(results + "09_VIRUS_TAXONOMY/virus_taxonomy_analysis.svg")
+
+    if config["include_lifestyle_module"]:
+        final_output.append(results + "10_VIRUS_LIFESTYLE/virus_lifestyle_analysis.svg")
+
+    # if config["include_function_module"]:
+    #     final_output.append("test")
+    #     final_output.append(results + "dramv_test")
+
+    final_output.append(
+        results + "12_VIRUS_ANALYSIS/03_filter_viruses/combined_breadth_and_depth.tsv"
+    )
+
+    return final_output
+
+
+localrule: all
+
+
+rule all:
+    input:
+        get_final_output,

@@ -1,0 +1,28 @@
+channels:
+  - conda-forge
+  - r
+  - bioconda
+  - defaults
+
+dependencies:
+  - python=3.7
+  - bcftools
+  - samtools=1.9*
+  - prodigal
+  - numpy
+  - pysam
+  - r-base
+  - r-data.table
+  - r-doparallel
+  - r-stringr
+  - r-ggplot2
+  - r-ggrepel
+  - r-cowplot
+  - r-vegan
+  - r-compositions
+  - r-pheatmap
+  - r-rcolorbrewer
+  - r-bit64
+  - r-gggenes
+  - pip:
+      - metapop==0.0.60

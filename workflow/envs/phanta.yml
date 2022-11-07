@@ -1,0 +1,14 @@
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+
+dependencies:
+  - bracken
+  - kraken2
+  - pandas
+  - numpy
+  - r-base
+  - r-stringr
+  - r-dplyr
+  - bc

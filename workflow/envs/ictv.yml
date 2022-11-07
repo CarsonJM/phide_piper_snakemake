@@ -1,0 +1,14 @@
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+
+dependencies:
+  - aria2
+  - ripgrep
+  - csvtk
+  - seqkit
+  - taxonkit=0.11.0
+  - taxopy
+  - mmseqs2
+  - sed

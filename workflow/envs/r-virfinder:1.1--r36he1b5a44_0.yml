@@ -1,0 +1,8 @@
+channels:
+  - conda-forge
+  - bioconda
+  - r
+  - defaults
+
+dependencies:
+  - r-virfinder=1.1=r36he1b5a44_0

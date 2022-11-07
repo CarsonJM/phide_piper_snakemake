@@ -1,0 +1,12 @@
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+
+dependencies:
+  - vcontact2=0.11.3=pyhdfd78af_0
+  - mcl
+  - blast
+  - diamond
+  - openjdk
+  - clusterone

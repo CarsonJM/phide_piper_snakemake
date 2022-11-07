@@ -1,0 +1,14 @@
+*.snakemake/*
+*.cache/*
+*.fontconfig/*
+*.keras/*
+*.theano/*
+dag.pdf
+*results*
+slurm_logs/*
+*test_input*
+simple/*
+benchmark/*
+*.conda*
+*.keras*
+*.java*

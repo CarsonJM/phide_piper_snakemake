@@ -1,0 +1,5 @@
+channels:
+  - bioconda
+
+dependencies:
+  - virsorter=1.0.6=pl526h516909a_0
