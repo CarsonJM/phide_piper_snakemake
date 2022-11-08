@@ -24,16 +24,16 @@ merged_melt = merged.melt(id_vars=['seq_name'], value_vars=['MMSeqs2', 'GeNomad'
 genomad_group = merged.groupby('GeNomad', as_index=False).count()
 mmseqs_group = merged.groupby('MMSeqs2', as_index=False).count()
 plot = merged_melt.groupby(['value', 'variable'], as_index=False).count()
-plot['proportion'] = plot['seq_name']/sum(plot['seq_name'])
+plot['proportion'] = plot['seq_name']*2/sum(plot['seq_name'])
 ordered = plot.sort_values('value').drop_duplicates('value')
 plot['value'] = pd.Categorical(plot['value'], ordered['value'])
 plot.rename(columns={"value": "Order"}, inplace=True)
 
 # plot kneaddata read counts and save
-fig = px.bar(plot, x='variable', y='seq_name',  color='Order',
+fig = px.bar(plot, x='variable', y='proportion',  color='Order',
              labels={
                      "variable": "Taxonomy method",
-                     "seq_name" : "Proportion of viruses"
+                     "proportion" : "Proportion of viruses"
                  })
 
 fig.update_layout(title_text='Virus taxonomic assignment')

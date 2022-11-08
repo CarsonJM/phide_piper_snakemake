@@ -24,7 +24,7 @@ merged['PHIST'] = merged.apply(lambda x: str(x.phist_taxonomy).split(';')[1] if 
 
 merged_melt = merged.melt(id_vars=['viral_genome'], value_vars=['iPHoP', 'PHIST'])
 plot = merged_melt.groupby(['value', 'variable'], as_index=False).count()
-plot['proportion'] = plot['viral_genome']/sum(plot['viral_genome'])
+plot['proportion'] = plot['viral_genome']*2/sum(plot['viral_genome'])
 ordered = plot.sort_values('value').drop_duplicates('value')
 plot['value'] = pd.Categorical(plot['value'], ordered['value'])
 plot.rename(columns={"value": "Phylum"}, inplace=True)

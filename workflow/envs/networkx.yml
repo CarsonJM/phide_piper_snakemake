@@ -8,3 +8,5 @@ dependencies:
   - scipy
   - matplotlib
   - pandas
+  - plotly
+  - python-kaleido

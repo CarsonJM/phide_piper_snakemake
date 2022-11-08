@@ -45,7 +45,7 @@ rule build_dramv:
     resources:
         runtime="48:00:00",
         mem_mb="100000",
-        partition="ckpt",
+        partition="compute-hugemem",
         account="pedslabs"
     threads: config["virus_function"]["dramv_threads"]
     shell:
@@ -72,7 +72,7 @@ rule update_dram:
     resources:
         runtime="48:00:00",
         mem_mb="100000",
-        partition="ckpt",
+        partition="compute-hugemem",
         account="pedslabs",
     threads: config["virus_function"]["dramv_threads"]
     shell:
