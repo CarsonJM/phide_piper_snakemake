@@ -75,9 +75,9 @@ def get_final_output(wildcards):
     )
 
     final_output.append(results + "07_VIRUS_DIVERSITY/virus_diversity_votu_figure.svg")
-    final_output.append(
-        results + "07_VIRUS_DIVERSITY/virus_diversity_genus_figure.html",
-    )
+    # final_output.append(
+    #     results + "07_VIRUS_DIVERSITY/virus_diversity_genus_figure.html",
+    # )
     final_output.append(results + "07_VIRUS_DIVERSITY/virus_phylogeny.png")
 
     if config["include_host_module"]:
@@ -96,6 +96,7 @@ def get_final_output(wildcards):
     final_output.append(
         results + "12_VIRUS_ANALYSIS/03_filter_viruses/combined_breadth_and_depth.tsv"
     )
+    final_output.append(results + "12_VIRUS_ANALYSIS/bowtie2_multiqc.html")
 
     return final_output
 

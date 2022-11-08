@@ -268,7 +268,12 @@ rule virus_host_analysis:
         + ".csv",
         phist=results + "08_VIRUS_HOST/02_phist/phist_host_taxonomy.csv",
     output:
-        results + "08_VIRUS_HOST/virus_host_taxonomy.csv",
+        report=results + "08_VIRUS_HOST/virus_host_taxonomy.csv",
+        svg=report(
+            results + "08_VIRUS_HOST/virus_host_taxonomy.svg",
+            category="Step 07: Virus clustering",
+        ),
+        html=results + "08_VIRUS_HOST/virus_host_taxonomy.html",
     conda:
         "../envs/jupyter.yml"
     script:

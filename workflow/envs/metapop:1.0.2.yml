@@ -26,3 +26,4 @@ dependencies:
   - r-gggenes
   - pip:
       - metapop==0.0.60
+      

@@ -12,3 +12,4 @@ benchmark/*
 *.conda*
 *.keras*
 *.java*
+*.ipynb_checkpoints*

@@ -423,16 +423,7 @@ rule extract_virsorter_db:
     input:
         resources + "virsorter/virsorter-data-v2.tar.gz",
     output:
-        pfam=directory(resources + "virsorter/virsorter-data/PFAM_27/"),
-        pgc=directory(resources + "virsorter/virsorter-data/Phage_gene_catalog/"),
-        pgcpv=directory(
-            resources + "virsorter/virsorter-data/Phage_gene_catalog_plus_viromes/"
-        ),
-        dockerfile=resources + "virsorter/virsorter-data/Dockerfile",
-        ref_files=resources + "virsorter/virsorter-data/Generic_ref_file.refs",
-        sup05=resources + "virsorter/virsorter-data/SUP05_SAGs_with_viruses.fna",
         vsrm=resources + "virsorter/virsorter-data/VirSorter_Readme.txt",
-        vsrmv=resources + "virsorter/virsorter-data/VirSorter_Readme_viromes.txt",
     params:
         vs_dir=resources + "virsorter/",
     benchmark:

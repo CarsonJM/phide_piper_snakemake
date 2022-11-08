@@ -27,7 +27,7 @@ use-conda: True
 conda-prefix: /gscratch/scrubbed/carsonjm/conda_envs
 use-singularity: True
 singularity-prefix: /gscratch/scrubbed/carsonjm/singularity
-singularity-args: "-B /gscratch/ --env APPTAINER_CACHEDIR=/gscratch/scrubbed/carsonjm/.apptainer,DRAM_CONFIG_LOCATION=/gscratch/stf/carsonjm/CarsonJM/phide_piper/CONFIG.json"
+singularity-args: "-B /gscratch/ --env APPTAINER_CACHEDIR=/gscratch/scrubbed/carsonjm/.apptainer"
 cluster-status: status-sacct.sh
 rerun-triggers: mtime
 cluster-cancel: scancel

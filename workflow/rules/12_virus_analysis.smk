@@ -116,6 +116,40 @@ rule align_reads_to_viruses:
         """
 
 
+# generate report for alignments
+rule bowtie2_multiqc:
+    input:
+        expand(
+            results + "12_VIRUS_ANALYSIS/01_align_viruses/{sample}.log",
+            sample=samples,
+        ),
+    output:
+        report(
+            results + "12_VIRUS_ANALYSIS/bowtie2_multiqc.html",
+            category="Step 12: Virus analysis",
+        ),
+    params:
+        bt2_input=results + "12_VIRUS_ANALYSIS/01_align_viruses/*.log",
+        bt2_dir=results + "12_VIRUS_ANALYSIS/01_align_viruses/",
+        bt2_out=results + "12_VIRUS_ANALYSIS/01_align_viruses/multiqc_report.html",
+    # conda:
+    #     "../envs/multiqc:1.12--pyhdfd78af_0.yml"
+    container:
+        "docker://quay.io/biocontainers/multiqc:1.12--pyhdfd78af_0"
+    benchmark:
+        "benchmark/12_VIRUS_ANALYSIS/bowtie2_multiqc.tsv"
+    resources:
+        runtime="00:10:00",
+        mem_mb="1000",
+    shell:
+        """
+        multiqc {params.bt2_input} \
+        -o {params.bt2_dir} -f
+
+        mv {params.bt2_out} {output}
+        """
+
+
 # -----------------------------------------------------
 # 02 Metapop
 # -----------------------------------------------------
@@ -166,10 +200,14 @@ rule metapop:
         read_counts=results + "12_VIRUS_ANALYSIS/02_metapop/combined_read_counts.tsv",
         viruses=results + "07_VIRUS_DIVERSITY/01_votu_clusters/votu_representatives.fna",
     output:
-        expand(
+        breadth=expand(
             results
             + "12_VIRUS_ANALYSIS/02_metapop/MetaPop/03.Breadth_and_Depth/{sample}_breadth_and_depth.tsv",
             sample=samples,
+        ),
+        pdf=report(
+            results + "12_VIRUS_ANALYSIS/02_metapop/MetaPop/12.Visualizations/preprocessing_summaries.pdf",
+            category="Step 12: Virus analysis",
         ),
     log:
         results + "00_LOGS/12_VIRUS_ANALYSIS/metapop.log",
@@ -190,10 +228,10 @@ rule metapop:
     resources:
         runtime="04:00:00",
         mem_mb="10000",
-    threads: 8
+    threads: 1
     shell:
         """
-        mkdir {params.viruses_dir}
+        # mkdir {params.viruses_dir}
         cp {input.viruses} {params.viruses}
 
         # run metapop to identify viruses present in samples
@@ -204,6 +242,7 @@ rule metapop:
         --id_min {params.min_id} \
         --min_cov {params.min_breadth} \
         --min_dep {params.min_depth} \
+        --threads {threads} \
         {params.extra_args}
         """
 

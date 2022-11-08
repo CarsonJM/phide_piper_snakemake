@@ -2,19 +2,16 @@ import pandas as pd
 import plotly.express as px
 
 # read metaphlan data
-lifestyles = pd.read_csv(str(snakemake.input))
+lifestyles = pd.read_csv(str(snakemake.input), sep='\t')
 
 # prepare for plotting
-bacphlip_count = lifestyles[['viral_genome', 'BACPHLIP_class']]
-bacphlip_count['tool'] = 'BACPHLIP'
-bacphlip_count['Lifestyle classification'] = bacphlip_count['BACPHLIP_class']
-bacphlip_count2 = bacphlip_count[['Lifestyle classification', 'tool']]
-bacphlip_group = bacphlip_count2.groupby('Lifestyle classification', as_index=False).count()
-bacphlip_group['axis'] = "BACPHLIP"
-bacphlip_group['proportions'] = bacphlip_group['tool']/sum(bacphlip_group['tool'])
+lifestyles['Classification'] = lifestyles.apply(lambda x: 'Virulent' if x.Virulent > snakemake.params.bacphlip_prob else 'Temperate', axis=1)
+lifestyles_group = lifestyles.groupby("Classification", as_index=False).count()
+lifestyles_group['proportions'] = lifestyles_group['Virulent']/sum(lifestyles_group["Virulent"])
+lifestyles_group["axis"] = "BACPHLIP"
 
 # plot kneaddata read counts and save
-fig = px.bar(bacphlip_group, x='axis', y='proportions', color='Lifestyle classification',
+fig = px.bar(lifestyles_group, x='axis', y='proportions', color='Classification',
              labels={
                      "axis": "BACPHLIP Classification",
                      "proportions" : "Proportion of viruses"

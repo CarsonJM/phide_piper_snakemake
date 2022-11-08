@@ -114,7 +114,7 @@ rule extract_votu_reps:
     conda:
         "../envs/jupyter.yml"
     script:
-        "../scripts/06_extract_dereplicated_viruses.py"
+        "../scripts/07_votu_analysis.py"
 
 
 # -----------------------------------------------------
@@ -453,7 +453,7 @@ rule virus_diversity_genus_anlysis:
         ),
         html=results + "07_VIRUS_DIVERSITY/virus_diversity_genus_figure.html",
     conda:
-        "../envs/jupyter.yml"
+        "../envs/networkx.yml"
     benchmark:
         "benchmark/07_VIRUS_DIVERSITY/virus_diversity_votu_anlysis.tsv"
     resources:

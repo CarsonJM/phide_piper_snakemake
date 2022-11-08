@@ -11,3 +11,5 @@ dependencies:
   - plotly
   - python-kaleido
   - upsetplot
+  - networkx
+  - scipy

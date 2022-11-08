@@ -96,30 +96,18 @@ rule bacphlip:
 # -----------------------------------------------------
 # Analyze virus lifestyles
 # -----------------------------------------------------
-# parse checkV to determine prophage integration
-rule combine_virus_lifestyle_outputs:
-    input:
-        results + "10_VIRUS_LIFESTYLE/01_bacphlip/lifestyles.tsv",
-    output:
-        results + "10_VIRUS_LIFESTYLE/virus_lifestyle_report.csv",
-    params:
-        bacphlip_prob=config["virus_lifestyle"]["bacphlip_confidence"],
-    conda:
-        "../envs/jupyter.yml"
-    script:
-        "../scripts/10_combine_lifestyle_results.py"
-
-
 # visualize virus host results
 rule virus_lifestyle_analysis:
     input:
-        results + "10_VIRUS_LIFESTYLE/virus_lifestyle_report.csv",
+        results + "10_VIRUS_LIFESTYLE/01_bacphlip/lifestyles.tsv",
     output:
         svg=report(
             results + "10_VIRUS_LIFESTYLE/virus_lifestyle_analysis.svg",
             category="Step 08: Virus lifestyle",
         ),
         html=results + "10_VIRUS_LIFESTYLE/virus_lifestyle_analysis.html",
+    params:
+        bacphlip_prob=config["virus_lifestyle"]["bacphlip_confidence"],
     conda:
         "../envs/jupyter.yml"
     script:
