@@ -12,6 +12,7 @@ benchmark/*
 *.conda*
 *.keras*
 *.java*
-*.ipynb_checkpoints*
+**.ipynb_checkpoints*
 *log/*
 *report.html*
+*.wget-hsts*
