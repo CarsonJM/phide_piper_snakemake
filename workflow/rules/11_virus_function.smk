@@ -123,13 +123,13 @@ rule virsorter2_dram:
 
 
 # run dramv
-rule dramv:
+rule dramv_annotate:
     input:
         test="update_test",
         vs2=results + "11_VIRUS_FUNCTION/01_virsorter2/for-dramv/viral-affi-contigs-for-dramv.tab",
         viruses=results + "11_VIRUS_FUNCTION/01_virsorter2/for-dramv/final-viral-combined-for-dramv.fa",
     output:
-        results + "dramv_test"
+        results + "11_VIRUS_FUNCTION/02_dramv/annotations.tsv"
     params:
         out_dir = results + "11_VIRUS_FUNCTION/02_dramv/",
     conda:
@@ -146,6 +146,27 @@ rule dramv:
         --keep_tmp_dir \
         -o {params.out_dir} \
         --threads {threads}
+        """
+
+
+# run dramv distill
+rule dramv_distill:
+    input:
+        results + "11_VIRUS_FUNCTION/02_dramv/annotations.tsv"
+    output:
+        results + "11_VIRUS_FUNCTION/02_dramv/distillate.tsv"
+    params:
+        out_dir = results + "11_VIRUS_FUNCTION/02_dramv/distillate",
+    conda:
+        "../envs/dram:1.3.4--pyhdfd78af_0.yml"
+    # container:
+    #     "docker://quay.io/biocontainers/dram:1.3.4--pyhdfd78af_0"
+    threads: config["virus_function"]["dramv_threads"]
+    shell:
+        """
+        DRAM-v.py distill \
+        -i {input} \
+        -o {params.out_dir}
         """
 
 

@@ -13,3 +13,5 @@ benchmark/*
 *.keras*
 *.java*
 *.ipynb_checkpoints*
+*log/*
+*report.html*
