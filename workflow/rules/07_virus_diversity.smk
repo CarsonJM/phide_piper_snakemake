@@ -168,7 +168,7 @@ rule vcontact2:
         --raw-proteins {input.proteins} \
         --rel-mode 'Diamond' \
         --proteins-fp {input.g2g} \
-        --db 'ProkaryoticViralRefSeq85-Merged' \
+        --db 'None' \
         --pcs-mode MCL \
         --vcs-mode ClusterONE \
         --c1-bin /opt/conda/bin/cluster_one-1.0.jar \

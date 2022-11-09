@@ -96,13 +96,6 @@ virus_quality:
   remove_proviruses: True
   checkv_threads: 8
 
-include_binning_module: False
-virus_binning:
-  max_completeness_to_bin: 90
-  vrhyme_arguments: ""
-  min_bin_completeness: 90
-  vrhyme_threads: 8
-
 virus_diversity:
   blast_arguments: ""
   min_ani: 95
