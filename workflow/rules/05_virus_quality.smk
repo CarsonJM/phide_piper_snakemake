@@ -109,10 +109,11 @@ rule checkv_trim:
     container:
         "docker://quay.io/biocontainers/checkv:1.0.1--pyhdfd78af_0"
     benchmark:
-        "benchmark/05_VIRUS_QUALITY/checkv_{sample}.tsv"
+        "benchmark/05_VIRUS_QUALITY/checkv_trim_{sample}.tsv"
     resources:
-        runtime="04:00:00",
+        runtime="12:00:00",
         mem_mb="10000",
+        partition="compute-hugemem",
     threads: config["virus_quality"]["checkv_threads"]
     shell:
         """
@@ -175,8 +176,9 @@ rule checkv:
     benchmark:
         "benchmark/05_VIRUS_QUALITY/checkv_{sample}.tsv"
     resources:
-        runtime="04:00:00",
+        runtime="12:00:00",
         mem_mb="10000",
+        partition="compute-hugemem",
     threads: config["virus_quality"]["checkv_threads"]
     shell:
         """

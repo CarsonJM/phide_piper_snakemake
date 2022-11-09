@@ -30,7 +30,6 @@ report: "../report/workflow.rst"
 localrules:
     symlink_reads,
     merge_replicates,
-    kneaddata_analysis,
 
 
 # -----------------------------------------------------
@@ -158,9 +157,9 @@ rule fastp_multiqc:
     container:
         "docker://quay.io/biocontainers/multiqc:1.12--pyhdfd78af_0"
     benchmark:
-        "benchmark/01_READ_PREPROCESSING/multiqc.tsv"
+        "benchmark/01_READ_PREPROCESSING/fastp_multiqc.tsv"
     resources:
-        runtime="00:01:00",
+        runtime="00:10:00",
         mem_mb="1000",
     shell:
         """
@@ -190,11 +189,10 @@ rule download_kneaddata_database:
     container:
         "docker://quay.io/biocontainers/kneaddata:0.10.0--pyhdfd78af_0"
     benchmark:
-        "benchmark/01_READ_PREPROCESSING/download_kneaddata.tsv"
+        "benchmark/01_READ_PREPROCESSING/download_kneaddata_database.tsv"
     resources:
-        runtime="00:10:00",
+        runtime="00:30:00",
         mem_mb="10000",
-        partition="compute",
     shell:
         """
         # download human genome reference to desired directory
@@ -231,8 +229,9 @@ rule kneaddata:
     benchmark:
         "benchmark/01_READ_PREPROCESSING/kneaddata_{sample}.tsv"
     resources:
-        runtime="10:00:00",
+        runtime="12:00:00",
         mem_mb="10000",
+        partition="compute-hugemem",
     threads: config["read_preprocessing"]["kneaddata_threads"]
     shell:
         """

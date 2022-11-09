@@ -52,9 +52,9 @@ rule metaspades:
     benchmark:
         "benchmark/03_READ_ASSEMBLY/metaspades_{sample}.tsv"
     resources:
-        runtime="04:00:00",
+        runtime="12:00:00",
         mem_mb="250000",
-        partition="ckpt",
+        partition="compute-hugemem",
     threads: config["read_assembly"]["spades_threads"]
     shell:
         """
@@ -86,9 +86,9 @@ rule metaviralspades:
     benchmark:
         "benchmark/03_READ_ASSEMBLY/metaviralspades_{sample}.tsv"
     resources:
-        runtime="04:00:00",
+        runtime="12:00:00",
         mem_mb="250000",
-        partition="ckpt",
+        partition="compute-hugemem",
     threads: config["read_assembly"]["spades_threads"]
     shell:
         """
@@ -121,9 +121,9 @@ rule rnaviral_spades:
     benchmark:
         "benchmark/03_READ_ASSEMBLY/rnaviralspades_{sample}.tsv"
     resources:
-        runtime="04:00:00",
+        runtime="12:00:00",
         mem_mb="250000",
-        partition="ckpt",
+        partition="compute-hugemem",
     threads: config["read_assembly"]["spades_threads"]
     shell:
         """
@@ -161,9 +161,9 @@ rule combine_spades_assemblies:
     output:
         results + "03_READ_ASSEMBLY/01_spades/{sample}_contigs.fasta",
     benchmark:
-        "benchmark/03_READ_ASSEMBLY/rnaviralspades_{sample}.tsv"
+        "benchmark/03_READ_ASSEMBLY/combine_spades_assemblies_{sample}.tsv"
     resources:
-        runtime="00:01:00",
+        runtime="00:10:00",
         mem_mb="1000",
     shell:
         """
@@ -210,10 +210,9 @@ rule blast_contigs_within_samples:
     benchmark:
         "benchmark/03_READ_ASSEMBLY/blast_contigs_within_samples_{sample}.tsv"
     resources:
-        runtime="04:00:00",
+        runtime="12:00:00",
         mem_mb="10000",
         partition="compute-hugemem",
-        account="pedslabs",
     threads: config["virus_dereplication"]["blast_threads"]
     shell:
         """
@@ -234,7 +233,7 @@ rule build_mgv:
     params:
         mgv_dir=resources + "mgv",
     benchmark:
-        "benchmark/04_VIRUS_IDENTIFICATION/build_mgv.tsv"
+        "benchmark/03_READ_ASSEMBLY/build_mgv.tsv"
     resources:
         runtime="00:10:00",
         mem_mb="1000",
@@ -264,7 +263,7 @@ rule dereplicate_contigs_within_samples:
     benchmark:
         "benchmark/03_READ_ASSEMBLY/dereplicate_contigs_within_samples_{sample}.tsv"
     resources:
-        runtime="04:00:00",
+        runtime="00:10:00",
         mem_mb="10000",
     shell:
         """
@@ -381,9 +380,9 @@ rule quast_multiqc:
     container:
         "docker://quay.io/biocontainers/multiqc:1.12--pyhdfd78af_0"
     benchmark:
-        "benchmark/01_READ_PREPROCESSING/multiqc.tsv"
+        "benchmark/03_READ_ASSEMBLY/quast_multiqc.tsv"
     resources:
-        runtime="00:01:00",
+        runtime="00:10:00",
         mem_mb="1000",
     shell:
         """

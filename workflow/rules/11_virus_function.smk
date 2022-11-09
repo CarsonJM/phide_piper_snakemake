@@ -43,10 +43,8 @@ rule build_dramv:
     benchmark:
         "benchmark/11_VIRUS_FUNCTION/build_dramv.tsv"
     resources:
-        runtime="48:00:00",
+        runtime="4:00:00",
         mem_mb="100000",
-        partition="compute-hugemem",
-        account="pedslabs"
     threads: config["virus_function"]["dramv_threads"]
     shell:
         """
@@ -70,10 +68,8 @@ rule update_dram:
     benchmark:
         "benchmark/11_VIRUS_FUNCTION/update_dram.tsv"
     resources:
-        runtime="48:00:00",
+        runtime="4:00:00",
         mem_mb="100000",
-        partition="compute-hugemem",
-        account="pedslabs",
     threads: config["virus_function"]["dramv_threads"]
     shell:
         """
@@ -100,10 +96,11 @@ rule virsorter2_dram:
         "../envs/virsorter:2.2.3--pyhdfd78af_1.yml"
     threads: config["virus_identification"]["virsorter2_threads"]
     benchmark:
-        "benchmark/11_VIRUS_FUNCTION/virsorter2.tsv"
+        "benchmark/11_VIRUS_FUNCTION/virsorter2_dram.tsv"
     resources:
-        runtime="04:00:00",
+        runtime="12:00:00",
         mem_mb="10000",
+        partition="compute-hugemem"
     shell:
         """
         rm -rf {params.out_dir}
@@ -137,6 +134,10 @@ rule dramv_annotate:
     # container:
     #     "docker://quay.io/biocontainers/dram:1.3.4--pyhdfd78af_0"
     threads: config["virus_function"]["dramv_threads"]
+    resources:
+        runtime="12:00:00",
+        mem_mb="10000",
+        partition="compute-hugemem"
     shell:
         """
         DRAM-v.py annotate \
@@ -165,132 +166,12 @@ rule dramv_distill:
     # container:
     #     "docker://quay.io/biocontainers/dram:1.3.4--pyhdfd78af_0"
     threads: config["virus_function"]["dramv_threads"]
+    resources:
+        runtime="00:10:00",
+        mem_mb="10000",
     shell:
         """
         DRAM-v.py distill \
         -i {input} \
         -o {params.out_dir}
         """
-
-
-# -----------------------------------------------------
-# 02 geNomad function
-# -----------------------------------------------------
-# add sample column to genomad output
-rule add_sample_to_genomad_functions:
-    input:
-        results
-        + "04_VIRUS_IDENTIFICATION/06_genomad/{sample}/{sample}_scaffolds_dereplicated_annotate/{sample}_scaffolds_dereplicated_genes.tsv",
-    output:
-        results + "11_VIRUS_FUNCTION/02_genomad/{sample}/gene_functions.tsv"
-    benchmark:
-        "benchmark/11_VIRUS_FUNCTION/add_sample_to_genomad_functions_{sample}.tsv"
-    resources:
-        runtime="00:10:00",
-        mem_mb="10000",
-    shell:
-        """
-        # add sample column to each checkv output
-        s={wildcards.sample}
-        sed -i "s/$/\t$s/" {input}
-        sample="sample"
-        sed -i "1s/$s/$sample/" {input}
-
-        cat {input} > {output}
-        """
-
-
-# combine taxonomies across samples
-rule combine_genomad_functions:
-    input:
-        expand(results + "11_VIRUS_FUNCTION/02_genomad/{sample}/gene_functions.tsv", sample=samples)
-    output:
-        results + "11_VIRUS_FUNCTION/02_genomad/gene_functions_combined.tsv",
-    benchmark:
-        "benchmark/11_VIRUS_FUNCTION/combine_genomad_functions.tsv"
-    resources:
-        runtime="00:10:00",
-        mem_mb="10000",
-    shell:
-        """
-        # combine all outputs, only keeping header from one file
-        awk 'FNR>1 || NR==1' {input} > {output}
-        """
-
-
-# filter genomad function to contain only viruses
-rule filter_genomad_functions:
-    input:
-        results + "11_VIRUS_FUNCTION/02_genomad/gene_functions_combined.tsv",
-    output:
-        results + "11_VIRUS_FUNCTION/02_genomad/gene_functions_filtered.tsv",
-    conda:
-        "../envs/jupyter.yml"
-    benchmark:
-        "benchmark/11_VIRUS_FUNCTION/filter_genomad_functions.tsv"
-    resources:
-        runtime="00:10:00",
-        mem_mb="10000",
-    script:
-        "11_filter_genomad_functions.py"
-
-
-# -----------------------------------------------------
-# 03 VIBRANT
-# -----------------------------------------------------
-# add sample column to genomad output
-rule add_sample_to_vibrant_functions:
-    input:
-        results + "04_VIRUS_IDENTIFICATION/04_vibrant/{sample}/VIBRANT_{sample}_contigs_dereplicated/VIBRANT_results_{sample}_contigs_dereplicated/VIBRANT_annotations_oral_enriched_contigs_dereplicated.tsv"
-    output:
-        results + "11_VIRUS_FUNCTION/03_vibrant/{sample}/gene_functions.tsv"
-    benchmark:
-        "benchmark/11_VIRUS_FUNCTION/add_sample_to_vibrant_functions_{sample}.tsv"
-    resources:
-        runtime="00:10:00",
-        mem_mb="10000",
-    shell:
-        """
-        # add sample column to each checkv output
-        s={wildcards.sample}
-        sed -i "s/$/\t$s/" {input}
-        sample="sample"
-        sed -i "1s/$s/$sample/" {input}
-
-        cat {input} > {output}
-        """
-
-
-# combine taxonomies across samples
-rule combine_vibrant_functions:
-    input:
-        expand(results + "11_VIRUS_FUNCTION/03_vibrant/{sample}/gene_functions.tsv", sample=samples)
-    output:
-        results + "11_VIRUS_FUNCTION/03_vibrant/gene_functions_combined.tsv",
-    benchmark:
-        "benchmark/11_VIRUS_FUNCTION/combine_vibrant_functions.tsv"
-    resources:
-        runtime="00:10:00",
-        mem_mb="10000",
-    shell:
-        """
-        # combine all outputs, only keeping header from one file
-        awk 'FNR>1 || NR==1' {input} > {output}
-        """
-
-
-# filter genomad function to contain only viruses
-rule filter_vibrant_functions:
-    input:
-        results + "11_VIRUS_FUNCTION/03_vibrant/gene_functions_combined.tsv",
-    output:
-        results + "11_VIRUS_FUNCTION/03_vibrant/gene_functions_filtered.tsv",
-    conda:
-        "../envs/jupyter.yml"
-    benchmark:
-        "benchmark/11_VIRUS_FUNCTION/filter_vibrant_functions.tsv"
-    resources:
-        runtime="00:10:00",
-        mem_mb="10000",
-    script:
-        "11_filter_vibrant_functions.py"

@@ -49,8 +49,8 @@ rule combine_viruses:
     benchmark:
         "benchmark/06_VIRUS_DEREPLICATION/combine_viruses.tsv"
     resources:
-        runtime="00:06:00",
-        mem_mb="0600",
+        runtime="00:10:00",
+        mem_mb="1000",
     shell:
         """
         cat {input.viruses} > {output.viruses}
@@ -80,8 +80,9 @@ rule blast_viruses_v_viruses:
     benchmark:
         "benchmark/06_VIRUS_DEREPLICATION/blast_viruses_v_viruses.tsv"
     resources:
-        runtime="04:00:00",
+        runtime="12:00:00",
         mem_mb="06000",
+        partition="compute-hugemem",
     threads: config["virus_dereplication"]["blast_threads"]
     shell:
         """
@@ -115,8 +116,8 @@ rule dereplicate_viruses:
     benchmark:
         "benchmark/06_VIRUS_DEREPLICATION/dereplicate_viruses.tsv"
     resources:
-        runtime="00:06:00",
-        mem_mb="0600",
+        runtime="00:10:00",
+        mem_mb="1000",
     shell:
         """
         # calculate ani and af from blast results
@@ -150,8 +151,8 @@ rule extract_virus_replicate_representatives:
     benchmark:
         "benchmark/06_VIRUS_DEREPLICATION/extract_virus_replicate_representatives.tsv"
     resources:
-        runtime="00:06:00",
-        mem_mb="0600",
+        runtime="00:10:00",
+        mem_mb="1000",
     script:
         "../scripts/06_extract_dereplicated_viruses.py"
 
@@ -175,7 +176,7 @@ rule virus_dereplication_anlysis:
     benchmark:
         "benchmark/06_VIRUS_DEREPLICATION/virus_dereplication_anlysis.tsv"
     resources:
-        runtime="00:06:00",
-        mem_mb="0600",
+        runtime="00:10:00",
+        mem_mb="1000",
     script:
         "../scripts/06_virus_dereplication_analysis.py"

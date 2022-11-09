@@ -50,7 +50,7 @@ rule symlink_contigs:
     benchmark:
         "benchmark/04_VIRUS_IDENTIFICATION/symlink_contigs_{sample}.tsv"
     resources:
-        runtime="00:00:10",
+        runtime="00:10:00",
         mem_mb="1000",
     shell:
         """
@@ -70,7 +70,7 @@ rule length_filter_symlinked_contigs:
     conda:
         "../envs/jupyter.yml"
     benchmark:
-        "benchmark/03_READ_ASSEMBLY/contig_length_filter_{sample}.tsv"
+        "benchmark/04_VIRUS_IDENTIFICATION/length_filter_symlinked_contigs_{sample}.tsv"
     resources:
         runtime="00:10:00",
         mem_mb="1000",
@@ -101,6 +101,9 @@ rule symlink_preprocessed_reads:
     output:
         R1=results + "00_INPUT/{sample}_proprcessed_1.fastq.gz",
         R2=results + "00_INPUT/{sample}_preprocessed_2.fastq.gz",
+    resources:
+        runtime="00:10:00",
+        mem_mb="1000",
     shell:
         """
         # symlink input paths to renamed files
@@ -134,7 +137,7 @@ rule download_mgv_databases:
     benchmark:
         "benchmark/04_VIRUS_IDENTIFICATION/download_mgv_databases.tsv"
     resources:
-        runtime="00:10:00",
+        runtime="00:30:00",
         mem_mb="1000",
     shell:
         """
@@ -190,8 +193,9 @@ rule mgv_imgvr_hmmsearch:
     benchmark:
         "benchmark/04_VIRUS_IDENTIFICATION/mgv_imgvr_hmmsearch_{sample}.tsv"
     resources:
-        runtime="04:00:00",
+        runtime="12:00:00",
         mem_mb="10000",
+        partition="compute-hugemem",
     threads: config["virus_identification"]["mgv_threads"]
     shell:
         """
@@ -219,8 +223,9 @@ rule mgv_pfam_hmmsearch:
     benchmark:
         "benchmark/04_VIRUS_IDENTIFICATION/mgv_pfam_hmmsearch_{sample}.tsv"
     resources:
-        runtime="04:00:00",
+        runtime="12:00:00",
         mem_mb="10000",
+        partition="compute-hugemem",
     threads: config["virus_identification"]["mgv_threads"]
     shell:
         """
@@ -459,8 +464,9 @@ rule virsorter:
     benchmark:
         "benchmark/04_VIRUS_IDENTIFICATION/virsorter_{sample}.tsv"
     resources:
-        runtime="10:00:00",
+        runtime="12:00:00",
         mem_mb="10000",
+        partition="compute-hugemem",
     threads: config["virus_identification"]["virsorter_threads"]
     shell:
         """
@@ -523,8 +529,9 @@ rule virsorter2:
     benchmark:
         "benchmark/04_VIRUS_IDENTIFICATION/virsorter2_{sample}.tsv"
     resources:
-        runtime="10:00:00",
+        runtime="12:00:00",
         mem_mb="100000",
+        partition="compute-hugemem",
     threads: config["virus_identification"]["virsorter2_threads"]
     shell:
         """
@@ -595,8 +602,9 @@ rule vibrant:
     benchmark:
         "benchmark/04_VIRUS_IDENTIFICATION/vibrant_{sample}.tsv"
     resources:
-        runtime="04:00:00",
+        runtime="12:00:00",
         mem_mb="10000",
+        partition="compute-hugemem",
     threads: config["virus_identification"]["vibrant_threads"]
     shell:
         """
@@ -710,8 +718,9 @@ rule genomad:
     benchmark:
         "benchmark/04_VIRUS_IDENTIFICATION/genomad_{sample}.tsv"
     resources:
-        runtime="04:00:00",
+        runtime="12:00:00",
         mem_mb="10000",
+        partition="compute-hugemem",
     threads: config["virus_identification"]["genomad_threads"]
     shell:
         """

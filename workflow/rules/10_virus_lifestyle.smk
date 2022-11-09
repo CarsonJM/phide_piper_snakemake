@@ -77,8 +77,9 @@ rule bacphlip:
     benchmark:
         "benchmark/10_VIRUS_LIFESTYLE/bacphlip.tsv"
     resources:
-        runtime="04:00:00",
+        runtime="12:00:00",
         mem_mb="10000",
+        partition="compute-hugemem"
     threads: config["virus_lifestyle"]["bacphlip_threads"]
     shell:
         """
@@ -110,5 +111,10 @@ rule virus_lifestyle_analysis:
         bacphlip_prob=config["virus_lifestyle"]["bacphlip_confidence"],
     conda:
         "../envs/jupyter.yml"
+    resources:
+        runtime="00:30:00",
+        mem_mb="1000",
+    benchmark:
+        "benchmark/10_VIRUS_LIFESTYLE/virus_lifestyle_analysis.tsv"
     script:
         "../scripts/10_virus_lifestyle_analysis.py"

@@ -68,7 +68,7 @@ rule build_viruses_bowtie2db:
     benchmark:
         "benchmark/12_VIRUS_ANALYSIS/build_viruses_bowtie2db.tsv"
     resources:
-        runtime="01:00:00",
+        runtime="04:00:00",
         mem_mb="10000",
     shell:
         """
@@ -95,10 +95,11 @@ rule align_reads_to_viruses:
         "../envs/kneaddata:0.10.0--pyhdfd78af_0.yml"
     threads: 8
     benchmark:
-        "benchmark/07_VIRUS_ABUNDANCE/align_reads_to_viruses_{sample}.tsv"
+        "benchmark/12_VIRUS_ANALYSIS/align_reads_to_viruses_{sample}.tsv"
     resources:
-        runtime="04:00:00",
+        runtime="12:00:00",
         mem_mb="10000",
+        partition="compute-hugemem",
     shell:
         """
         # align reads to bowtie2 database
@@ -206,7 +207,8 @@ rule metapop:
             sample=samples,
         ),
         pdf=report(
-            results + "12_VIRUS_ANALYSIS/02_metapop/MetaPop/12.Visualizations/preprocessing_summaries.pdf",
+            results
+            + "12_VIRUS_ANALYSIS/02_metapop/MetaPop/12.Visualizations/preprocessing_summaries.pdf",
             category="Step 12: Virus analysis",
         ),
     log:
@@ -224,11 +226,11 @@ rule metapop:
     conda:
         "../envs/metapop:1.0.2.yml"
     benchmark:
-        "benchmark/07_VIRUS_ABUNDANCE/metapop.tsv"
+        "benchmark/12_VIRUS_ANALYSIS/metapop.tsv"
     resources:
         runtime="04:00:00",
         mem_mb="10000",
-    threads: 1
+    threads: 8
     shell:
         """
         # mkdir {params.viruses_dir}

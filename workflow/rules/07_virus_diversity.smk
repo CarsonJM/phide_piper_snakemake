@@ -49,8 +49,9 @@ rule blast_viruses_cluster:
     benchmark:
         "benchmark/07_VIRUS_DIVERSITY/blast_viral_contigs_cluster.tsv"
     resources:
-        runtime="00:10:00",
+        runtime="12:00:00",
         mem_mb="10000",
+        partition="compute-hugemem",
     threads: config["virus_diversity"]["blast_threads"]
     shell:
         """
@@ -80,7 +81,7 @@ rule cluster_viruses:
     conda:
         "../envs/jupyter.yml"
     benchmark:
-        "benchmark/07_VIRUS_DIVERSITY/cluster_viral_contigs.tsv"
+        "benchmark/07_VIRUS_DIVERSITY/cluster_viruses.tsv"
     resources:
         runtime="00:10:00",
         mem_mb="1000",
@@ -155,10 +156,11 @@ rule vcontact2:
     container:
         "docker://sonnenburglab/vcontact2"
     benchmark:
-        "benchmark/07_VIRUS_DIVERSITY/gene2genome.tsv"
+        "benchmark/07_VIRUS_DIVERSITY/vcontact2.tsv"
     resources:
-        runtime="04:00:00",
+        runtime="12:00:00",
         mem_mb="100000",
+        partition="compute-hugemem",
     threads: config["virus_diversity"]["vcontact2_threads"]
     shell:
         """
@@ -188,9 +190,9 @@ rule prepare_vogdb_hmms:
         ccp77=resources + "ccp77/vog.hmm.tar.gz",
         ccp77_dir=resources + "ccp77/",
     benchmark:
-        "benchmark/07_VIRUS_DIVERSITY/03_caudoviricetes_phylogeny/prepare_vogdb_hmms.tsv"
+        "benchmark/07_VIRUS_DIVERSITY/prepare_vogdb_hmms.tsv"
     resources:
-        runtime="00:10:00",
+        runtime="00:30:00",
         mem_mb="10000",
     shell:
         """
@@ -216,7 +218,7 @@ rule extract_ccp77_hmms:
         ccp77_dir=resources + "ccp77/ccp77/",
         ccp77_hmms=resources + "ccp77/ccp77/ccp77.hmm",
     benchmark:
-        "benchmark/07_VIRUS_DIVERSITY/03_caudoviricetes_phylogeny/extract_ccp77_hmms.tsv"
+        "benchmark/07_VIRUS_DIVERSITY/extract_ccp77_hmms.tsv"
     resources:
         runtime="00:10:00",
         mem_mb="10000",
@@ -241,10 +243,11 @@ rule ccp77_hmmsearch:
     container:
         "docker://quay.io/biocontainers/hmmer:3.3.2--h87f3376_2"
     benchmark:
-        "benchmark/07_VIRUS_DIVERSITY/03_caudoviricetes_phylogeny/ccp77_hmmsearch.tsv"
+        "benchmark/07_VIRUS_DIVERSITY/ccp77_hmmsearch.tsv"
     resources:
-        runtime="04:00:00",
+        runtime="12:00:00",
         mem_mb="10000",
+        partition="compute-hugemem",
     threads: config["virus_phylogeny"]["hmmsearch_threads"]
     shell:
         """
@@ -273,7 +276,7 @@ rule extract_top_ccp77_hits:
     conda:
         "../envs/jupyter.yml"
     benchmark:
-        "benchmark/07_VIRUS_DIVERSITY/03_caudoviricetes_phylogeny/extract_top_ccp77_hits.tsv"
+        "benchmark/07_VIRUS_DIVERSITY/extract_top_ccp77_hits.tsv"
     resources:
         runtime="00:10:00",
         mem_mb="10000",
@@ -296,10 +299,11 @@ rule ccp77_hmmalign:
     container:
         "docker://quay.io/biocontainers/hmmer:3.3.2--h87f3376_2"
     benchmark:
-        "benchmark/07_VIRUS_DIVERSITY/03_caudoviricetes_phylogeny/ccp77_hmmalign.tsv"
+        "benchmark/07_VIRUS_DIVERSITY/ccp77_hmmalign.tsv"
     resources:
-        runtime="04:00:00",
+        runtime="12:00:00",
         mem_mb="10000",
+        partition="compute-hugemem",
     shell:
         """
         # change cwd
@@ -333,10 +337,11 @@ rule trim_msa:
     container:
         "docker://quay.io/biocontainers/trimal:1.4.1--h9f5acd7_6"
     benchmark:
-        "benchmark/07_VIRUS_DIVERSITY/03_caudoviricetes_phylogeny/trim_msa.tsv"
+        "benchmark/07_VIRUS_DIVERSITY/trim_msa.tsv"
     resources:
-        runtime="04:00:00",
+        runtime="12:00:00",
         mem_mb="10000",
+        partition="compute-hugemem",
     shell:
         """
         # change cwd
@@ -367,7 +372,7 @@ rule concatenate_and_filter_msa:
     conda:
         "../envs/jupyter.yml"
     benchmark:
-        "benchmark/07_VIRUS_DIVERSITY/03_caudoviricetes_phylogeny/concatenate_and_filter_msa.tsv"
+        "benchmark/07_VIRUS_DIVERSITY/concatenate_and_filter_msa.tsv"
     resources:
         runtime="00:10:00",
         mem_mb="10000",
@@ -386,10 +391,11 @@ rule fasttree:
     container:
         "docker://quay.io/biocontainers/fasttree:2.1.10--h779adbc_6"
     benchmark:
-        "benchmark/07_VIRUS_DIVERSITY/03_caudoviricetes_phylogeny/fasttree.tsv"
+        "benchmark/07_VIRUS_DIVERSITY/fasttree.tsv"
     resources:
-        runtime="04:00:00",
+        runtime="12:00:00",
         mem_mb="50000",
+        partition="compute-hugemem",
     shell:
         """
         fasttree -wag -gamma -mlacc 2 -slownni {input} > {output}
@@ -455,7 +461,7 @@ rule virus_diversity_genus_anlysis:
     conda:
         "../envs/networkx.yml"
     benchmark:
-        "benchmark/07_VIRUS_DIVERSITY/virus_diversity_votu_anlysis.tsv"
+        "benchmark/07_VIRUS_DIVERSITY/virus_diversity_genus_anlysis.tsv"
     resources:
         runtime="00:10:00",
         mem_mb="1000",

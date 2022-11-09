@@ -42,7 +42,7 @@ rule symlink_preprocessed_viruses:
     benchmark:
         "benchmark/06_VIRUS_HOST/symlink_preprocessed_viruses_{sample}.tsv"
     resources:
-        runtime="00:00:10",
+        runtime="00:10:00",
         mem_mb="1000",
     shell:
         """
@@ -79,8 +79,8 @@ rule download_iphop:
     benchmark:
         "benchmark/08_VIRUS_HOST/download_iphop.tsv"
     resources:
-        runtime="04:00:00",
-        mem_mb="50000",
+        runtime="4:00:00",
+        mem_mb="10000",
     shell:
         """
         # download iphop test database
@@ -104,10 +104,10 @@ rule verify_iphop_db:
     container:
         "/gscratch/stf/carsonjm/apptainer/iphop-1.1.0.sif"
     benchmark:
-        "benchmark/08_VIRUS_HOST/download_iphop.tsv"
+        "benchmark/08_VIRUS_HOST/verify_iphop_db.tsv"
     resources:
-        runtime="04:00:00",
-        mem_mb="50000",
+        runtime="4:00:00",
+        mem_mb="10000",
     shell:
         """
         # download iphop test database
@@ -140,8 +140,9 @@ rule iphop:
     benchmark:
         "benchmark/08_VIRUS_HOST/iphop.tsv"
     resources:
-        runtime="4:00:00",
+        runtime="12:00:00",
         mem_mb="100000",
+        partition="compute-hugemem",
     shell:
         """
         # run iphop predict
@@ -169,7 +170,7 @@ rule build_phist:
     benchmark:
         "benchmark/08_VIRUS_HOST/build_phist.tsv"
     resources:
-        runtime="1:00:00",
+        runtime="00:30:00",
         mem_mb="1000",
     shell:
         """
@@ -200,7 +201,7 @@ rule split_viruses_for_phist:
     benchmark:
         "benchmark/08_VIRUS_HOST/split_viruses_for_phist.tsv"
     resources:
-        runtime="1:00:00",
+        runtime="00:30:00",
         mem_mb="1000",
     script:
         "../scripts/08_split_viruses_for_phist.py"
@@ -225,8 +226,9 @@ rule phist:
     benchmark:
         "benchmark/08_VIRUS_HOST/phist.tsv"
     resources:
-        runtime="10:00:00",
+        runtime="12:00:00",
         mem_mb="100000",
+        partition="compute-hugemem",
     shell:
         """
         # run phist using uhgg
@@ -251,7 +253,7 @@ rule phist_host_taxonomy:
     benchmark:
         "benchmark/08_VIRUS_HOST/phist_host_taxonomy.tsv"
     resources:
-        runtime="1:00:00",
+        runtime="00:10:00",
         mem_mb="1000",
     script:
         "../scripts/08_phist_host_taxonomy.py"
@@ -274,6 +276,11 @@ rule virus_host_analysis:
             category="Step 08: Virus hosts",
         ),
         html=results + "08_VIRUS_HOST/virus_host_taxonomy.html",
+    benchmark:
+        "benchmark/08_VIRUS_HOST/virus_host_analysis.tsv"
+    resources:
+        runtime="00:10:00",
+        mem_mb="1000",
     conda:
         "../envs/jupyter.yml"
     script:

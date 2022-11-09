@@ -48,7 +48,7 @@ rule build_viromeqc:
     benchmark:
         "benchmark/02_VIRUS_ENRICHMENT/build_viromeqc.tsv"
     resources:
-        runtime="00:10:00",
+        runtime="00:30:00",
         mem_mb="10000",
     shell:
         """
@@ -95,9 +95,9 @@ rule viromeqc:
     benchmark:
         "benchmark/02_VIRUS_ENRICHMENT/viromeqc_{sample}.tsv"
     resources:
-        runtime="10:00:00",
+        runtime="12:00:00",
         mem_mb="10000",
-        partition="compute",
+        partition="compute-hugemem",
     threads: config["virus_enrichment"]["viromeqc_threads"]
     shell:
         """
@@ -136,7 +136,7 @@ rule combine_viromeqc_across_samples:
     benchmark:
         "benchmark/02_VIRUS_ENRICHMENT/combine_viromeqc_across_samples.tsv"
     resources:
-        runtime="00:05:00",
+        runtime="00:10:00",
         mem_mb="1000",
     shell:
         """
@@ -163,7 +163,7 @@ rule virus_enrichment_analysis:
     benchmark:
         "benchmark/02_VIRUS_ENRICHMENT/virus_enrichment_analysis.tsv"
     resources:
-        runtime="00:05:00",
+        runtime="00:10:00",
         mem_mb="1000",
     script:
         "../scripts/02_virus_enrichment_analysis.py"

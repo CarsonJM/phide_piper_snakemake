@@ -47,8 +47,9 @@ rule genomad_taxonomy:
     benchmark:
         "benchmark/09_VIRUS_TAXONOMY/genomad.tsv"
     resources:
-        runtime="04:00:00",
+        runtime="12:00:00",
         mem_mb="10000",
+        partition="compute-hugemem"
     shell:
         """
         # run vibrant for all virus types
@@ -75,7 +76,7 @@ rule build_mmseqs:
     benchmark:
         "benchmark/09_VIRUS_TAXONOMY/build_mmseqs.tsv"
     resources:
-        runtime="01:00:00",
+        runtime="00:30:00",
         mem_mb="1000",
     shell:
         """
@@ -103,8 +104,9 @@ rule mmseqs2:
     benchmark:
         "benchmark/09_VIRUS_TAXONOMY/mmseqs2.tsv"
     resources:
-        runtime="04:00:00",
+        runtime="12:00:00",
         mem_mb="150000",
+        partition="compute-hugemem"
     threads: config["virus_taxonomy"]["mmseqs_threads"]
     shell:
         """
