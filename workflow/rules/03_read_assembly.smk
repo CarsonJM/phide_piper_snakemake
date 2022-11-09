@@ -106,7 +106,6 @@ rule metaviralspades:
 # Assemble reads using spades
 rule rnaviral_spades:
     input:
-        spades_script=resources + "spades/SPAdes-3.15.2-Linux/bin/spades.py",
         R1=results + "01_READ_PREPROCESSING/03_kneaddata/{sample}_paired_1.fastq.gz",
         R2=results + "01_READ_PREPROCESSING/03_kneaddata/{sample}_paired_2.fastq.gz",
     output:
