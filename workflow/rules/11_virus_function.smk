@@ -154,7 +154,10 @@ rule dramv_distill:
     input:
         results + "11_VIRUS_FUNCTION/02_dramv/annotations.tsv"
     output:
-        results + "11_VIRUS_FUNCTION/02_dramv/distillate.tsv"
+        report(
+            results + "11_VIRUS_FUNCTION/02_dramv/distillate/product.html",
+            category="Step 11: Virus Function",
+        ),
     params:
         out_dir = results + "11_VIRUS_FUNCTION/02_dramv/distillate",
     conda:

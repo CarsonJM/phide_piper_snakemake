@@ -271,7 +271,7 @@ rule virus_host_analysis:
         report=results + "08_VIRUS_HOST/virus_host_taxonomy.csv",
         svg=report(
             results + "08_VIRUS_HOST/virus_host_taxonomy.svg",
-            category="Step 07: Virus clustering",
+            category="Step 08: Virus hosts",
         ),
         html=results + "08_VIRUS_HOST/virus_host_taxonomy.html",
     conda:
