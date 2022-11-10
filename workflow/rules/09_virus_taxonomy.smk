@@ -1,5 +1,5 @@
 # -----------------------------------------------------
-# Virus taxonomy
+# Virus Taxonomy Module (if include_taxonomy_module = True)
 # -----------------------------------------------------
 import pandas as pd
 import os
@@ -25,13 +25,14 @@ resources = config["resources"]
 # -----------------------------------------------------
 # Virus taxonomy rules
 # -----------------------------------------------------
-localrules: virus_taxonomy_analysis
 
 # -----------------------------------------------------
 # 01 geNomad's marker based taxonomy
 # -----------------------------------------------------
-# run vibrant to identify viral contigs
+# run genomad to identify virus taxonomy
 rule genomad_taxonomy:
+    message:
+        "Running geNomad to predict virus taxonomy"
     input:
         genomad=resources + "genomad/genomad_db/virus_hallmark_annotation.txt",
         contigs=results + "07_VIRUS_DIVERSITY/01_votu_clusters/votu_representatives.fna",
@@ -47,12 +48,11 @@ rule genomad_taxonomy:
     benchmark:
         "benchmark/09_VIRUS_TAXONOMY/genomad.tsv"
     resources:
-        runtime="12:00:00",
+        runtime="04:00:00",
         mem_mb="10000",
-        partition="compute-hugemem"
     shell:
         """
-        # run vibrant for all virus types
+        # run genomad on viruses to predict taxonomy
         genomad end-to-end \
         --threads {threads} \
         --verbose \
@@ -68,7 +68,10 @@ rule genomad_taxonomy:
 # -----------------------------------------------------
 # 02 MMseqs consensus
 # -----------------------------------------------------
+# download mmseqs database and extract 
 rule build_mmseqs:
+    message:
+        "Downloading and extracting MMSeqs2 NCBI NR database for assigning viral taxonomy"
     output:
         resources + "imgvr_6/virus_tax_db/virus_tax_db"
     params:
@@ -88,7 +91,10 @@ rule build_mmseqs:
         tar -xvf virus_tax_db.tar
         """
 
+# run mmseqs2 against ncbi nr
 rule mmseqs2:
+    message:
+        "Running MMSeqs2 against NCBI NR to predict consensus taxonomy"
     input:
         viruses=results + "07_VIRUS_DIVERSITY/01_votu_clusters/votu_representatives.fna",
         db=resources + "imgvr_6/virus_tax_db/virus_tax_db"
@@ -110,9 +116,11 @@ rule mmseqs2:
     threads: config["virus_taxonomy"]["mmseqs_threads"]
     shell:
         """
+        # create output directory
         mkdir {params.out_dir}
         cd {params.out_dir}
 
+        # run mmseqs easy taxonomy to identify lca
         mmseqs easy-taxonomy \
         {input.viruses} \
         {input.db} \
@@ -130,8 +138,10 @@ rule mmseqs2:
 # -----------------------------------------------------
 # Analyze taxonomy results
 # -----------------------------------------------------
-# visualize virus host results
+# visualize virus taxonomy results
 rule virus_taxonomy_analysis:
+    message:
+        "Visualizing virus taxonomy results from both tools"
     input:
         genomad=results + "09_VIRUS_TAXONOMY/01_genomad/votu_representatives_annotate/votu_representatives_taxonomy.tsv",
         mmseqs=results + "09_VIRUS_TAXONOMY/02_mmseqs2/taxonomy_lca.tsv",

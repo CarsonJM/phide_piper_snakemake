@@ -1,5 +1,5 @@
 # -------------------------------------
-# Read assembly (Only runs if data_type: "reads")
+# Read Assembly Module (If input_data = "reads")
 # -------------------------------------
 import pandas as pd
 
@@ -37,6 +37,8 @@ localrules:
 # -----------------------------------------------------
 # Assemble reads using metaspades
 rule metaspades:
+    message:
+        "Assembling {sample} using metaSPAdes"
     input:
         R1=results + "01_READ_PREPROCESSING/03_kneaddata/{sample}_paired_1.fastq.gz",
         R2=results + "01_READ_PREPROCESSING/03_kneaddata/{sample}_paired_2.fastq.gz",
@@ -52,9 +54,8 @@ rule metaspades:
     benchmark:
         "benchmark/03_READ_ASSEMBLY/metaspades_{sample}.tsv"
     resources:
-        runtime="12:00:00",
-        mem_mb="250000",
-        partition="compute-hugemem",
+        runtime="04:00:00",
+        mem_mb="100000",
     threads: config["read_assembly"]["spades_threads"]
     shell:
         """
@@ -71,6 +72,8 @@ rule metaspades:
 
 # Assemble reads using metaviralspades
 rule metaviralspades:
+    message:
+        "Assembling {sample} using metaviralSPAdes"
     input:
         R1=results + "01_READ_PREPROCESSING/03_kneaddata/{sample}_paired_1.fastq.gz",
         R2=results + "01_READ_PREPROCESSING/03_kneaddata/{sample}_paired_2.fastq.gz",
@@ -86,13 +89,12 @@ rule metaviralspades:
     benchmark:
         "benchmark/03_READ_ASSEMBLY/metaviralspades_{sample}.tsv"
     resources:
-        runtime="12:00:00",
-        mem_mb="250000",
-        partition="compute-hugemem",
+        runtime="04:00:00",
+        mem_mb="100000",
     threads: config["read_assembly"]["spades_threads"]
     shell:
         """
-        # assemble reads using spades
+        # assemble reads using metaviralspades
         spades.py \
         --metaviral \
         -1 {input.R1} \
@@ -103,8 +105,10 @@ rule metaviralspades:
         """
 
 
-# Assemble reads using spades
-rule rnaviral_spades:
+# Assemble reads using rnaviralspades
+rule rnaviralspades:
+    message:
+        "Assembling {sample} using rnaviralSPAdes"
     input:
         R1=results + "01_READ_PREPROCESSING/03_kneaddata/{sample}_paired_1.fastq.gz",
         R2=results + "01_READ_PREPROCESSING/03_kneaddata/{sample}_paired_2.fastq.gz",
@@ -120,13 +124,12 @@ rule rnaviral_spades:
     benchmark:
         "benchmark/03_READ_ASSEMBLY/rnaviralspades_{sample}.tsv"
     resources:
-        runtime="12:00:00",
-        mem_mb="250000",
-        partition="compute-hugemem",
+        runtime="04:00:00",
+        mem_mb="100000",
     threads: config["read_assembly"]["spades_threads"]
     shell:
         """
-        # assemble reads using spades
+        # assemble reads using rnaviralspades
         spades.py \
         --rnaviral \
         -1 {input.R1} \
@@ -155,6 +158,8 @@ if "rnaviral" in config["read_assembly"]["assembly_modes"]:
 
 # combine all spades assembly types
 rule combine_spades_assemblies:
+    message:
+        "Combining {sample} assemblies from different assemblers"
     input:
         assemblies,
     output:
@@ -166,6 +171,7 @@ rule combine_spades_assemblies:
         mem_mb="1000",
     shell:
         """
+        # combine assemblies from different assemblers
         cat {input} > {output}
         """
 
@@ -175,6 +181,8 @@ rule combine_spades_assemblies:
 # -----------------------------------------------------
 # filter contigs based on contig length
 rule contig_length_filter:
+    message:
+        "Filtering {sample} assemblies to only those longer than {params.min_length}"
     input:
         results + "03_READ_ASSEMBLY/01_spades/{sample}_contigs.fasta",
     output:
@@ -194,6 +202,8 @@ rule contig_length_filter:
 
 # blast contigs against one another for dereplication
 rule blast_contigs_within_samples:
+    message:
+        "BLASTing {sample} contigs against one another to dererplicate dataset"
     input:
         results + "03_READ_ASSEMBLY/02_contig_filters/{sample}/{sample}_contigs.fasta",
     output:
@@ -209,13 +219,12 @@ rule blast_contigs_within_samples:
     benchmark:
         "benchmark/03_READ_ASSEMBLY/blast_contigs_within_samples_{sample}.tsv"
     resources:
-        runtime="12:00:00",
+        runtime="00:10:00",
         mem_mb="10000",
-        partition="compute-hugemem",
     threads: config["virus_dereplication"]["blast_threads"]
     shell:
         """
-        # make a blast db from phage contigs
+        # make a blast db from contigs
         makeblastdb -in {input} -out {params.blastdb} -dbtype nucl
 
         # all against all blast
@@ -225,6 +234,8 @@ rule blast_contigs_within_samples:
 
 # download build mgv repo and HMM files
 rule build_mgv:
+    message:
+        "Cloning MGV repository to obtain dereplication script"
     output:
         blastani_script=resources + "mgv/ani_cluster/blastani.py",
         cluster_script=resources + "mgv/ani_cluster/cluster.py",
@@ -246,6 +257,8 @@ rule build_mgv:
 
 # keep only one species representative from each sample
 rule dereplicate_contigs_within_samples:
+    message:
+        "Dereplicating {sample} contigs using BLAST results"
     input:
         viruses=results
         + "03_READ_ASSEMBLY/02_contig_filters/{sample}/{sample}_contigs.fasta",
@@ -269,13 +282,15 @@ rule dereplicate_contigs_within_samples:
         # calculate ani and af from blast results
         python {input.blastani_script} -i {input.blast} -o {params.ani_tsv}
 
-        # cluster phage genomes based on 99% ani and 99% af
+        # cluster contigs based on 95% ANI and 85% AF
         python {input.cluster_script} --fna {input.viruses} --ani {params.ani_tsv} --out {output} --min_ani 95 --min_qcov 85 --min_tcov 0
         """
 
 
 # extract dereplicated contigs
 rule extract_dereplicated_contigs_within_samples:
+    message:
+        "Extracting {sample} representatives to retain only one of each replicate"
     input:
         clusters=results
         + "03_READ_ASSEMBLY/02_contig_filters/{sample}/{sample}_contigs_clusters.tsv",
@@ -300,6 +315,8 @@ rule extract_dereplicated_contigs_within_samples:
 # -----------------------------------------------------
 # run quast to determine the quality of assemblies
 rule quast:
+    message:
+        "Running QUAST on {sample} to determine assembly quality"
     input:
         results
         + "03_READ_ASSEMBLY/02_contig_filters/{sample}/{sample}_contigs_dereplicated.fasta",
@@ -318,7 +335,7 @@ rule quast:
         "benchmark/03_READ_ASSEMBLY/quast_{sample}.tsv"
     resources:
         runtime="00:10:00",
-        mem_mb="1000",
+        mem_mb="10000",
     shell:
         """
         # assembly analysis using quast
@@ -333,33 +350,10 @@ rule quast:
         """
 
 
-# combine quast outputs
-rule combine_quast_across_samples:
-    input:
-        expand(
-            results + "03_READ_ASSEMBLY/03_quast/{sample}/transposed_report.tsv",
-            sample=samples,
-        ),
-    output:
-        report(
-            results + "03_READ_ASSEMBLY/read_assembly_report.tsv",
-            caption="../report/03_read_assembly.rst",
-            category="Step 03: Read assembly",
-        ),
-    benchmark:
-        "benchmark/03_READ_ASSEMBLY/combine_quast_across_samples.tsv"
-    resources:
-        runtime="00:10:00",
-        mem_mb="1000",
-    shell:
-        """
-        # combine quast reports for all assemblies, only keeping the header from one file
-        awk 'FNR>1 || NR==1' {input} > {output}
-        """
-
-
 # generate report for assemblies
 rule quast_multiqc:
+    message:
+        "Generating MULTIQC report for QUAST analyses"
     input:
         expand(
             results + "03_READ_ASSEMBLY/03_quast/{sample}/transposed_report.tsv",
@@ -385,8 +379,10 @@ rule quast_multiqc:
         mem_mb="1000",
     shell:
         """
+        # Generate MULTIQC report from QUAST results
         multiqc {params.quast_dir} \
         -o {params.quast_dir} -f
 
+        # move report to final destination
         mv {params.quast_out} {output}
         """

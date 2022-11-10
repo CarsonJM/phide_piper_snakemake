@@ -1,5 +1,5 @@
 # -----------------------------------------------------
-# Virome enrichment (Only runs if data_type: "reads")
+# Virome enrichment Module (if input_data = "reads")
 # -----------------------------------------------------
 import pandas as pd
 
@@ -29,14 +29,15 @@ report: "../report/workflow.rst"
 # -----------------------------------------------------
 localrules:
     combine_viromeqc_across_samples,
-    virus_enrichment_analysis,
 
 
 # -----------------------------------------------------
 # 01 ViromeQC
 # -----------------------------------------------------
-# set up viromeqc
+# clone viromeqc and download database
 rule build_viromeqc:
+    message:
+        "Cloning ViromeQC and downloading the database"
     output:
         amphora=resources + "viromeqc/index/amphora_bacteria.dmnd",
         lsu=resources + "viromeqc/index/SILVA_132_LSURef_tax_silva.clean.1.bt2",
@@ -78,6 +79,8 @@ rule build_viromeqc:
 
 # determine virus enrichment with viromeqc
 rule viromeqc:
+    message:
+        "Running ViromeQC on {sample} to determine virus enrichment"
     input:
         amphora=resources + "viromeqc/index/amphora_bacteria.dmnd",
         lsu=resources + "viromeqc/index/SILVA_132_LSURef_tax_silva.clean.1.bt2",
@@ -95,9 +98,8 @@ rule viromeqc:
     benchmark:
         "benchmark/02_VIRUS_ENRICHMENT/viromeqc_{sample}.tsv"
     resources:
-        runtime="12:00:00",
+        runtime="04:00:00",
         mem_mb="10000",
-        partition="compute-hugemem",
     threads: config["virus_enrichment"]["viromeqc_threads"]
     shell:
         """
@@ -124,8 +126,10 @@ rule viromeqc:
         """
 
 
-# combine viromeqc results for all samples
+# combine viromeqc results across all samples
 rule combine_viromeqc_across_samples:
+    message:
+        "Combining ViromeQC results across samples"
     input:
         expand(
             results + "02_VIRUS_ENRICHMENT/01_viromeqc/{sample}_vqc.tsv",
@@ -150,6 +154,8 @@ rule combine_viromeqc_across_samples:
 # -----------------------------------------------------
 # analyze viromeqc results to visualize virus enrichment
 rule virus_enrichment_analysis:
+    message:
+        "Visualizing ViromeQC results for all samples"
     input:
         results + "02_VIRUS_ENRICHMENT/virus_enrichment_report.tsv",
     output:

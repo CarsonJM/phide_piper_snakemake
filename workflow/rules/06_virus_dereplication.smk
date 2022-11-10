@@ -1,5 +1,5 @@
 # -----------------------------------------------------
-# Virus Dereplication
+# Virus Dereplication Module (if input_data = "reads" or "contigs" or "vls")
 # -----------------------------------------------------
 import pandas as pd
 
@@ -35,6 +35,8 @@ localrules: combine_viruses
 # -----------------------------------------------------
 # combine viruses across samples
 rule combine_viruses:
+    message:
+        "Combining viruses, untrimmed viruses, and proteins across samples"
     input:
         viruses=expand(results + "05_VIRUS_QUALITY/03_quality_filter/{sample}/quality_filtered_viruses.fna", sample=samples),
         untrimmed_viruses=expand(results + "05_VIRUS_QUALITY/03_quality_filter/{sample}/untrimmed_quality_filtered_viruses.fna", sample=samples),
@@ -53,8 +55,13 @@ rule combine_viruses:
         mem_mb="1000",
     shell:
         """
+        # combine viruses
         cat {input.viruses} > {output.viruses}
+
+        # combine untrimmed viruses (for host identification)
         cat {input.untrimmed_viruses} > {output.untrimmed_viruses}
+
+        # combine proteins (for taxonomy)
         cat {input.proteins} > {output.proteins}
         """
 
@@ -64,6 +71,8 @@ rule combine_viruses:
 # -----------------------------------------------------
 # blast viral genomes against one another
 rule blast_viruses_v_viruses:
+    message:
+        "BLASTing viral genomes against one another for dereplication across samples"
     input:
         results
         + "06_VIRUS_DEREPLICATION/01_combine_viruses/combined_viruses.fasta",
@@ -86,7 +95,7 @@ rule blast_viruses_v_viruses:
     threads: config["virus_dereplication"]["blast_threads"]
     shell:
         """
-        # make a blast db from phage contigs
+        # make a blast db from viruses
         makeblastdb -in {input} -out {params.blastdb} -dbtype nucl
 
         # all against all blast
@@ -94,8 +103,10 @@ rule blast_viruses_v_viruses:
         """
 
 
-# dereplicate viral genomes
+# dereplicate viruses
 rule dereplicate_viruses:
+    message:
+        "Dereplicating viruses across samples at {params.min_ani} ANI and {params.min_qcov} AF"
     input:
         viruses=results
         + "06_VIRUS_DEREPLICATION/01_combine_viruses/combined_viruses.fasta",
@@ -123,13 +134,15 @@ rule dereplicate_viruses:
         # calculate ani and af from blast results
         python {params.blastani_script} -i {input.blast_tsv} -o {params.ani_tsv}
 
-        # cluster phage genomes based on 95% ani and 85% af
+        # cluster viruses 95% ani and 85% af (recommended)
         python {params.cluster_script} --fna {input.viruses} --ani {params.ani_tsv} --out {output} --min_ani {params.min_ani} --min_qcov {params.min_qcov} --min_tcov {params.min_tcov}
         """
 
 
 # extract replicate representatives
 rule extract_virus_replicate_representatives:
+    message:
+        "Extracting longest member of each replicate cluster as the representative"
     input:
         clusters=results
         + "06_VIRUS_DEREPLICATION/02_dereplicate_viruses/viruses_replicates.tsv",
@@ -162,6 +175,8 @@ rule extract_virus_replicate_representatives:
 # -----------------------------------------------------
 # plot virus dereplication results
 rule virus_dereplication_anlysis:
+    message:
+        "Visualizing the virus dereplication results"
     input:
         results
             + "06_VIRUS_DEREPLICATION/02_dereplicate_viruses/viruses_replicates.tsv",

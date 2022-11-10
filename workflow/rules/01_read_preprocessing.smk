@@ -1,5 +1,5 @@
 # -------------------------------------
-# Read Preprocessing Module
+# Read Preprocessing Module (if input_data = "reads")
 # -------------------------------------
 import pandas as pd
 
@@ -35,8 +35,10 @@ localrules:
 # -----------------------------------------------------
 # 00 Symlink inputs
 # -----------------------------------------------------
-# symlink input paths to new paths
-rule symlink_reads:
+# symlink input reads to new paths
+rule symlink_input_reads:
+    message:
+        "Symlinking {sample} input files to new location"
     input:
         R1=lambda wildcards: samples_df[
             (+samples_df["sample"] + "_" + samples_df["replicate"])
@@ -56,7 +58,7 @@ rule symlink_reads:
         mem_mb="1000",
     shell:
         """
-        # symlink input paths to renamed files
+        # symlink input reads to specified paths
         ln -s {input.R1} {output.R1}
         ln -s {input.R2} {output.R2}
         """
@@ -65,7 +67,7 @@ rule symlink_reads:
 # -----------------------------------------------------
 # 01 Merge Replicates
 # -----------------------------------------------------
-# identify replicates
+# identify replicate reads
 sample_replicate = samples_df[["sample", "replicate"]]
 sample_replicate_dictionary = sample_replicate.set_index("sample").to_dict()[
     "replicate"
@@ -73,7 +75,9 @@ sample_replicate_dictionary = sample_replicate.set_index("sample").to_dict()[
 
 
 # merge sample replicates into single file
-rule merge_replicates:
+rule merge_input_replicates:
+    message:
+        "Merging {sample} replicates into one file"
     input:
         R1=lambda wildcards: expand(
             results + "00_INPUT/{{sample}}_{replicate}.R1.fastq.gz",
@@ -89,11 +93,11 @@ rule merge_replicates:
     benchmark:
         "benchmark/01_READ_PREPROCESSING/merge_replicates_{sample}.tsv"
     resources:
-        runtime="00:00:10",
+        runtime="00:01:00",
         mem_mb="1000",
     shell:
         """
-        # symlink input paths to renamed files
+        # symlink replicates into one combined file
         ln -s {input.R1} {output.R1}
         ln -s {input.R2} {output.R2}
         """
@@ -104,6 +108,8 @@ rule merge_replicates:
 # -----------------------------------------------------
 # trim and deduplicate reads with fastp
 rule fastp:
+    message:
+        "Trimming and deduplicating {sample} with fastp"
     input:
         R1=results + "01_READ_PREPROCESSING/01_merge_replicates/{sample}.R1.fastq.gz",
         R2=results + "01_READ_PREPROCESSING/01_merge_replicates/{sample}.R2.fastq.gz",
@@ -121,11 +127,12 @@ rule fastp:
     benchmark:
         "benchmark/01_READ_PREPROCESSING/fastp_{sample}.tsv"
     resources:
-        runtime="04:00:00",
+        runtime="00:15:00",
         mem_mb="10000",
     threads: config["read_preprocessing"]["fastp_threads"]
     shell:
         """
+        # run fastp to trim and remove 
         fastp --in1 {input.R1} \
         --in2 {input.R2} \
         --out1 {output.R1} \
@@ -139,6 +146,8 @@ rule fastp:
 
 # generate report for trimming and deduplication
 rule fastp_multiqc:
+    message:
+        "Generating a MULTIQC report using fastp results"
     input:
         expand(
             results + "01_READ_PREPROCESSING/02_fastp/{sample}_fastp.json",
@@ -175,6 +184,8 @@ rule fastp_multiqc:
 # -----------------------------------------------------
 # download and build kneaddata human bowtie2 database
 rule download_kneaddata_database:
+    message:
+        "Downloading human genome bowtie2 database for KneadData"
     output:
         resources + "kneaddata/hg37dec_v0.1.1.bt2",
         resources + "kneaddata/hg37dec_v0.1.2.bt2",
@@ -202,6 +213,8 @@ rule download_kneaddata_database:
 
 # Remove human reads with kneaddata
 rule kneaddata:
+    message:
+        "Running KneadData on {sample} to remove human reads"
     input:
         resources + "kneaddata/hg37dec_v0.1.1.bt2",
         resources + "kneaddata/hg37dec_v0.1.2.bt2",
@@ -229,9 +242,8 @@ rule kneaddata:
     benchmark:
         "benchmark/01_READ_PREPROCESSING/kneaddata_{sample}.tsv"
     resources:
-        runtime="12:00:00",
+        runtime="01:00:00",
         mem_mb="10000",
-        partition="compute-hugemem",
     threads: config["read_preprocessing"]["kneaddata_threads"]
     shell:
         """
@@ -253,8 +265,10 @@ rule kneaddata:
         """
 
 
-# Count reads after host removal
+# Count reads before and after host removal
 rule kneaddata_read_counts:
+    message:
+        "Generating read counts before and after human removal"
     input:
         expand(
             results + "01_READ_PREPROCESSING/03_kneaddata/{sample}.log", sample=samples
@@ -286,6 +300,8 @@ rule kneaddata_read_counts:
 # -----------------------------------------------------
 # generate report for human read removal
 rule kneaddata_analysis:
+    message:
+        "Visualizing read counts before and after human read removal"
     input:
         results + "01_READ_PREPROCESSING/kneaddata_read_counts.tsv",
     output:

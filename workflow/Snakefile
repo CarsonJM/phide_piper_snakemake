@@ -78,7 +78,9 @@ def get_final_output(wildcards):
     final_output.append(
         results + "07_VIRUS_DIVERSITY/virus_diversity_genus_figure.html",
     )
-    final_output.append(results + "07_VIRUS_DIVERSITY/virus_phylogeny.png")
+
+    if config["include_phylogeny_module"]:
+        final_output.append(results + "07_VIRUS_DIVERSITY/virus_phylogeny.png")
 
     if config["include_host_module"]:
         final_output.append(results + "08_VIRUS_HOST/virus_host_taxonomy.csv")

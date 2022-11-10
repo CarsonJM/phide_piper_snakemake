@@ -13,7 +13,10 @@ for line in clusters:
 # extract representative sequences from fasta file
 votu_rep_sequences = []
 for record in SeqIO.parse(str(snakemake.input.viruses), "fasta"):
-    votu_rep_sequences.append(record)
+    if record.id in votu_reps:
+        votu_rep_sequences.append(record)
+    else:
+        continue
 
 # save all sequences to specified file
 SeqIO.write(votu_rep_sequences, str(snakemake.output), "fasta")

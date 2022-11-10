@@ -1,5 +1,5 @@
 # -----------------------------------------------------
-# Virus host
+# Virus Host Module (if include_host_module = True)
 # -----------------------------------------------------
 import pandas as pd
 
@@ -32,7 +32,10 @@ report: "report/workflow.rst"
 # -----------------------------------------------------
 # 00 Determine inputs for module
 # -----------------------------------------------------
+# if input_data = "viruses" symlink input viruses
 rule symlink_preprocessed_viruses:
+    message:
+        "Symlinking preprocessed viruses to new paths"
     input:
         lambda wildcards: samples_df[(samples_df["sample"]) == wildcards.sample][
             "viruses"
@@ -46,7 +49,7 @@ rule symlink_preprocessed_viruses:
         mem_mb="1000",
     shell:
         """
-        # symlink input paths to renamed files
+        # symlink input viruses to renamed files
         ln -s {input} {output}
         """
 
@@ -67,7 +70,10 @@ elif config["input_data"] == "viruses":
 # -----------------------------------------------------
 # 01 iPHoP
 # -----------------------------------------------------
+# download iphop database
 rule download_iphop:
+    message:
+        "Downloading iPHoP database"
     output:
         resources + "iphop/iphop_download_complete",
     params:
@@ -88,11 +94,15 @@ rule download_iphop:
         --no_prompt \
         --split 
 
+        # create file indicating download is complete
         touch {output}
         """
 
 
+# verify that iphop download is correct
 rule verify_iphop_db:
+    message:
+        "Verifying iPHoP download"
     input:
         resources + "iphop/iphop_download_complete",
     output:
@@ -110,15 +120,19 @@ rule verify_iphop_db:
         mem_mb="10000",
     shell:
         """
-        # download iphop test database
+        # verify iphop download
         iphop download --db_dir {params.iphop_dir} \
         --full_verify
 
+        # create file to indicate that download is correct
         touch {output}
         """
 
 
+# run iphop to predict hosts for viral sequences
 rule iphop:
+    message:
+        "Predicting hosts for viral sequences"
     input:
         viruses=viruses,
         iphop=resources + "iphop/iphop_download_verified",
@@ -159,8 +173,10 @@ rule iphop:
 # -----------------------------------------------------
 # 02 PHIST
 # -----------------------------------------------------
-# build phist
+# clone phist repository
 rule build_phist:
+    message:
+        "Cloning PHIST repository"
     output:
         resources + "phist/out/predictions.csv",
     params:
@@ -188,8 +204,10 @@ rule build_phist:
         """
 
 
-# organize viruses to by input into phist
+# organize viruses for input into phist
 rule split_viruses_for_phist:
+    message:
+        "Splitting viruses into single files for input into PHIST"
     input:
         viruses,
     output:
@@ -207,8 +225,10 @@ rule split_viruses_for_phist:
         "../scripts/08_split_viruses_for_phist.py"
 
 
-# run phist using uhgg
+# run phist
 rule phist:
+    message:
+        "Predicting hosts for viruses using PHIST"
     input:
         phist_build=resources + "phist/out/predictions.csv",
         virus_fastas=results + "08_VIRUS_HOST/02_phist/virus_fastas/viruses_prepared",
@@ -231,7 +251,7 @@ rule phist:
         partition="compute-hugemem",
     shell:
         """
-        # run phist using uhgg
+        # run phist
         python3 {params.phist_script} {params.virus_dir} {params.bacteria_db_dir} {params.out_dir} \
         -t {threads}
         """
@@ -239,6 +259,8 @@ rule phist:
 
 # determine host taxonomy from refseq phist
 rule phist_host_taxonomy:
+    message:
+        "Predicting host taxonomy using all host genomes with > {params.min_common_kmers} common kmers and LCA where total kmers have > {params.min_agreement}% agreement"
     input:
         bacteria_db_metadata=config["bacteria_db_meta"],
         phist=results + "08_VIRUS_HOST/02_phist/common_kmers.csv",
@@ -262,7 +284,10 @@ rule phist_host_taxonomy:
 # -----------------------------------------------------
 # Host analysis
 # -----------------------------------------------------
+# analyze virus host outputs
 rule virus_host_analysis:
+    message:
+        "Visualizing iPHoP and PHIST taxonomy outputs"
     input:
         iphop=results
         + "08_VIRUS_HOST/01_iphop/Host_prediction_to_genus_m"

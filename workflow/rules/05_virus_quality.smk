@@ -1,5 +1,5 @@
 # -----------------------------------------------------
-# Virus quality (will always run)
+# Virus Quality Module (if input_data = "reads" or "contigs" or "vls")
 # -----------------------------------------------------
 import pandas as pd
 
@@ -30,41 +30,42 @@ report: "../report/workflow.rst"
 localrules:
     symlink_viruses,
     combine_virus_quality_reports,
-    virus_quality_analysis,
 
 
 # -----------------------------------------------------
 # 00 Determine inputs for module
 # -----------------------------------------------------
-# symlink input viruses
-rule symlink_viruses:
+# symlink input vls
+rule symlink_vls:
+    message:
+        "Symlinking input virus-like sequences from {sample} to new location"
     input:
         lambda wildcards: samples_df[(samples_df["sample"]) == wildcards.sample][
-            "viruses"
+            "vls"
         ].iloc[0],
     output:
-        results + "00_INPUT/{sample}_viruses.fasta",
+        results + "00_INPUT/{sample}_vls.fasta",
     benchmark:
-        "benchmark/05_VIRUS_QUALITY/symlink_viruses_{sample}.tsv"
+        "benchmark/05_VIRUS_QUALITY/symlink_vls_{sample}.tsv"
     resources:
         runtime="00:00:10",
         mem_mb="1000",
     shell:
         """
-        # symlink input paths to renamed files
+        # symlink input vls to renamed files
         ln -s {input} {output}
         """
 
 
 # if reads or contigs are input, use output from 04_virus_identification
 if config["input_data"] == "reads" or config["input_data"] == "contigs":
-    viruses = (
+    vls = (
         results
         + "04_VIRUS_IDENTIFICATION/08_combine_outputs/{sample}/combined_viral_contigs.fasta"
     )
-# if input is viruses, use symlinked viruses
-elif config["input_data"] == "viruses":
-    viruses = results + "00_INPUT/{sample}_viruses.fasta"
+# if input is vls, use symlinked vls
+elif config["input_data"] == "vls":
+    vls = results + "00_INPUT/{sample}_vls.fasta"
 
 
 # -----------------------------------------------------
@@ -72,6 +73,8 @@ elif config["input_data"] == "viruses":
 # -----------------------------------------------------
 # download checkv database
 rule download_checkv:
+    message:
+        "Downloading CheckV database"
     output:
         resources + "checkv/checkv-db-v1.4/genome_db/checkv_reps.dmnd",
     params:
@@ -94,9 +97,11 @@ rule download_checkv:
 
 # run checkv on viral contigs to trim proviruses
 rule checkv_trim:
+    message:
+        "Trimming host regions from {sample} viruses"
     input:
         checkv_db=resources + "checkv/checkv-db-v1.4/genome_db/checkv_reps.dmnd",
-        virus_contigs=viruses,
+        virus_contigs=vls,
     output:
         checkv_proviruses=results
         + "05_VIRUS_QUALITY/01_checkv_trim/{sample}/proviruses.fna",
@@ -111,27 +116,28 @@ rule checkv_trim:
     benchmark:
         "benchmark/05_VIRUS_QUALITY/checkv_trim_{sample}.tsv"
     resources:
-        runtime="12:00:00",
+        runtime="04:00:00",
         mem_mb="10000",
-        partition="compute-hugemem",
     threads: config["virus_quality"]["checkv_threads"]
     shell:
         """
-        # run checkv to determine virus quality
+        # run checkv to trim proviruses
         checkv contamination {input.virus_contigs} {params.checkv_dir} \
         -d {params.checkv_db} \
         -t {threads}
         """
 
 
-# combine trimmed proviruses and input viruses
-rule combine_trimmed_viruses:
+# combine trimmed proviruses and input vls
+rule combine_trimmed_vls:
+    message:
+        "Renaming trimmed viruses and combining with untrimmed viruses from {sample}"
     input:
         checkv_proviruses=results
         + "05_VIRUS_QUALITY/01_checkv_trim/{sample}/proviruses.fna",
         checkv_viruses=results + "05_VIRUS_QUALITY/01_checkv_trim/{sample}/viruses.fna",
     output:
-        results + "05_VIRUS_QUALITY/01_checkv_trim/{sample}/trimmed_viruses.fna",
+        results + "05_VIRUS_QUALITY/01_checkv_trim/{sample}/trimmed_vls.fna",
     conda:
         "../envs/jupyter.yml"
     benchmark:
@@ -143,14 +149,12 @@ rule combine_trimmed_viruses:
         "../scripts/05_combine_trimmed_viruses.py"
 
 
-# if virome input, do not use trimmed viruses as proviruses will be removed
+# if remove_proviruses = True, do not use trimmed viruses as proviruses will be removed
 if config["virus_quality"]["remove_proviruses"]:
-    checkv_input = viruses
-# if bulk metagenome, use trimmed viruses to quality filter proviruses
+    checkv_input = vls
+# if remove_proviruses = False, use trimmed viruses to quality filter proviruses
 else:
-    checkv_input = (
-        results + "05_VIRUS_QUALITY/01_checkv_trim/{sample}/trimmed_viruses.fna"
-    )
+    checkv_input = results + "05_VIRUS_QUALITY/01_checkv_trim/{sample}/trimmed_vls.fna"
 
 
 # -----------------------------------------------------
@@ -158,6 +162,8 @@ else:
 # -----------------------------------------------------
 # determine virus quality using CheckV
 rule checkv:
+    message:
+        "Running CheckV to determine virus quality and contamination for {sample}"
     input:
         checkv_db=resources + "checkv/checkv-db-v1.4/genome_db/checkv_reps.dmnd",
         virus_contigs=checkv_input,
@@ -176,9 +182,8 @@ rule checkv:
     benchmark:
         "benchmark/05_VIRUS_QUALITY/checkv_{sample}.tsv"
     resources:
-        runtime="12:00:00",
+        runtime="04:00:00",
         mem_mb="10000",
-        partition="compute-hugemem",
     threads: config["virus_quality"]["checkv_threads"]
     shell:
         """
@@ -186,6 +191,12 @@ rule checkv:
         checkv end_to_end {input.virus_contigs} {params.checkv_dir} \
         -d {params.checkv_db} \
         -t {threads}
+
+        # add sample column to each checkv output
+        s={wildcards.sample}
+        sed -i "s/$/\t$s/" {output.checkv_results}
+        sample="sample"
+        sed -i "1s/$s/$sample/" {output.checkv_results}
         """
 
 
@@ -194,6 +205,8 @@ rule checkv:
 # -----------------------------------------------------
 # remove low quality virus (and retain high-quality untrimmed counterparts)
 rule quality_filter_viruses:
+    message:
+        "Filtering viruses in {sample} not meeting config.yaml criteria"
     input:
         checkv_results=results
         + "05_VIRUS_QUALITY/02_checkv/{sample}/quality_summary.tsv",
@@ -227,7 +240,9 @@ rule quality_filter_viruses:
 # Analyze virus quality
 # -----------------------------------------------------
 # combine checkv reports across samples
-rule combine_virus_quality_reports:
+rule combine_checkv_reports:
+    message:
+        "Combining CheckV reports across samples"
     input:
         expand(
             results + "05_VIRUS_QUALITY/02_checkv/{sample}/quality_summary.tsv",
@@ -236,7 +251,7 @@ rule combine_virus_quality_reports:
     output:
         results + "05_VIRUS_QUALITY/virus_quality_report.tsv",
     benchmark:
-        "benchmark/05_VIRUS_QUALITY/combine_virus_quality_reports.tsv"
+        "benchmark/05_VIRUS_QUALITY/combine_checkv_reports.tsv"
     resources:
         runtime="00:10:00",
         mem_mb="1000",
@@ -249,6 +264,8 @@ rule combine_virus_quality_reports:
 
 # analyze checkv results to visualize genome qualities and provirus prevalence
 rule virus_quality_analysis:
+    message:
+        "Visualizing virus quality for complete dataset"
     input:
         results + "05_VIRUS_QUALITY/virus_quality_report.tsv",
     output:

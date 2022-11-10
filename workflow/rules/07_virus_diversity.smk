@@ -1,5 +1,5 @@
 # -----------------------------------------------------
-# Virus clustering
+# Virus Diversity Module (if input_data = "reads" or "contigs" or "vls")
 # -----------------------------------------------------
 import pandas as pd
 
@@ -34,7 +34,9 @@ localrules:
 # 01 Cluster viruses into vOTUs
 # -----------------------------------------------------
 # blast dereplicated viruses against one another
-rule blast_viruses_cluster:
+rule blast_derep_viruses_v_derep_viruses:
+    message:
+        "BLASTing all dereplicated viruses against one another for vOTU clustering"
     input:
         results
         + "06_VIRUS_DEREPLICATION/02_dereplicate_viruses/dereplicated_viruses.fna",
@@ -55,16 +57,18 @@ rule blast_viruses_cluster:
     threads: config["virus_diversity"]["blast_threads"]
     shell:
         """
-        # make a blast db from phage contigs
+        # make a blast db from dereplicated viruses
         makeblastdb -in {input} -out {params.blastdb} -dbtype nucl
 
-        # all against all blast
+        # blast dereplicated viruses against one another
         blastn -query {input} -db {params.blastdb} -out {output} -num_threads {threads} -outfmt '6 std qlen slen' -max_target_seqs 25000 -perc_identity 90
         """
 
 
 # cluster viruses using blast results
 rule cluster_viruses:
+    message:
+        "Clustering viruses into vOTUs based on {params.min_ani} ANI and {params.qcov} AF"
     input:
         fasta=results
         + "06_VIRUS_DEREPLICATION/02_dereplicate_viruses/dereplicated_viruses.fna",
@@ -90,13 +94,15 @@ rule cluster_viruses:
         # calculate ani and af from blast results
         python {params.blastani_script} -i {input.blast} -o {params.ani_tsv}
 
-        # cluster phage genomes based on 99% ani and 99% af
+        # cluster phage genomes based on 95% ani and 85% af
         python {params.cluster_script} --fna {input.fasta} --ani {params.ani_tsv} --out {output} --min_ani {params.min_ani} --min_qcov {params.min_qcov} --min_tcov {params.min_tcov}
         """
 
 
 # extract votu representatives
 rule extract_votu_reps:
+    message:
+        "Extracting longest member of each vOTU as representative"
     input:
         clusters=results + "07_VIRUS_DIVERSITY/01_votu_clusters/votu_clusters.tsv",
         viruses=results
@@ -123,6 +129,8 @@ rule extract_votu_reps:
 # -----------------------------------------------------
 # create gene2genome file for input to vcontact2
 rule gene2genome:
+    message:
+        "Creating a file that links genes to genomes for vContact2"
     input:
         results + "07_VIRUS_DIVERSITY/01_votu_clusters/votu_representatives_proteins.faa",
     output:
@@ -136,6 +144,7 @@ rule gene2genome:
         mem_mb="10000",
     shell:
         """
+        # create gene2genome file for vcontact2
         vcontact2_gene2genome \
         --proteins {input} \
         --output {output} \
@@ -145,6 +154,8 @@ rule gene2genome:
 
 # run vcontact2 to determine the number of genus-level clusters
 rule vcontact2:
+    message:
+        "Run vContact2 to group viruses into approximately genus-level clusters"
     input:
         proteins=results + "07_VIRUS_DIVERSITY/01_votu_clusters/votu_representatives_proteins.faa",
         g2g=results + "07_VIRUS_DIVERSITY/02_vcontact2/vcontact2_gene2genome.csv",
@@ -164,13 +175,14 @@ rule vcontact2:
     threads: config["virus_diversity"]["vcontact2_threads"]
     shell:
         """
+        # clear output directory
         rm -rf {params.out_dir}
 
+        # run vcontact2
         vcontact2 \
         --raw-proteins {input.proteins} \
         --rel-mode 'Diamond' \
         --proteins-fp {input.g2g} \
-        --db 'None' \
         --pcs-mode MCL \
         --vcs-mode ClusterONE \
         --c1-bin /opt/conda/bin/cluster_one-1.0.jar \
@@ -180,10 +192,12 @@ rule vcontact2:
 
 
 # -----------------------------------------------------
-# 03 Caudoviricetes phylogeny
+# 03 Caudoviricetes phylogeny (if include_phylogeny_module = True)
 # -----------------------------------------------------
 # download vogdb hmms
 rule prepare_vogdb_hmms:
+    message:
+        "Downloading VOGdb HMMs"
     output:
         resources + "ccp77/vogdb_downloaded",
     params:
@@ -208,6 +222,8 @@ rule prepare_vogdb_hmms:
 
 # extract ccp77 hmms from vogdb dataset
 rule extract_ccp77_hmms:
+    message:
+        "Extracting 77 CCP HMMs specified in https://doi.org/10.1038/s41564-019-0448-z"
     input:
         resources + "ccp77/vogdb_downloaded",
         ccp77="workflow/resources/CCP77",
@@ -230,6 +246,8 @@ rule extract_ccp77_hmms:
 
 # hmmsearch ccp77 hmms
 rule ccp77_hmmsearch:
+    message:
+        "Searching viral genes against CCP77 HMMs to identify Caudoviricetes marker genes"
     input:
         resources + "ccp77/ccp77/VOG21972.hmm",
         viruses=results + "07_VIRUS_DIVERSITY/01_votu_clusters/votu_representatives_proteins.faa",
@@ -254,7 +272,7 @@ rule ccp77_hmmsearch:
         # combine ccp77 hmms
         cat {params.ccp77_dir}*.hmm > {output.ccp77_hmms}
 
-        # hmmsearch
+        # hmmsearch ccp77
         hmmsearch --noali \
         --cpu {threads} \
         --tblout {output.table} \
@@ -265,6 +283,8 @@ rule ccp77_hmmsearch:
 
 # extract the top hits from the hmmsearch
 rule extract_top_ccp77_hits:
+    message:
+        "Extracting top CCP77 HMM hits for each genome"
     input:
         viruses=results + "07_VIRUS_DIVERSITY/01_votu_clusters/votu_representatives_proteins.faa",
         hmmsearch=results + "07_VIRUS_DIVERSITY/03_caudoviricetes_phylogeny/01_hmmsearch/ccp77.out",
@@ -286,6 +306,8 @@ rule extract_top_ccp77_hits:
 
 # align top ccp77 hmm hits
 rule ccp77_hmmalign:
+    message:
+        "Aligning all CCP77 hits for all viral genomes"
     input:
         results + "07_VIRUS_DIVERSITY/03_caudoviricetes_phylogeny/top_hits_extracted",
     output:
@@ -312,6 +334,7 @@ rule ccp77_hmmalign:
         # make output dir
         mkdir {params.out_dir}
 
+        # align hits to CCP77 for each viral genome
         for file in *.faa
         do
         hmm={params.hmm_dir}"${{file%%.faa*}}".hmm
@@ -325,6 +348,8 @@ rule ccp77_hmmalign:
 
 # trim multiple sequence alignment
 rule trim_msa:
+    message:
+        "Trimming MSA using TrimAL"
     input:
         results + "07_VIRUS_DIVERSITY/03_caudoviricetes_phylogeny/top_hits_aligned",
     output:
@@ -348,6 +373,7 @@ rule trim_msa:
         cd {params.in_dir}
         mkdir {params.out_dir}
 
+        # trim msa using trimal
         for file in *.aln
         do
         trimal -gt 0.5 -in $file -out {params.out_dir}$file
@@ -359,6 +385,8 @@ rule trim_msa:
 
 # concatenate and filter msa
 rule concatenate_and_filter_msa:
+    message:
+        "Concatenating MSA and filtering based on a minimum of {params.min_hits} hits per genome and max of {params.max_percent_gaps} percent gaps"
     input:
         results + "07_VIRUS_DIVERSITY/03_caudoviricetes_phylogeny/msa_trimmed",
         viruses=results + "07_VIRUS_DIVERSITY/01_votu_clusters/votu_representatives_proteins.faa",
@@ -382,6 +410,8 @@ rule concatenate_and_filter_msa:
 
 # create phylogenetic tree using fasttree
 rule fasttree:
+    message:
+        "Creating phylogenetic tree using fasttree"
     input:
         results + "07_VIRUS_DIVERSITY/03_caudoviricetes_phylogeny/05_concatenated_msa/concat.faa",
     output:
@@ -404,6 +434,8 @@ rule fasttree:
 
 # visualize virus phylogeny tree
 rule virus_phylogeny_analysis:
+    message:
+        "Visualizing phylogenetic tree using biopython"
     input:
         results + "07_VIRUS_DIVERSITY/03_caudoviricetes_phylogeny/06_fasttree/fasttree",
     output:
@@ -424,6 +456,8 @@ rule virus_phylogeny_analysis:
 # -----------------------------------------------------
 # analyze diversity at votu level
 rule virus_diversity_votu_anlysis:
+    message:
+        "Visualizing vOTU diversity"
     input:
         results + "07_VIRUS_DIVERSITY/01_votu_clusters/votu_clusters.tsv",
     output:
@@ -445,6 +479,8 @@ rule virus_diversity_votu_anlysis:
 
 # analyze diversity at genus level via a network
 rule virus_diversity_genus_anlysis:
+    message:
+        "Visualizing genus-level diversity and networks"
     input:
         network=results + "07_VIRUS_DIVERSITY/02_vcontact2/output/c1.ntw",
         clusters=results + "07_VIRUS_DIVERSITY/02_vcontact2/output/viral_cluster_overview.csv",

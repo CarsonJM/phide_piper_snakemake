@@ -1,5 +1,5 @@
 # -----------------------------------------------------
-# Virus identification (will always run)
+# Virus Identification Module (If input_data = "reads" or "contigs")
 # -----------------------------------------------------
 import pandas as pd
 
@@ -31,7 +31,6 @@ localrules:
     symlink_contigs,
     symlink_preprocessed_reads,
     combine_reports_across_samples,
-    virus_identification_analysis,
     merge_reports_within_samples,
     merge_viral_contigs_within_samples,
 
@@ -54,13 +53,13 @@ rule symlink_contigs:
         mem_mb="1000",
     shell:
         """
-        # symlink input paths to renamed files
+        # symlink input contigs to renamed files
         ln -s {input} {output}
         """
 
 
-# filter contigs based on contig length
-rule length_filter_symlinked_contigs:
+# filter symlinked contigs based on contig length
+rule filter_symlinked_contigs:
     input:
         results + "00_INPUT/{sample}_contigs.fasta",
     output:
@@ -70,7 +69,7 @@ rule length_filter_symlinked_contigs:
     conda:
         "../envs/jupyter.yml"
     benchmark:
-        "benchmark/04_VIRUS_IDENTIFICATION/length_filter_symlinked_contigs_{sample}.tsv"
+        "benchmark/04_VIRUS_IDENTIFICATION/filter_symlinked_contigs_{sample}.tsv"
     resources:
         runtime="00:10:00",
         mem_mb="1000",
@@ -106,7 +105,7 @@ rule symlink_preprocessed_reads:
         mem_mb="1000",
     shell:
         """
-        # symlink input paths to renamed files
+        # symlink input reads to renamed files
         ln -s {input.R1} {output.R1}
         ln -s {input.R2} {output.R2}
         """
@@ -116,7 +115,7 @@ rule symlink_preprocessed_reads:
 if config["input_data"] == "reads":
     R1 = results + "01_READ_PREPROCESSING/03_kneaddata/{sample}_paired_1.fastq.gz"
     R2 = results + "01_READ_PREPROCESSING/03_kneaddata/{sample}_paired_2.fastq.gz"
-# if contigs, vls, or viruses input then symlink reads for external hits/abundances
+# if contigs, vls, or viruses are input then symlink reads for external hits/abundances
 else:
     R1 = results + "00_INPUT/{sample}_proprocessed_1.fastq.gz"
     R2 = results + "00_INPUT/{sample}_preprocessed_2.fastq.gz"
@@ -125,8 +124,10 @@ else:
 # -----------------------------------------------------
 # 01 MGV (& VirFinder)
 # -----------------------------------------------------
-# download build mgv repo and HMM files
+# download mgv repo and HMM files
 rule download_mgv_databases:
+    message:
+        "Downloading MGV HMM databases"
     output:
         imgvr_hmm=resources + "mgv/viral_detection_pipeline/input/imgvr.hmm",
         pfam_hmm=resources + "mgv/viral_detection_pipeline/input/pfam.hmm",
@@ -141,9 +142,11 @@ rule download_mgv_databases:
         mem_mb="1000",
     shell:
         """
-        # download mgv hmm databases
+        # download MGV HMM databases
         wget -O {params.imgvr_hmm} https://img.jgi.doe.gov//docs/final_list.hmms.gz
         wget -O {params.pfam_hmm} ftp://ftp.ebi.ac.uk/pub/databases/Pfam/releases/Pfam31.0/Pfam-A.hmm.gz
+
+        # unzip MGV HMM databases
         gunzip {params.imgvr_hmm}
         gunzip {params.pfam_hmm}
         """
@@ -151,6 +154,8 @@ rule download_mgv_databases:
 
 # use prodigal to identify ORFs
 rule mgv_prodigal:
+    message:
+        "Predicting {sample} ORFs using Prodigal"
     input:
         assembly,
     output:
@@ -168,7 +173,7 @@ rule mgv_prodigal:
         mem_mb="10000",
     shell:
         """
-        # call viral genes
+        # predict ope reading frames
         prodigal -i {input} \
         -p meta \
         -a {output.mgv_faa} \
@@ -181,6 +186,8 @@ rule mgv_prodigal:
 
 # use hmmsearch to find imgvr HMM hits
 rule mgv_imgvr_hmmsearch:
+    message:
+        "Searching IMGVR HMMs for {sample} hits"
     input:
         mgv_faa=results + "04_VIRUS_IDENTIFICATION/01_mgv/input/{sample}.faa",
         imgvr_hmm=resources + "mgv/viral_detection_pipeline/input/imgvr.hmm",
@@ -199,7 +206,7 @@ rule mgv_imgvr_hmmsearch:
     threads: config["virus_identification"]["mgv_threads"]
     shell:
         """
-        # identify imgvr viral genes using hmm search
+        # identify imgvr hits using hmm search
         hmmsearch \
         -Z 1 \
         --cpu {threads} \
@@ -211,6 +218,8 @@ rule mgv_imgvr_hmmsearch:
 
 # use hmmsearch to find pfam HMM hits
 rule mgv_pfam_hmmsearch:
+    message:
+        "Searching PFAM HMMs for {sample} hits"
     input:
         mgv_faa=results + "04_VIRUS_IDENTIFICATION/01_mgv/input/{sample}.faa",
         pfam_hmm=resources + "mgv/viral_detection_pipeline/input/pfam.hmm",
@@ -229,7 +238,7 @@ rule mgv_pfam_hmmsearch:
     threads: config["virus_identification"]["mgv_threads"]
     shell:
         """
-        # identify imgvr viral genes using hmmsearch
+        # identify pfam hits using hmmsearch
         hmmsearch \
         -Z 1 \
         --cpu {threads} \
@@ -241,6 +250,8 @@ rule mgv_pfam_hmmsearch:
 
 # use mgv count_hmm_hits.py script to determine bacterial/viral HMM hits
 rule mgv_count_hmm_hits:
+    message:
+        "Counting HMM hits for {sample}"
     input:
         contigs=assembly,
         mgv_faa=results + "04_VIRUS_IDENTIFICATION/01_mgv/input/{sample}.faa",
@@ -273,6 +284,8 @@ rule mgv_count_hmm_hits:
 
 # run virfinder to identify viral kmers
 rule mgv_virfinder:
+    message:
+        "Running VirFinder on {sample} contigs"
     input:
         imgvr_hmm=resources + "mgv/viral_detection_pipeline/input/imgvr.hmm",
         pfam_hmm=resources + "mgv/viral_detection_pipeline/input/pfam.hmm",
@@ -306,6 +319,8 @@ rule mgv_virfinder:
 
 # calculate the strand switch rate using mgv strand_switch.py script
 rule mgv_strand_switch:
+    message:
+        "Calculating strand switch rate for {sample} contigs"
     input:
         imgvr_hmm=resources + "mgv/viral_detection_pipeline/input/imgvr.hmm",
         pfam_hmm=resources + "mgv/viral_detection_pipeline/input/pfam.hmm",
@@ -322,8 +337,8 @@ rule mgv_strand_switch:
     benchmark:
         "benchmark/04_VIRUS_IDENTIFICATION/mgv_strand_switch_{sample}.tsv"
     resources:
-        runtime="01:00:00",
-        mem_mb="10000",
+        runtime="00:10:00",
+        mem_mb="1000",
     shell:
         """
         # change to mgv directory so scripts work correctly
@@ -337,6 +352,8 @@ rule mgv_strand_switch:
 
 # create master table using mgv master_table.py script
 rule mgv_master_table:
+    message:
+        "Creating MGV master table for {sample} analysis"
     input:
         mgv_hmm_hits=results
         + "04_VIRUS_IDENTIFICATION/01_mgv/output/{sample}_hmm_hits.tsv",
@@ -365,8 +382,10 @@ rule mgv_master_table:
         """
 
 
-# predict viral contigs using HMM hits, strand switch rate, and virfinder results (mgv viral_classify.py script)
+# predict viral contigs using HMM hits, strand switch rate, and virfinder results
 rule mgv_viral_classify:
+    message:
+        "Classifying {sample} to identify viral contigs"
     input:
         mgv_fna=results + "04_VIRUS_IDENTIFICATION/01_mgv/input/{sample}.fna",
         mgv_master_table=results
@@ -403,6 +422,8 @@ rule mgv_viral_classify:
 # -----------------------------------------------------
 # download virsorter db
 rule download_virsorter:
+    message:
+        "Downloading VirSorter database"
     output:
         resources + "virsorter/virsorter-data-v2.tar.gz",
     params:
@@ -425,6 +446,8 @@ rule download_virsorter:
 
 # extract virsorter db
 rule extract_virsorter_db:
+    message:
+        "Extracting VirSorter database"
     input:
         resources + "virsorter/virsorter-data-v2.tar.gz",
     output:
@@ -445,6 +468,8 @@ rule extract_virsorter_db:
 
 # identify viral contigs using virsorter
 rule virsorter:
+    message:
+        "Running VirSorter on {sample} to identify viral contigs"
     input:
         contigs=assembly,
         vsrm=resources + "virsorter/virsorter-data/VirSorter_Readme.txt",
@@ -470,6 +495,7 @@ rule virsorter:
     threads: config["virus_identification"]["virsorter_threads"]
     shell:
         """
+        # clear output directory if present
         rm -rf {params.output_dir}
 
         # run virsorter to identify viral contigs
@@ -487,6 +513,8 @@ rule virsorter:
 # -----------------------------------------------------
 # download virsorter2 db
 rule download_virsorter2:
+    message:
+        "Downloading VirSorter2 database"
     output:
         resources + "virsorter2/Done_all_setup",
     params:
@@ -512,6 +540,8 @@ rule download_virsorter2:
 
 # run virsorter2 to identifiy viral contigs
 rule virsorter2:
+    message:
+        "Running VirSorter2 for {sample} to identify viral contigs"
     input:
         contigs=assembly,
         vs2_db=resources + "virsorter2/Done_all_setup",
@@ -535,6 +565,7 @@ rule virsorter2:
     threads: config["virus_identification"]["virsorter2_threads"]
     shell:
         """
+        # clear output directory
         rm -rf {params.vs2_dir}
 
         # run virsorter2
@@ -555,6 +586,8 @@ rule virsorter2:
 # -----------------------------------------------------
 # download vibrant database
 rule download_vibrant:
+    message:
+        "Downloading VIBRANT database"
     output:
         resources + "vibrant/db/databases/VIBRANT_setup.log",
     params:
@@ -568,6 +601,7 @@ rule download_vibrant:
         mem_mb="1000",
     shell:
         """
+        # clear output directory
         rm -rf {params.vb_dir}
 
         # download vibrant database
@@ -584,6 +618,8 @@ rule download_vibrant:
 
 # run vibrant to identify viral contigs
 rule vibrant:
+    message:
+        "Running VIBRANT on {sample} to identify viral contigs"
     input:
         contigs=assembly,
         vb_db=resources + "vibrant/db/databases/VIBRANT_setup.log",
@@ -608,10 +644,10 @@ rule vibrant:
     threads: config["virus_identification"]["vibrant_threads"]
     shell:
         """
-        # remove vibrant directory
+        # remove output directory
         # rm -rf {params.vb_dir}
 
-        # run vibrant for all virus types
+        # run vibrant
         VIBRANT_run.py \
         -i {input.contigs} \
         -d {params.vb_db} \
@@ -625,8 +661,10 @@ rule vibrant:
 # -----------------------------------------------------
 # 05 DeepVirFinder
 # -----------------------------------------------------
-# run deepvirfinder
+# clone deepvirfinder repo
 rule build_deepvirfinder:
+    message:
+        "Building DeepVirFinder"
     output:
         resources + "deepvirfinder/dvf.py",
     params:
@@ -641,12 +679,15 @@ rule build_deepvirfinder:
         # run deepvirfinder
         git clone https://github.com/jessieren/DeepVirFinder {params.dvf_dir}
 
+        # make script executable
         chmod 777 {params.dvf_dir}*
         """
 
 
 # run deepvirfinder
 rule deepvirfinder:
+    message:
+        "Running DeepVirFinder on {sample} to identify viral contigs"
     input:
         dvf_script=resources + "deepvirfinder/dvf.py",
         contigs=assembly,
@@ -661,8 +702,9 @@ rule deepvirfinder:
     benchmark:
         "benchmark/04_VIRUS_IDENTIFICATION/deepvirfinder_{sample}.tsv"
     resources:
-        runtime="04:00:00",
+        runtime="12:00:00",
         mem_mb="10000",
+        partition="compute-hugemem",
     threads: config["virus_identification"]["virfinder_threads"]
     shell:
         """
@@ -678,8 +720,10 @@ rule deepvirfinder:
 # -----------------------------------------------------
 # 06 Genomad
 # -----------------------------------------------------
-# run vibrant to identify viral contigs
+# download genomad database
 rule download_genomad:
+    message:
+        "Downloading geNomad database"
     output:
         resources + "genomad/genomad_db/virus_hallmark_annotation.txt",
     params:
@@ -693,15 +737,18 @@ rule download_genomad:
         mem_mb="10000",
     shell:
         """
+        # change to genomad directory
         cd {params.genomad_dir}
 
-        # run vibrant for all virus types
+        # download genomad databases
         genomad download-database .
         """
 
 
-# run vibrant to identify viral contigs
+# run genomad to identify viral contigs
 rule genomad:
+    message:
+        "Running geNomad on {sample} to identify viral contigs"
     input:
         genomad=resources + "genomad/genomad_db/virus_hallmark_annotation.txt",
         contigs=assembly,
@@ -718,13 +765,12 @@ rule genomad:
     benchmark:
         "benchmark/04_VIRUS_IDENTIFICATION/genomad_{sample}.tsv"
     resources:
-        runtime="12:00:00",
+        runtime="04:00:00",
         mem_mb="10000",
-        partition="compute-hugemem",
     threads: config["virus_identification"]["genomad_threads"]
     shell:
         """
-        # run vibrant for all virus types
+        # run genomad
         genomad end-to-end \
         --threads {threads} \
         --verbose \
@@ -743,6 +789,8 @@ rule genomad:
 # -----------------------------------------------------
 # create a mash sketch of virusdb
 rule mash_sketch_virusdb:
+    message:
+        "Creating mash sketch of {input}"
     input:
         config["virus_db"],
     output:
@@ -768,6 +816,8 @@ rule mash_sketch_virusdb:
 
 # screen reads to identify external viruses
 rule screen_reads_against_virusdb:
+    message:
+        "Screening reads against {input.sketch} to identify external viruses present in {sample}"
     input:
         R1=R1,
         R2=R2,
@@ -786,7 +836,7 @@ rule screen_reads_against_virusdb:
         "benchmark/04_VIRUS_IDENTIFICATION/screen_reads_against_virusdb_sketch_{sample}.tsv"
     resources:
         runtime="04:00:00",
-        mem_mb="250000",
+        mem_mb="100000",
     threads: config["virus_identification"]["mash_threads"]
     shell:
         """
@@ -799,12 +849,15 @@ rule screen_reads_against_virusdb:
         {input.sketch} \
         {params.combined} > {output}
 
+        # remove combined fastq to save space
         rm {params.combined}
         """
 
 
-# filter to keep only blast hits
-rule extract_virusdb_hits:
+# filter to keep only external hits
+rule extract_external_hits:
+    message:
+        "Extracting external viruses present in {sample}"
     input:
         read_screen=results
         + "04_VIRUS_IDENTIFICATION/07_external_hits/{sample}/virusdb_mash_screen.tab",
@@ -825,8 +878,10 @@ rule extract_virusdb_hits:
         "../scripts/04_extract_virusdb_hits.py"
 
 
-# add mash hit contigs to contigs fasta
-rule combine_mash_hits_with_contigs:
+# add external hits to contigs fasta
+rule combine_external_hits_with_contigs:
+    message:
+        "Combining external viruses with {sample} contigs"
     input:
         mash_hits=results
         + "04_VIRUS_IDENTIFICATION/07_external_hits/{sample}/virusdb_hits.fna",
@@ -841,6 +896,7 @@ rule combine_mash_hits_with_contigs:
         mem_mb="1000",
     shell:
         """
+        # combine hits fasta with contigs
         cat {input.contigs} {input.mash_hits} > {output}
         """
 
@@ -918,8 +974,10 @@ else:
     external = pd.DataFrame()
 
 
-# combine outputs from all tool outputs
+# combine outputs from all tools
 rule merge_reports_within_samples:
+    message:
+        "Merging all virus identification reports within {sample}"
     input:
         mgv_results=mgv1,
         mgv_viruses=mgv2,
@@ -967,6 +1025,8 @@ else:
 
 # combine viral contigs from all tool outputs using thresholds specified in config.yaml
 rule merge_viral_contigs_within_samples:
+    message:
+        "Merging viral contigs meeting config.yaml criteria within {sample}"
     input:
         contigs=combined,
         viral_report=results
@@ -1007,8 +1067,10 @@ rule merge_viral_contigs_within_samples:
 # -----------------------------------------------------
 # Analyze combined virus data
 # -----------------------------------------------------
-# combine virus reports
+# combine virus reports across samples
 rule combine_reports_across_samples:
+    message:
+        "Combining viral reports across all samples"
     input:
         expand(
             results
@@ -1031,6 +1093,8 @@ rule combine_reports_across_samples:
 
 # plot virus counts by tool
 rule virus_identification_analysis:
+    message:
+        "Visualizing virus identification"
     input:
         results + "04_VIRUS_IDENTIFICATION/virus_identification_report.csv",
     output:
