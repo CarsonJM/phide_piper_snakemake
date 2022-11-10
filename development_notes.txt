@@ -1,6 +1,4 @@
 Pipeline To Do:
-- Flesh out modules 8-12
-- Annotate config.yaml file for modules 8-12
 - Add ability to split virus file for iphop
 - Change virus quality figure to boxplot
 - Change virus identification output format
