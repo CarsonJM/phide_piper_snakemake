@@ -251,7 +251,7 @@ rule mgv_pfam_hmmsearch:
 # use mgv count_hmm_hits.py script to determine bacterial/viral HMM hits
 rule mgv_count_hmm_hits:
     message:
-        "Counting HMM hits for {sample}"
+        "Counting HMM hits for {wildcards.sample}"
     input:
         contigs=assembly,
         mgv_faa=results + "04_VIRUS_IDENTIFICATION/01_mgv/input/{sample}.faa",
@@ -817,7 +817,7 @@ rule mash_sketch_virusdb:
 # screen reads to identify external viruses
 rule screen_reads_against_virusdb:
     message:
-        "Screening reads against {input.sketch} to identify external viruses present in {sample}"
+        "Screening reads against {input.sketch} to identify external viruses present in {wildcards.sample}"
     input:
         R1=R1,
         R2=R2,
@@ -857,7 +857,7 @@ rule screen_reads_against_virusdb:
 # filter to keep only external hits
 rule extract_external_hits:
     message:
-        "Extracting external viruses present in {sample}"
+        "Extracting external viruses present in {wildcards.sample}"
     input:
         read_screen=results
         + "04_VIRUS_IDENTIFICATION/07_external_hits/{sample}/virusdb_mash_screen.tab",
@@ -977,7 +977,7 @@ else:
 # combine outputs from all tools
 rule merge_reports_within_samples:
     message:
-        "Merging all virus identification reports within {sample}"
+        "Merging all virus identification reports within {wildcards.sample}"
     input:
         mgv_results=mgv1,
         mgv_viruses=mgv2,
@@ -1026,7 +1026,7 @@ else:
 # combine viral contigs from all tool outputs using thresholds specified in config.yaml
 rule merge_viral_contigs_within_samples:
     message:
-        "Merging viral contigs meeting config.yaml criteria within {sample}"
+        "Merging viral contigs meeting config.yaml criteria within {wildcards.sample}"
     input:
         contigs=combined,
         viral_report=results

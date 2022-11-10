@@ -131,7 +131,7 @@ rule checkv_trim:
 # combine trimmed proviruses and input vls
 rule combine_trimmed_vls:
     message:
-        "Renaming trimmed viruses and combining with untrimmed viruses from {sample}"
+        "Renaming trimmed viruses and combining with untrimmed viruses from {wildcards.sample}"
     input:
         checkv_proviruses=results
         + "05_VIRUS_QUALITY/01_checkv_trim/{sample}/proviruses.fna",
@@ -163,7 +163,7 @@ else:
 # determine virus quality using CheckV
 rule checkv:
     message:
-        "Running CheckV to determine virus quality and contamination for {sample}"
+        "Running CheckV to determine virus quality and contamination for {wildcards.sample}"
     input:
         checkv_db=resources + "checkv/checkv-db-v1.4/genome_db/checkv_reps.dmnd",
         virus_contigs=checkv_input,
