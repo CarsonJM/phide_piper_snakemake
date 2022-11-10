@@ -12,3 +12,4 @@ Lucas Hoffman Lab
 University of Washington  
 carsonjm@uw.edu 
 
+For information on pipeline usage, please see the wiki at: https://github.com/CarsonJM/phide_piper/wiki
