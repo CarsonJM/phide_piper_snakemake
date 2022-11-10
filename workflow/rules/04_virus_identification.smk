@@ -200,9 +200,8 @@ rule mgv_imgvr_hmmsearch:
     benchmark:
         "benchmark/04_VIRUS_IDENTIFICATION/mgv_imgvr_hmmsearch_{sample}.tsv"
     resources:
-        runtime="12:00:00",
+        runtime="04:00:00",
         mem_mb="10000",
-        partition="compute-hugemem",
     threads: config["virus_identification"]["mgv_threads"]
     shell:
         """
@@ -232,9 +231,8 @@ rule mgv_pfam_hmmsearch:
     benchmark:
         "benchmark/04_VIRUS_IDENTIFICATION/mgv_pfam_hmmsearch_{sample}.tsv"
     resources:
-        runtime="12:00:00",
+        runtime="04:00:00",
         mem_mb="10000",
-        partition="compute-hugemem",
     threads: config["virus_identification"]["mgv_threads"]
     shell:
         """
@@ -638,9 +636,8 @@ rule vibrant:
     benchmark:
         "benchmark/04_VIRUS_IDENTIFICATION/vibrant_{sample}.tsv"
     resources:
-        runtime="12:00:00",
+        runtime="04:00:00",
         mem_mb="10000",
-        partition="compute-hugemem",
     threads: config["virus_identification"]["vibrant_threads"]
     shell:
         """
@@ -702,9 +699,8 @@ rule deepvirfinder:
     benchmark:
         "benchmark/04_VIRUS_IDENTIFICATION/deepvirfinder_{sample}.tsv"
     resources:
-        runtime="12:00:00",
+        runtime="04:00:00",
         mem_mb="10000",
-        partition="compute-hugemem",
     threads: config["virus_identification"]["virfinder_threads"]
     shell:
         """

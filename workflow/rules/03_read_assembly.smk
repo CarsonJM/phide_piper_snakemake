@@ -219,7 +219,7 @@ rule blast_contigs_within_samples:
     benchmark:
         "benchmark/03_READ_ASSEMBLY/blast_contigs_within_samples_{sample}.tsv"
     resources:
-        runtime="00:10:00",
+        runtime="00:30:00",
         mem_mb="10000",
     threads: config["virus_dereplication"]["blast_threads"]
     shell:

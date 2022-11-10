@@ -89,9 +89,8 @@ rule blast_viruses_v_viruses:
     benchmark:
         "benchmark/06_VIRUS_DEREPLICATION/blast_viruses_v_viruses.tsv"
     resources:
-        runtime="12:00:00",
-        mem_mb="06000",
-        partition="compute-hugemem",
+        runtime="04:00:00",
+        mem_mb="10000",
     threads: config["virus_dereplication"]["blast_threads"]
     shell:
         """

@@ -51,9 +51,8 @@ rule blast_derep_viruses_v_derep_viruses:
     benchmark:
         "benchmark/07_VIRUS_DIVERSITY/blast_viral_contigs_cluster.tsv"
     resources:
-        runtime="12:00:00",
+        runtime="04:00:00",
         mem_mb="10000",
-        partition="compute-hugemem",
     threads: config["virus_diversity"]["blast_threads"]
     shell:
         """
