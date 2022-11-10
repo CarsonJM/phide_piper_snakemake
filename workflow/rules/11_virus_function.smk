@@ -1,5 +1,5 @@
 # -----------------------------------------------------
-# Virus function
+# Virus function Module (if include_function_module = True)
 # -----------------------------------------------------
 import pandas as pd
 
@@ -32,6 +32,8 @@ report: "report/workflow.rst"
 # -----------------------------------------------------
 # build dram
 rule build_dramv:
+    message:
+        "Downloading DRAM databases"
     output:
         test="test"
     params:
@@ -48,13 +50,17 @@ rule build_dramv:
     threads: config["virus_function"]["dramv_threads"]
     shell:
         """
+        # download dram databases except uniref
         DRAM-setup.py prepare_databases --skip_uniref --output_dir {params.dram_dir}
 
         touch {output.test}
         """
 
 
+# updated dram's config file with database locations
 rule update_dram:
+    message:
+        "Updating DRAM's config file with database locations"
     input:
         test="test"
     output:
@@ -73,6 +79,7 @@ rule update_dram:
     threads: config["virus_function"]["dramv_threads"]
     shell:
         """
+        # update descriptions db
         DRAM-setup.py update_description_db
 
         touch {output.test}
@@ -81,6 +88,8 @@ rule update_dram:
 
 # run virsorter2 to identifiy viral contigs
 rule virsorter2_dram:
+    message:
+        "Obtaining VirSorter2 output that is required to run DRAM-v"
     input:
         contigs=results + "07_VIRUS_DIVERSITY/01_votu_clusters/votu_representatives.fna",
         vs2_db=resources + "virsorter2/Done_all_setup",
@@ -103,6 +112,7 @@ rule virsorter2_dram:
         partition="compute-hugemem"
     shell:
         """
+        # remove output directory
         rm -rf {params.out_dir}
 
         # run virsorter2
@@ -119,8 +129,10 @@ rule virsorter2_dram:
         """
 
 
-# run dramv
+# run dramv to annotate proteins
 rule dramv_annotate:
+    message:
+        "Annotating proteins using DRAM-v"
     input:
         test="update_test",
         vs2=results + "11_VIRUS_FUNCTION/01_virsorter2/for-dramv/viral-affi-contigs-for-dramv.tab",
@@ -133,13 +145,14 @@ rule dramv_annotate:
         "../envs/dram:1.3.4--pyhdfd78af_0.yml"
     # container:
     #     "docker://quay.io/biocontainers/dram:1.3.4--pyhdfd78af_0"
-    threads: config["virus_function"]["dramv_threads"]
     resources:
         runtime="12:00:00",
         mem_mb="10000",
         partition="compute-hugemem"
+    threads: config["virus_function"]["dramv_threads"]
     shell:
         """
+        # annotate proteins with dramv
         DRAM-v.py annotate \
         -i {input.viruses} \
         -v {input.vs2} \
@@ -152,6 +165,8 @@ rule dramv_annotate:
 
 # run dramv distill
 rule dramv_distill:
+    message:
+        "Distilling DRAM-v annotations"
     input:
         results + "11_VIRUS_FUNCTION/02_dramv/annotations.tsv"
     output:
@@ -165,12 +180,13 @@ rule dramv_distill:
         "../envs/dram:1.3.4--pyhdfd78af_0.yml"
     # container:
     #     "docker://quay.io/biocontainers/dram:1.3.4--pyhdfd78af_0"
-    threads: config["virus_function"]["dramv_threads"]
     resources:
         runtime="00:10:00",
         mem_mb="10000",
+    threads: config["virus_function"]["dramv_threads"]
     shell:
         """
+        # run dramv distill
         DRAM-v.py distill \
         -i {input} \
         -o {params.out_dir}

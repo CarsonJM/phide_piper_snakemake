@@ -1,5 +1,5 @@
 # -----------------------------------------------------
-# Virus abundance
+# Virus abundance Module (will always run)
 # -----------------------------------------------------
 import pandas as pd
 
@@ -37,8 +37,7 @@ localrules:
 # -----------------------------------------------------
 # 00 Determine inputs for module
 # -----------------------------------------------------
-
-# read symlink in 07_virus_clustering.smk
+# read symlink in 04_virus_identification.smk
 if config["input_data"] == "reads":
     R1 = results + "01_READ_PREPROCESSING/03_kneaddata/{sample}_paired_1.fastq.gz"
     R2 = results + "01_READ_PREPROCESSING/03_kneaddata/{sample}_paired_2.fastq.gz"
@@ -56,20 +55,24 @@ elif (
 # -----------------------------------------------------
 # Align reads to virus catalog using bowtie2
 rule build_viruses_bowtie2db:
+    message:
+        "Building a bowtie2 db of vOTU representative viruses"
     input:
         results + "07_VIRUS_DIVERSITY/01_votu_clusters/votu_representatives.fna",
     output:
         results + "12_VIRUS_ANALYSIS/01_align_viruses/virus_catalog.1.bt2",
     params:
         db=results + "12_VIRUS_ANALYSIS/01_align_viruses/virus_catalog",
-    conda:
-        "../envs/kneaddata:0.10.0--pyhdfd78af_0.yml"
-    threads: 8
+    # conda:
+    #     "../envs/kneaddata:0.10.0--pyhdfd78af_0.yml"
+    container:
+        "docker://quay.io/biocontainers/kneaddata:0.10.0--pyhdfd78af_0"
     benchmark:
         "benchmark/12_VIRUS_ANALYSIS/build_viruses_bowtie2db.tsv"
     resources:
         runtime="04:00:00",
         mem_mb="10000",
+    threads: config["virus_analysis"]["bowtie2_threads"]
     shell:
         """
         # make a bowtie2 db from virusdb
@@ -79,6 +82,8 @@ rule build_viruses_bowtie2db:
 
 # Align reads to virus catalog using bowtie2
 rule align_reads_to_viruses:
+    message:
+        "Aligning reads to vOTU database to determine virus abundances"
     input:
         R1=R1,
         R2=R2,
@@ -86,20 +91,20 @@ rule align_reads_to_viruses:
     output:
         bam=results + "12_VIRUS_ANALYSIS/01_align_viruses/bam_files/{sample}.bam",
         log=results + "12_VIRUS_ANALYSIS/01_align_viruses/{sample}.log",
-    log:
-        results + "00_LOGS/12_VIRUS_ANALYSIS/align_reads_to_viruses_{sample}.log",
     params:
         db=results + "12_VIRUS_ANALYSIS/01_align_viruses/virus_catalog",
         sam=results + "12_VIRUS_ANALYSIS/01_align_viruses/{sample}.sam",
-    conda:
-        "../envs/kneaddata:0.10.0--pyhdfd78af_0.yml"
-    threads: 8
+    # conda:
+    #     "../envs/kneaddata:0.10.0--pyhdfd78af_0.yml"
+    container:
+        "docker://quay.io/biocontainers/kneaddata:0.10.0--pyhdfd78af_0"
     benchmark:
         "benchmark/12_VIRUS_ANALYSIS/align_reads_to_viruses_{sample}.tsv"
     resources:
         runtime="12:00:00",
         mem_mb="10000",
         partition="compute-hugemem",
+    threads: config["virus_analysis"]["bowtie2_threads"]
     shell:
         """
         # align reads to bowtie2 database
@@ -119,6 +124,8 @@ rule align_reads_to_viruses:
 
 # generate report for alignments
 rule bowtie2_multiqc:
+    message:
+        "Running MULTIQC to visualize bowtie2 alignment rates"
     input:
         expand(
             results + "12_VIRUS_ANALYSIS/01_align_viruses/{sample}.log",
@@ -144,6 +151,7 @@ rule bowtie2_multiqc:
         mem_mb="1000",
     shell:
         """
+        # run multiqc on bowtie2 outputs
         multiqc {params.bt2_input} \
         -o {params.bt2_dir} -f
 
@@ -154,7 +162,10 @@ rule bowtie2_multiqc:
 # -----------------------------------------------------
 # 02 Metapop
 # -----------------------------------------------------
+# generate read counts using bam files
 rule read_counts:
+    message:
+        "Generating read counts for {sample} FastQ"
     input:
         results + "12_VIRUS_ANALYSIS/01_align_viruses/bam_files/{sample}.bam",
     output:
@@ -168,11 +179,15 @@ rule read_counts:
         mem_mb="1000",
     shell:
         """
+        # print read counts out to file
         echo -e {wildcards.sample}"\t"$(samtools view -c {input}) > {output}
         """
 
 
+# combine read counts files across all sampels
 rule combine_read_counts_across_samples:
+    message:
+        "Combining read counts files across all samples"
     input:
         expand(
             results + "12_VIRUS_ANALYSIS/02_metapop/{sample}_read_counts.tsv",
@@ -187,12 +202,15 @@ rule combine_read_counts_across_samples:
         mem_mb="1000",
     shell:
         """
+        # combine read counts files
         cat {input} > {output}
         """
 
 
-# determine which viruses are present in the sample
+# Run metapop to preprocess and analyze alignments
 rule metapop:
+    message:
+        "Running MetaPop to preprocess and analyze virus alignments"
     input:
         bam=expand(
             results + "12_VIRUS_ANALYSIS/01_align_viruses/bam_files/{sample}.bam",
@@ -211,18 +229,16 @@ rule metapop:
             + "12_VIRUS_ANALYSIS/02_metapop/MetaPop/12.Visualizations/preprocessing_summaries.pdf",
             category="Step 12: Virus analysis",
         ),
-    log:
-        results + "00_LOGS/12_VIRUS_ANALYSIS/metapop.log",
     params:
         bam_dir=results + "12_VIRUS_ANALYSIS/01_align_viruses/bam_files/",
         viruses_dir=results + "07_VIRUS_DIVERSITY/01_votu_clusters/fasta/",
         viruses=results
         + "07_VIRUS_DIVERSITY/01_votu_clusters/fasta/votu_representatives.fna",
         out_dir=results + "12_VIRUS_ANALYSIS/02_metapop/",
-        min_id=95,
-        min_breadth=50,
-        min_depth=1,
-        extra_args="",
+        min_id=config["virus_analysis"]["min_id"],
+        min_breadth=config["virus_analysis"]["min_breadth"],
+        min_depth=config["virus_analysis"]["min_depth"],
+        extra_args=config["virus_analysis"]["metapop_arguments"],
     conda:
         "../envs/metapop:1.0.2.yml"
     benchmark:
@@ -230,10 +246,11 @@ rule metapop:
     resources:
         runtime="04:00:00",
         mem_mb="10000",
-    threads: 8
+    threads: config["virus_analysis"]["metapop_threads"]
     shell:
         """
-        # mkdir {params.viruses_dir}
+        rm -rf {params.viruses_dir}
+        mkdir {params.viruses_dir}
         cp {input.viruses} {params.viruses}
 
         # run metapop to identify viruses present in samples
@@ -247,47 +264,3 @@ rule metapop:
         --threads {threads} \
         {params.extra_args}
         """
-
-
-# -----------------------------------------------------
-# 03 Filter viruses
-# -----------------------------------------------------
-# extract present viruses
-rule combine_breadth_and_depth_across_samples:
-    input:
-        metapop=expand(
-            results
-            + "12_VIRUS_ANALYSIS/02_metapop/MetaPop/03.Breadth_and_Depth/{sample}_breadth_and_depth.tsv",
-            sample=samples,
-        ),
-    output:
-        results + "12_VIRUS_ANALYSIS/03_filter_viruses/combined_breadth_and_depth.tsv",
-    benchmark:
-        "benchmark/12_VIRUS_ANALYSIS/combine_breadth_and_depth_across_samples.tsv"
-    resources:
-        runtime="00:10:00",
-        mem_mb="1000",
-    shell:
-        """
-        # combine all outputs, only keeping header from one file
-        awk 'FNR>1 || NR==1' {input.metapop} > {output}
-        """
-
-
-rule extract_present_viruses:
-    input:
-        viruses=results
-        + "06_VIRUS_QUALITY/02_quality_filter/quality_filtered_viruses.fna",
-        metapop=results
-        + "12_VIRUS_ANALYSIS/03_filter_viruses/combined_breadth_and_depth.tsv",
-    output:
-        results + "12_VIRUS_ANALYSIS/03_filter_viruses/present_viruses.fna",
-    conda:
-        "../envs/jupyter.yml"
-    benchmark:
-        "benchmark/12_VIRUS_ANALYSIS/extract_present_viruses.tsv"
-    resources:
-        runtime="00:10:00",
-        mem_mb="1000",
-    script:
-        "../scripts/07_extract_present_viruses.py"
