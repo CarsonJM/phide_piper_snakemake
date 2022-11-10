@@ -19,7 +19,7 @@ bacteria_db: "/gscratch/scrubbed/carsonjm/resources/uhog/bacteria/"
 bacteria_db_meta: "/gscratch/scrubbed/carsonjm/resources/uhog/uhog_genome-all_metadata.tsv"
 
 #------------------------------------
-# Pipeline options
+# Input data options
 #------------------------------------
 # reads, contigs, viruses, or processed viruses
 input_data: "reads"
