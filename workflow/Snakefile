@@ -96,9 +96,6 @@ def get_final_output(wildcards):
             results + "11_VIRUS_FUNCTION/02_dramv/distillate/product.html"
         )
 
-    final_output.append(
-        results + "12_VIRUS_ANALYSIS/03_filter_viruses/combined_breadth_and_depth.tsv"
-    )
     final_output.append(results + "12_VIRUS_ANALYSIS/bowtie2_multiqc.html")
 
     return final_output
