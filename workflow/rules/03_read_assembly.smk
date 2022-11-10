@@ -38,7 +38,7 @@ localrules:
 # Assemble reads using metaspades
 rule metaspades:
     message:
-        "Assembling {sample} using metaSPAdes"
+        "Assembling {wildcards.sample} using metaSPAdes"
     input:
         R1=results + "01_READ_PREPROCESSING/03_kneaddata/{sample}_paired_1.fastq.gz",
         R2=results + "01_READ_PREPROCESSING/03_kneaddata/{sample}_paired_2.fastq.gz",
@@ -73,7 +73,7 @@ rule metaspades:
 # Assemble reads using metaviralspades
 rule metaviralspades:
     message:
-        "Assembling {sample} using metaviralSPAdes"
+        "Assembling {wildcards.sample} using metaviralSPAdes"
     input:
         R1=results + "01_READ_PREPROCESSING/03_kneaddata/{sample}_paired_1.fastq.gz",
         R2=results + "01_READ_PREPROCESSING/03_kneaddata/{sample}_paired_2.fastq.gz",
@@ -108,7 +108,7 @@ rule metaviralspades:
 # Assemble reads using rnaviralspades
 rule rnaviralspades:
     message:
-        "Assembling {sample} using rnaviralSPAdes"
+        "Assembling {wildcards.sample} using rnaviralSPAdes"
     input:
         R1=results + "01_READ_PREPROCESSING/03_kneaddata/{sample}_paired_1.fastq.gz",
         R2=results + "01_READ_PREPROCESSING/03_kneaddata/{sample}_paired_2.fastq.gz",
@@ -159,7 +159,7 @@ if "rnaviral" in config["read_assembly"]["assembly_modes"]:
 # combine all spades assembly types
 rule combine_spades_assemblies:
     message:
-        "Combining {sample} assemblies from different assemblers"
+        "Combining {wildcards.sample} assemblies from different assemblers"
     input:
         assemblies,
     output:
@@ -182,7 +182,7 @@ rule combine_spades_assemblies:
 # filter contigs based on contig length
 rule contig_length_filter:
     message:
-        "Filtering {sample} assemblies to only those longer than {params.min_length}"
+        "Filtering {wildcards.sample} assemblies to only those longer than {params.min_length}"
     input:
         results + "03_READ_ASSEMBLY/01_spades/{sample}_contigs.fasta",
     output:
@@ -203,7 +203,7 @@ rule contig_length_filter:
 # blast contigs against one another for dereplication
 rule blast_contigs_within_samples:
     message:
-        "BLASTing {sample} contigs against one another to dererplicate dataset"
+        "BLASTing {wildcards.sample} contigs against one another to dererplicate dataset"
     input:
         results + "03_READ_ASSEMBLY/02_contig_filters/{sample}/{sample}_contigs.fasta",
     output:
@@ -258,7 +258,7 @@ rule build_mgv:
 # keep only one species representative from each sample
 rule dereplicate_contigs_within_samples:
     message:
-        "Dereplicating {sample} contigs using BLAST results"
+        "Dereplicating {wildcards.sample} contigs using BLAST results"
     input:
         viruses=results
         + "03_READ_ASSEMBLY/02_contig_filters/{sample}/{sample}_contigs.fasta",
@@ -290,7 +290,7 @@ rule dereplicate_contigs_within_samples:
 # extract dereplicated contigs
 rule extract_dereplicated_contigs_within_samples:
     message:
-        "Extracting {sample} representatives to retain only one of each replicate"
+        "Extracting {wildcards.sample} representatives to retain only one of each replicate"
     input:
         clusters=results
         + "03_READ_ASSEMBLY/02_contig_filters/{sample}/{sample}_contigs_clusters.tsv",
@@ -316,7 +316,7 @@ rule extract_dereplicated_contigs_within_samples:
 # run quast to determine the quality of assemblies
 rule quast:
     message:
-        "Running QUAST on {sample} to determine assembly quality"
+        "Running QUAST on {wildcards.sample} to determine assembly quality"
     input:
         results
         + "03_READ_ASSEMBLY/02_contig_filters/{sample}/{sample}_contigs_dereplicated.fasta",

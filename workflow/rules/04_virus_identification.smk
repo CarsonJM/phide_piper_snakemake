@@ -155,7 +155,7 @@ rule download_mgv_databases:
 # use prodigal to identify ORFs
 rule mgv_prodigal:
     message:
-        "Predicting {sample} ORFs using Prodigal"
+        "Predicting {wildcards.sample} ORFs using Prodigal"
     input:
         assembly,
     output:
@@ -187,7 +187,7 @@ rule mgv_prodigal:
 # use hmmsearch to find imgvr HMM hits
 rule mgv_imgvr_hmmsearch:
     message:
-        "Searching IMGVR HMMs for {sample} hits"
+        "Searching IMGVR HMMs for {wildcards.sample} hits"
     input:
         mgv_faa=results + "04_VIRUS_IDENTIFICATION/01_mgv/input/{sample}.faa",
         imgvr_hmm=resources + "mgv/viral_detection_pipeline/input/imgvr.hmm",
@@ -219,7 +219,7 @@ rule mgv_imgvr_hmmsearch:
 # use hmmsearch to find pfam HMM hits
 rule mgv_pfam_hmmsearch:
     message:
-        "Searching PFAM HMMs for {sample} hits"
+        "Searching PFAM HMMs for {wildcards.sample} hits"
     input:
         mgv_faa=results + "04_VIRUS_IDENTIFICATION/01_mgv/input/{sample}.faa",
         pfam_hmm=resources + "mgv/viral_detection_pipeline/input/pfam.hmm",
@@ -285,7 +285,7 @@ rule mgv_count_hmm_hits:
 # run virfinder to identify viral kmers
 rule mgv_virfinder:
     message:
-        "Running VirFinder on {sample} contigs"
+        "Running VirFinder on {wildcards.sample} contigs"
     input:
         imgvr_hmm=resources + "mgv/viral_detection_pipeline/input/imgvr.hmm",
         pfam_hmm=resources + "mgv/viral_detection_pipeline/input/pfam.hmm",
@@ -320,7 +320,7 @@ rule mgv_virfinder:
 # calculate the strand switch rate using mgv strand_switch.py script
 rule mgv_strand_switch:
     message:
-        "Calculating strand switch rate for {sample} contigs"
+        "Calculating strand switch rate for {wildcards.sample} contigs"
     input:
         imgvr_hmm=resources + "mgv/viral_detection_pipeline/input/imgvr.hmm",
         pfam_hmm=resources + "mgv/viral_detection_pipeline/input/pfam.hmm",
@@ -353,7 +353,7 @@ rule mgv_strand_switch:
 # create master table using mgv master_table.py script
 rule mgv_master_table:
     message:
-        "Creating MGV master table for {sample} analysis"
+        "Creating MGV master table for {wildcards.sample} analysis"
     input:
         mgv_hmm_hits=results
         + "04_VIRUS_IDENTIFICATION/01_mgv/output/{sample}_hmm_hits.tsv",
@@ -385,7 +385,7 @@ rule mgv_master_table:
 # predict viral contigs using HMM hits, strand switch rate, and virfinder results
 rule mgv_viral_classify:
     message:
-        "Classifying {sample} to identify viral contigs"
+        "Classifying {wildcards.sample} to identify viral contigs"
     input:
         mgv_fna=results + "04_VIRUS_IDENTIFICATION/01_mgv/input/{sample}.fna",
         mgv_master_table=results
@@ -469,7 +469,7 @@ rule extract_virsorter_db:
 # identify viral contigs using virsorter
 rule virsorter:
     message:
-        "Running VirSorter on {sample} to identify viral contigs"
+        "Running VirSorter on {wildcards.sample} to identify viral contigs"
     input:
         contigs=assembly,
         vsrm=resources + "virsorter/virsorter-data/VirSorter_Readme.txt",
@@ -541,7 +541,7 @@ rule download_virsorter2:
 # run virsorter2 to identifiy viral contigs
 rule virsorter2:
     message:
-        "Running VirSorter2 for {sample} to identify viral contigs"
+        "Running VirSorter2 for {wildcards.sample} to identify viral contigs"
     input:
         contigs=assembly,
         vs2_db=resources + "virsorter2/Done_all_setup",
@@ -619,7 +619,7 @@ rule download_vibrant:
 # run vibrant to identify viral contigs
 rule vibrant:
     message:
-        "Running VIBRANT on {sample} to identify viral contigs"
+        "Running VIBRANT on {wildcards.sample} to identify viral contigs"
     input:
         contigs=assembly,
         vb_db=resources + "vibrant/db/databases/VIBRANT_setup.log",
@@ -687,7 +687,7 @@ rule build_deepvirfinder:
 # run deepvirfinder
 rule deepvirfinder:
     message:
-        "Running DeepVirFinder on {sample} to identify viral contigs"
+        "Running DeepVirFinder on {wildcards.sample} to identify viral contigs"
     input:
         dvf_script=resources + "deepvirfinder/dvf.py",
         contigs=assembly,
@@ -748,7 +748,7 @@ rule download_genomad:
 # run genomad to identify viral contigs
 rule genomad:
     message:
-        "Running geNomad on {sample} to identify viral contigs"
+        "Running geNomad on {wildcards.sample} to identify viral contigs"
     input:
         genomad=resources + "genomad/genomad_db/virus_hallmark_annotation.txt",
         contigs=assembly,
@@ -881,7 +881,7 @@ rule extract_external_hits:
 # add external hits to contigs fasta
 rule combine_external_hits_with_contigs:
     message:
-        "Combining external viruses with {sample} contigs"
+        "Combining external viruses with {wildcards.sample} contigs"
     input:
         mash_hits=results
         + "04_VIRUS_IDENTIFICATION/07_external_hits/{sample}/virusdb_hits.fna",

@@ -38,7 +38,7 @@ localrules:
 # symlink input vls
 rule symlink_vls:
     message:
-        "Symlinking input virus-like sequences from {sample} to new location"
+        "Symlinking input virus-like sequences from {wildcards.sample} to new location"
     input:
         lambda wildcards: samples_df[(samples_df["sample"]) == wildcards.sample][
             "vls"
@@ -98,7 +98,7 @@ rule download_checkv:
 # run checkv on viral contigs to trim proviruses
 rule checkv_trim:
     message:
-        "Trimming host regions from {sample} viruses"
+        "Trimming host regions from {wildcards.sample} viruses"
     input:
         checkv_db=resources + "checkv/checkv-db-v1.4/genome_db/checkv_reps.dmnd",
         virus_contigs=vls,
@@ -206,7 +206,7 @@ rule checkv:
 # remove low quality virus (and retain high-quality untrimmed counterparts)
 rule quality_filter_viruses:
     message:
-        "Filtering viruses in {sample} not meeting config.yaml criteria"
+        "Filtering viruses in {wildcards.sample} not meeting config.yaml criteria"
     input:
         checkv_results=results
         + "05_VIRUS_QUALITY/02_checkv/{sample}/quality_summary.tsv",

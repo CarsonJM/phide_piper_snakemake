@@ -80,7 +80,7 @@ rule build_viromeqc:
 # determine virus enrichment with viromeqc
 rule viromeqc:
     message:
-        "Running ViromeQC on {sample} to determine virus enrichment"
+        "Running ViromeQC on {wildcards.sample} to determine virus enrichment"
     input:
         amphora=resources + "viromeqc/index/amphora_bacteria.dmnd",
         lsu=resources + "viromeqc/index/SILVA_132_LSURef_tax_silva.clean.1.bt2",

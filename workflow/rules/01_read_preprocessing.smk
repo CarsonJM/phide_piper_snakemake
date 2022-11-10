@@ -38,7 +38,7 @@ localrules:
 # symlink input reads to new paths
 rule symlink_input_reads:
     message:
-        "Symlinking {sample} input files to new location"
+        "Symlinking {wildcards.sample} input files to new location"
     input:
         R1=lambda wildcards: samples_df[
             (+samples_df["sample"] + "_" + samples_df["replicate"])
@@ -77,7 +77,7 @@ sample_replicate_dictionary = sample_replicate.set_index("sample").to_dict()[
 # merge sample replicates into single file
 rule merge_input_replicates:
     message:
-        "Merging {sample} replicates into one file"
+        "Merging {wildcards.sample} replicates into one file"
     input:
         R1=lambda wildcards: expand(
             results + "00_INPUT/{{sample}}_{replicate}.R1.fastq.gz",
@@ -109,7 +109,7 @@ rule merge_input_replicates:
 # trim and deduplicate reads with fastp
 rule fastp:
     message:
-        "Trimming and deduplicating {sample} with fastp"
+        "Trimming and deduplicating {wildcards.sample} with fastp"
     input:
         R1=results + "01_READ_PREPROCESSING/01_merge_replicates/{sample}.R1.fastq.gz",
         R2=results + "01_READ_PREPROCESSING/01_merge_replicates/{sample}.R2.fastq.gz",
@@ -214,7 +214,7 @@ rule download_kneaddata_database:
 # Remove human reads with kneaddata
 rule kneaddata:
     message:
-        "Running KneadData on {sample} to remove human reads"
+        "Running KneadData on {wildcards.sample} to remove human reads"
     input:
         resources + "kneaddata/hg37dec_v0.1.1.bt2",
         resources + "kneaddata/hg37dec_v0.1.2.bt2",

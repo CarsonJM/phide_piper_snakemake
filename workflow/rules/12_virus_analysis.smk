@@ -165,7 +165,7 @@ rule bowtie2_multiqc:
 # generate read counts using bam files
 rule read_counts:
     message:
-        "Generating read counts for {sample} FastQ"
+        "Generating read counts for {wildcards.sample} FastQ"
     input:
         results + "12_VIRUS_ANALYSIS/01_align_viruses/bam_files/{sample}.bam",
     output:
