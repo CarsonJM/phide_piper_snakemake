@@ -212,7 +212,7 @@ rule quality_filter_viruses:
         + "05_VIRUS_QUALITY/02_checkv/{sample}/quality_summary.tsv",
         checkv_viruses=results + "05_VIRUS_QUALITY/02_checkv/{sample}/viruses.fna",
         checkv_proteins=results + "05_VIRUS_QUALITY/02_checkv/{sample}/tmp/proteins.faa",
-        untrimmed_viruses=viruses,
+        untrimmed_viruses=vls,
     output:
         viruses=results
         + "05_VIRUS_QUALITY/03_quality_filter/{sample}/quality_filtered_viruses.fna",
