@@ -68,7 +68,7 @@ rule blast_derep_viruses_v_derep_viruses:
 # cluster viruses using blast results
 rule cluster_viruses:
     message:
-        "Clustering viruses into vOTUs based on {params.min_ani} ANI and {params.qcov} AF"
+        "Clustering viruses into vOTUs based on {params.min_ani} ANI and {params.min_qcov} AF"
     input:
         fasta=results
         + "06_VIRUS_DEREPLICATION/02_dereplicate_viruses/dereplicated_viruses.fna",
