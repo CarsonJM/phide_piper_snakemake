@@ -557,8 +557,9 @@ rule virsorter2:
     benchmark:
         "benchmark/04_VIRUS_IDENTIFICATION/virsorter2_{sample}.tsv"
     resources:
-        runtime="04:00:00",
+        runtime="12:00:00",
         mem_mb="100000",
+        partition="compute-hugemem",
     threads: config["virus_identification"]["virsorter2_threads"]
     shell:
         """
