@@ -96,7 +96,12 @@ def get_final_output(wildcards):
             results + "11_VIRUS_FUNCTION/02_dramv/distillate/product.html"
         )
 
-    final_output.append(results + "12_VIRUS_ANALYSIS/bowtie2_multiqc.html")
+    if config["include_analysis_module"]:
+        final_output.append(results + "12_VIRUS_ANALYSIS/bowtie2_multiqc.html")
+        final_outut.append(
+            results
+            + "12_VIRUS_ANALYSIS/02_metapop/MetaPop/12.Visualizations/preprocessing_summaries.pdf"
+        )
 
     return final_output
 

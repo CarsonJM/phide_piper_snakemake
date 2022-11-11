@@ -192,6 +192,7 @@ virus_function:
   dramv_threads: 10
 
 # Module 12: Virus Analysis
+include_analysis_module: True
 virus_analysis:
   bowtie2_threads: 8
   metapop_arguments: ""
