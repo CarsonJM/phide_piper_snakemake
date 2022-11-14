@@ -115,7 +115,7 @@ rule extract_votu_reps:
     benchmark:
         "benchmark/07_VIRUS_DIVERSITY/extract_votu_reps.tsv"
     resources:
-        runtime="00:10:00",
+        runtime="01:00:00",
         mem_mb="1000",
     conda:
         "../envs/jupyter.yml"
