@@ -44,7 +44,7 @@ votu_rep_prot_ids= []
 votu_rep_prots = []
 rep = 1
 for record in SeqIO.parse(str(snakemake.input.proteins), "fasta"):
-    contig_id,protein = record.id.rpartition('_')
+    contig_id = record.id.rpartition('_')[0]
     if contig_id in votu_reps_set:
         if contig_id in set(votu_rep_prot_ids):
             record.id = record.id + "_" + str(rep)
