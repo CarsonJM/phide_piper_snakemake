@@ -120,7 +120,7 @@ rule extract_votu_reps:
     conda:
         "../envs/jupyter.yml"
     script:
-        "../scripts/07_votu_analysis.py"
+        "../scripts/07_extract_votu_representatives.py"
 
 
 # -----------------------------------------------------
