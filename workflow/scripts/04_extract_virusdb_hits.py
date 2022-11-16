@@ -14,7 +14,10 @@ virusdb_hits = []
 
 for record in SeqIO.parse(str(snakemake.input.virusdb), "fasta"):
     if record.id in read_screen_filt_queries:
-        virusdb_hits.append(record)
+        if record.id in set(virusdb_hits):
+            continue
+        else:
+            virusdb_hits.append(record)
         
 # save all sequences to specified file
 SeqIO.write(virusdb_hits, str(snakemake.output), "fasta")
