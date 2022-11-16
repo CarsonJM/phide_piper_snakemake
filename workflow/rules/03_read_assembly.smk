@@ -283,7 +283,7 @@ rule dereplicate_contigs_within_samples:
         python {input.blastani_script} -i {input.blast} -o {params.ani_tsv}
 
         # cluster contigs based on 95% ANI and 85% AF
-        python {input.cluster_script} --fna {input.viruses} --ani {params.ani_tsv} --out {output} --min_ani 95 --min_qcov 85 --min_tcov 0
+        python {input.cluster_script} --fna {input.viruses} --ani {params.ani_tsv} --out {output} --min_ani 95 --min_qcov 0 --min_tcov 85
         """
 
 
