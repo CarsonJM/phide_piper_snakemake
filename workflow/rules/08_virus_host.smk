@@ -151,6 +151,9 @@ checkpoint iphop_split:
         mem_mb="1000",
     shell:
         """
+        rm -rf {params.out_dir}
+        mkdir {params.out_dir}
+
         # run iphop predict
         iphop split \
         --input_file {input.viruses} \
