@@ -8,7 +8,7 @@ for record in SeqIO.parse(str(snakemake.input.checkv_viruses), "fasta"):
     combined.append(record)
 
 # parse through and combine virus sequences for each sample
-for record in SeqIO.parse(str(snakemake.input.checkv_proteins), "fasta"):
+for record in SeqIO.parse(str(snakemake.input.checkv_proviruses), "fasta"):
     record.id = record.id.rpartition('_')[0]
     combined.append(record)
 

@@ -129,6 +129,44 @@ rule verify_iphop_db:
         """
 
 
+# run iphop splinter to
+rule iphop_split:
+    message:
+        "Splitting virus fasta for iPHoP"
+    input:
+        viruses=viruses,
+        iphop=resources + "iphop/iphop_download_verified",
+    output:
+        results + "08_VIRUS_HOST/01_iphop/",
+    params:
+        min_score=config["virus_host"]["iphop_min_score"],
+        out_dir=results + "08_VIRUS_HOST/01_iphop/",
+        db_dir=resources + "iphop/Sept_2021_pub/",
+        extra_args=config["virus_host"]["iphop_arguments"],
+    # conda:
+    #     "../envs/iphop:1.1.0.yaml"
+    container:
+        "/gscratch/stf/carsonjm/apptainer/iphop-1.1.0.sif"
+    threads: config["virus_host"]["iphop_threads"]
+    benchmark:
+        "benchmark/08_VIRUS_HOST/iphop.tsv"
+    resources:
+        runtime="12:00:00",
+        mem_mb="100000",
+        partition="compute-hugemem",
+    shell:
+        """
+        # run iphop predict
+        iphop predict \
+        --fa_file {input.viruses} \
+        --out_dir {params.out_dir} \
+        --db_dir {params.db_dir} \
+        --num_threads {threads} \
+        --min_score {params.min_score} \
+        {params.extra_args}
+        """
+
+
 # run iphop to predict hosts for viral sequences
 rule iphop:
     message:
