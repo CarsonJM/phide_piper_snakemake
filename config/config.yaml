@@ -171,6 +171,7 @@ include_taxonomy_module: True
 virus_taxonomy:
   # Min annotated genomad genes per genome to assign taxonomy
   genomad_min_genes: 1
+  genomad_threads: 8
   # Min taxonomic agreement amongst all genomad hits
   genomad_min_agreement: 0.5
   mmseqs_arguments: ""

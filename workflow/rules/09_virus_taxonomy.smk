@@ -44,7 +44,7 @@ rule genomad_taxonomy:
         genomad_dir=resources + "genomad/genomad_db",
     conda:
         "../envs/genomad:1.0.1.yml"
-    threads: config["virus_identification"]["genomad_threads"]
+    threads: config["virus_taxonomy"]["genomad_threads"]
     benchmark:
         "benchmark/09_VIRUS_TAXONOMY/genomad.tsv"
     resources:
