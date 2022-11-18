@@ -100,7 +100,7 @@ rule virsorter2_dram:
     params:
         vs2_db=resources + "virsorter2",
         out_dir=results + "11_VIRUS_FUNCTION/01_virsorter2/",
-        extra_args=config["virus_identification"]["virsorter2_arguments"],
+        extra_args=config["virus_function"]["virsorter2_arguments"],
     conda:
         "../envs/virsorter:2.2.3--pyhdfd78af_1.yml"
     threads: config["virus_function"]["virsorter2_threads"]
@@ -124,8 +124,7 @@ rule virsorter2_dram:
         --min-score 0.0 \
         --rm-tmpdir \
         --viral-gene-enrich-off \
-        {params.extra_args} \
-        --provirus-off
+        {params.extra_args}
         """
 
 
