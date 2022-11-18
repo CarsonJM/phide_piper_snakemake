@@ -155,6 +155,7 @@ virus_phylogeny:
 # Module 8: Virus Host
 include_host_module: True
 virus_host:
+  iphop_split_num_seqs: 5
   # Roughly equates to precision
   iphop_min_score: 90
   iphop_arguments: ""

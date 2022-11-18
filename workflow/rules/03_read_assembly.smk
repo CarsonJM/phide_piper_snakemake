@@ -54,7 +54,7 @@ rule metaspades:
     benchmark:
         "benchmark/03_READ_ASSEMBLY/metaspades_{sample}.tsv"
     resources:
-        runtime="04:00:00",
+        runtime="05:00:00",
         mem_mb="100000",
     threads: config["read_assembly"]["spades_threads"]
     shell:
@@ -89,7 +89,7 @@ rule metaviralspades:
     benchmark:
         "benchmark/03_READ_ASSEMBLY/metaviralspades_{sample}.tsv"
     resources:
-        runtime="04:00:00",
+        runtime="05:00:00",
         mem_mb="100000",
     threads: config["read_assembly"]["spades_threads"]
     shell:
@@ -124,7 +124,7 @@ rule rnaviralspades:
     benchmark:
         "benchmark/03_READ_ASSEMBLY/rnaviralspades_{sample}.tsv"
     resources:
-        runtime="04:00:00",
+        runtime="05:00:00",
         mem_mb="100000",
     threads: config["read_assembly"]["spades_threads"]
     shell:

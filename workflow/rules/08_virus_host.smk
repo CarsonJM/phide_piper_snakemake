@@ -130,40 +130,32 @@ rule verify_iphop_db:
 
 
 # run iphop splinter to
-rule iphop_split:
+checkpoint iphop_split:
     message:
         "Splitting virus fasta for iPHoP"
     input:
         viruses=viruses,
-        iphop=resources + "iphop/iphop_download_verified",
     output:
-        results + "08_VIRUS_HOST/01_iphop/",
+        directory(results + "08_VIRUS_HOST/01_iphop/input_fastas/"),
     params:
-        min_score=config["virus_host"]["iphop_min_score"],
-        out_dir=results + "08_VIRUS_HOST/01_iphop/",
-        db_dir=resources + "iphop/Sept_2021_pub/",
-        extra_args=config["virus_host"]["iphop_arguments"],
+        out_dir=results + "08_VIRUS_HOST/01_iphop/input_fastas/",
+        num_seqs=config["virus_host"]["iphop_split_num_seqs"],
     # conda:
     #     "../envs/iphop:1.1.0.yaml"
     container:
         "/gscratch/stf/carsonjm/apptainer/iphop-1.1.0.sif"
-    threads: config["virus_host"]["iphop_threads"]
     benchmark:
-        "benchmark/08_VIRUS_HOST/iphop.tsv"
+        "benchmark/08_VIRUS_HOST/iphop_split.tsv"
     resources:
-        runtime="12:00:00",
-        mem_mb="100000",
-        partition="compute-hugemem",
+        runtime="00:10:00",
+        mem_mb="1000",
     shell:
         """
         # run iphop predict
-        iphop predict \
-        --fa_file {input.viruses} \
-        --out_dir {params.out_dir} \
-        --db_dir {params.db_dir} \
-        --num_threads {threads} \
-        --min_score {params.min_score} \
-        {params.extra_args}
+        iphop split \
+        --input_file {input.viruses} \
+        --split_dir {params.out_dir} \
+        --n_seq {params.num_seqs}
         """
 
 
@@ -172,16 +164,16 @@ rule iphop:
     message:
         "Predicting hosts for viral sequences"
     input:
-        viruses=viruses,
+        viruses=results + "08_VIRUS_HOST/01_iphop/input_fastas/batch_{batch}.fna",
         iphop=resources + "iphop/iphop_download_verified",
     output:
         results
-        + "08_VIRUS_HOST/01_iphop/Host_prediction_to_genus_m"
+        + "08_VIRUS_HOST/01_iphop/{batch}/Host_prediction_to_genus_m"
         + str(config["virus_host"]["iphop_min_score"])
         + ".csv",
     params:
         min_score=config["virus_host"]["iphop_min_score"],
-        out_dir=results + "08_VIRUS_HOST/01_iphop/",
+        out_dir=results + "08_VIRUS_HOST/01_iphop/{batch}/",
         db_dir=resources + "iphop/Sept_2021_pub/",
         extra_args=config["virus_host"]["iphop_arguments"],
     # conda:
@@ -190,7 +182,7 @@ rule iphop:
         "/gscratch/stf/carsonjm/apptainer/iphop-1.1.0.sif"
     threads: config["virus_host"]["iphop_threads"]
     benchmark:
-        "benchmark/08_VIRUS_HOST/iphop.tsv"
+        "benchmark/08_VIRUS_HOST/iphop_{batch}.tsv"
     resources:
         runtime="12:00:00",
         mem_mb="100000",
@@ -205,6 +197,40 @@ rule iphop:
         --num_threads {threads} \
         --min_score {params.min_score} \
         {params.extra_args}
+        """
+
+
+# input function for rule aggregate, return paths to all files produced by the checkpoint 'somestep'
+def combine_iphop_input(wildcards):
+    checkpoint_output = checkpoints.iphop_split.get(**wildcards).output[0]
+    return expand(
+        results
+        + "08_VIRUS_HOST/01_iphop/{batch}/Host_prediction_to_genus_m"
+        + str(config["virus_host"]["iphop_min_score"])
+        + ".csv",
+        batch=glob_wildcards(
+            os.path.join(checkpoint_output, "batch_{batch}.fna")
+        ).batch,
+    )
+
+
+# combine checkv reports across samples
+rule combine_iphop_reports:
+    message:
+        "Combining iPHoP reports across samples"
+    input:
+        combine_iphop_input,
+    output:
+        results + "08_VIRUS_HOST/01_iphop/iphop_report.tsv",
+    benchmark:
+        "benchmark/08_VIRUS_HOST/combine_iphop_reports.tsv"
+    resources:
+        runtime="00:10:00",
+        mem_mb="1000",
+    shell:
+        """
+        # combine all outputs, only keeping header from one file
+        awk 'FNR>1 || NR==1' {input} > {output}
         """
 
 
@@ -327,10 +353,7 @@ rule virus_host_analysis:
     message:
         "Visualizing iPHoP and PHIST taxonomy outputs"
     input:
-        iphop=results
-        + "08_VIRUS_HOST/01_iphop/Host_prediction_to_genus_m"
-        + str(config["virus_host"]["iphop_min_score"])
-        + ".csv",
+        iphop=results + "08_VIRUS_HOST/01_iphop/iphop_report.tsv",
         phist=results + "08_VIRUS_HOST/02_phist/phist_host_taxonomy.csv",
     output:
         report=results + "08_VIRUS_HOST/virus_host_taxonomy.csv",

@@ -98,7 +98,7 @@ rule viromeqc:
     benchmark:
         "benchmark/02_VIRUS_ENRICHMENT/viromeqc_{sample}.tsv"
     resources:
-        runtime="04:00:00",
+        runtime="05:00:00",
         mem_mb="10000",
     threads: config["virus_enrichment"]["viromeqc_threads"]
     shell:
