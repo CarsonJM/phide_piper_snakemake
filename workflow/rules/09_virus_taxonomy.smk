@@ -112,7 +112,6 @@ rule mmseqs2:
     resources:
         runtime="12:00:00",
         mem_mb="150000",
-        partition="compute-hugemem"
     threads: config["virus_taxonomy"]["mmseqs_threads"]
     shell:
         """

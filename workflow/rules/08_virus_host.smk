@@ -186,7 +186,6 @@ rule iphop:
     resources:
         runtime="12:00:00",
         mem_mb="100000",
-        partition="compute-hugemem",
     shell:
         """
         # run iphop predict
@@ -312,7 +311,6 @@ rule phist:
     resources:
         runtime="12:00:00",
         mem_mb="100000",
-        partition="compute-hugemem",
     shell:
         """
         # run phist

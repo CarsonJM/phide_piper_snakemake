@@ -103,7 +103,6 @@ rule align_reads_to_viruses:
     resources:
         runtime="12:00:00",
         mem_mb="10000",
-        partition="compute-hugemem",
     threads: config["virus_analysis"]["bowtie2_threads"]
     shell:
         """

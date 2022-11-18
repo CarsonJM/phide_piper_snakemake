@@ -109,7 +109,6 @@ rule virsorter2_dram:
     resources:
         runtime="12:00:00",
         mem_mb="10000",
-        partition="compute-hugemem"
     shell:
         """
         # remove output directory
@@ -148,7 +147,6 @@ rule dramv_annotate:
     resources:
         runtime="12:00:00",
         mem_mb="10000",
-        partition="compute-hugemem"
     threads: config["virus_function"]["dramv_threads"]
     shell:
         """

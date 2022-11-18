@@ -80,7 +80,6 @@ rule bacphlip:
     resources:
         runtime="12:00:00",
         mem_mb="10000",
-        partition="compute-hugemem"
     threads: config["virus_lifestyle"]["bacphlip_threads"]
     shell:
         """

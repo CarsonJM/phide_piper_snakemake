@@ -200,7 +200,7 @@ rule mgv_imgvr_hmmsearch:
     benchmark:
         "benchmark/04_VIRUS_IDENTIFICATION/mgv_imgvr_hmmsearch_{sample}.tsv"
     resources:
-        runtime="04:00:00",
+        runtime="15:00:00",
         mem_mb="10000",
     threads: config["virus_identification"]["mgv_threads"]
     shell:
@@ -231,7 +231,7 @@ rule mgv_pfam_hmmsearch:
     benchmark:
         "benchmark/04_VIRUS_IDENTIFICATION/mgv_pfam_hmmsearch_{sample}.tsv"
     resources:
-        runtime="04:00:00",
+        runtime="10:00:00",
         mem_mb="10000",
     threads: config["virus_identification"]["mgv_threads"]
     shell:
@@ -299,7 +299,7 @@ rule mgv_virfinder:
     benchmark:
         "benchmark/04_VIRUS_IDENTIFICATION/mgv_virfinder_{sample}.tsv"
     resources:
-        runtime="04:00:00",
+        runtime="05:00:00",
         mem_mb="10000",
     shell:
         """
@@ -487,9 +487,8 @@ rule virsorter:
     benchmark:
         "benchmark/04_VIRUS_IDENTIFICATION/virsorter_{sample}.tsv"
     resources:
-        runtime="12:00:00",
+        runtime="25:00:00",
         mem_mb="10000",
-        partition="compute-hugemem",
     threads: config["virus_identification"]["virsorter_threads"]
     shell:
         """
@@ -557,9 +556,8 @@ rule virsorter2:
     benchmark:
         "benchmark/04_VIRUS_IDENTIFICATION/virsorter2_{sample}.tsv"
     resources:
-        runtime="12:00:00",
+        runtime="20:00:00",
         mem_mb="100000",
-        partition="compute-hugemem",
     threads: config["virus_identification"]["virsorter2_threads"]
     shell:
         """
@@ -636,7 +634,7 @@ rule vibrant:
     benchmark:
         "benchmark/04_VIRUS_IDENTIFICATION/vibrant_{sample}.tsv"
     resources:
-        runtime="04:00:00",
+        runtime="10:00:00",
         mem_mb="10000",
     threads: config["virus_identification"]["vibrant_threads"]
     shell:
@@ -699,7 +697,7 @@ rule deepvirfinder:
     benchmark:
         "benchmark/04_VIRUS_IDENTIFICATION/deepvirfinder_{sample}.tsv"
     resources:
-        runtime="04:00:00",
+        runtime="10:00:00",
         mem_mb="10000",
     threads: config["virus_identification"]["virfinder_threads"]
     shell:
@@ -761,7 +759,7 @@ rule genomad:
     benchmark:
         "benchmark/04_VIRUS_IDENTIFICATION/genomad_{sample}.tsv"
     resources:
-        runtime="04:00:00",
+        runtime="05:00:00",
         mem_mb="10000",
     threads: config["virus_identification"]["genomad_threads"]
     shell:
@@ -831,7 +829,7 @@ rule screen_reads_against_virusdb:
     benchmark:
         "benchmark/04_VIRUS_IDENTIFICATION/screen_reads_against_virusdb_sketch_{sample}.tsv"
     resources:
-        runtime="04:00:00",
+        runtime="01:00:00",
         mem_mb="100000",
     threads: config["virus_identification"]["mash_threads"]
     shell:

@@ -115,7 +115,7 @@ rule extract_votu_reps:
     benchmark:
         "benchmark/07_VIRUS_DIVERSITY/extract_votu_reps.tsv"
     resources:
-        runtime="01:00:00",
+        runtime="00:10:00",
         mem_mb="10000",
     conda:
         "../envs/jupyter.yml"
@@ -171,7 +171,6 @@ rule vcontact2:
     resources:
         runtime="12:00:00",
         mem_mb="100000",
-        partition="compute-hugemem",
     threads: config["virus_diversity"]["vcontact2_threads"]
     shell:
         """
@@ -264,9 +263,8 @@ rule ccp77_hmmsearch:
     benchmark:
         "benchmark/07_VIRUS_DIVERSITY/ccp77_hmmsearch.tsv"
     resources:
-        runtime="12:00:00",
+        runtime="4:00:00",
         mem_mb="10000",
-        partition="compute-hugemem",
     threads: config["virus_phylogeny"]["hmmsearch_threads"]
     shell:
         """
@@ -324,9 +322,8 @@ rule ccp77_hmmalign:
     benchmark:
         "benchmark/07_VIRUS_DIVERSITY/ccp77_hmmalign.tsv"
     resources:
-        runtime="12:00:00",
+        runtime="4:00:00",
         mem_mb="10000",
-        partition="compute-hugemem",
     shell:
         """
         # change cwd
@@ -365,9 +362,8 @@ rule trim_msa:
     benchmark:
         "benchmark/07_VIRUS_DIVERSITY/trim_msa.tsv"
     resources:
-        runtime="12:00:00",
+        runtime="01:00:00",
         mem_mb="10000",
-        partition="compute-hugemem",
     shell:
         """
         # change cwd
@@ -424,9 +420,8 @@ rule fasttree:
     benchmark:
         "benchmark/07_VIRUS_DIVERSITY/fasttree.tsv"
     resources:
-        runtime="12:00:00",
+        runtime="01:00:00",
         mem_mb="50000",
-        partition="compute-hugemem",
     shell:
         """
         fasttree -wag -gamma -mlacc 2 -slownni {input} > {output}
