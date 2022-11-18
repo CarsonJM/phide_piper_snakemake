@@ -162,7 +162,8 @@ rule vcontact2:
         clusters=results + "07_VIRUS_DIVERSITY/02_vcontact2/output/viral_cluster_overview.csv",
         network=results + "07_VIRUS_DIVERSITY/02_vcontact2/output/c1.ntw",
     params:
-        out_dir=results + "07_VIRUS_DIVERSITY/02_vcontact2/output/"
+        out_dir=results + "07_VIRUS_DIVERSITY/02_vcontact2/output/",
+        extra_args=config["virus_diversity"]["vcontact2_arguments"]
     container:
         "docker://sonnenburglab/vcontact2"
     benchmark:
@@ -186,7 +187,8 @@ rule vcontact2:
         --vcs-mode ClusterONE \
         --c1-bin /opt/conda/bin/cluster_one-1.0.jar \
         --threads {threads} \
-        --output-dir {params.out_dir}
+        --output-dir {params.out_dir} \
+        {params.extra_args}
         """
 
 
