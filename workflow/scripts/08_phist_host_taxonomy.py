@@ -3,24 +3,7 @@ import pandas as pd
 # load uhgg metadata and blast results
 bacteria_db_metadata = pd.read_csv(
 # '/home/carsonjm/resources/uhgg/genome-all_metadata.tsv'
-str(snakemake.input.bacteria_db_metadata)
-, sep='\t')
-
-# split lineage column
-bacteria_db_metadata[['superkingdom', 'phylum', 'class', 'order','family', 'genus', 'species']] = bacteria_db_metadata['Lineage'].str.split(';', expand=True)
-bacteria_db_metadata['superkingdom'] = bacteria_db_metadata['superkingdom'].str.partition('d__')[2]
-bacteria_db_metadata['phylum'] = bacteria_db_metadata['phylum'].str.partition('p__')[2]
-bacteria_db_metadata['class'] = bacteria_db_metadata['class'].str.partition('c__')[2]
-bacteria_db_metadata['order'] = bacteria_db_metadata['order'].str.partition('o__')[2]
-bacteria_db_metadata['family'] = bacteria_db_metadata['family'].str.partition('f__')[2]
-bacteria_db_metadata['genus'] = bacteria_db_metadata['genus'].str.partition('g__')[2]
-bacteria_db_metadata['superkingdom'] = bacteria_db_metadata['superkingdom'].str.partition('_')[0]
-bacteria_db_metadata['phylum'] = bacteria_db_metadata['phylum'].str.partition('_')[0]
-bacteria_db_metadata['class'] = bacteria_db_metadata['class'].str.partition('_')[0]
-bacteria_db_metadata['order'] = bacteria_db_metadata['order'].str.partition('_')[0]
-bacteria_db_metadata['family'] = bacteria_db_metadata['family'].str.partition('_')[0]
-bacteria_db_metadata['genus'] = bacteria_db_metadata['genus'].str.partition('_')[0]
-
+str(snakemake.input.bacteria_db_metadata))
 
 # read phist report line-by-line
 phist = open(str(snakemake.input.phist), 'r')
@@ -72,7 +55,7 @@ snakemake.params.min_common_kmers
 # 0.5
 ]
 
-merged=phist_results_metadata_hq[['phage', 'host', 'common_kmers', 'superkingdom', 'phylum', 'class', 'order', 'family', 'genus']]
+merged=phist_results_metadata_hq[['phage', 'host', 'common_kmers', 'Genus']]
 
 merged2 = merged[merged['host'].notnull()]
 
@@ -99,55 +82,13 @@ def determine_consensus(taxonomic_rank, phist_table):
     return taxonomy_hits_consensus
 
 # determine genus level consensus
-genus_consensus = determine_consensus('genus', phist_counts_taxonomy)
+genus_consensus = determine_consensus('Genus', phist_counts_taxonomy)
 genus_unannotated = phist_counts_taxonomy[~phist_counts_taxonomy['phage'].isin(
     genus_consensus['phage'])]
 
 
-# determine family level consensus
-family_consensus = determine_consensus('family', genus_unannotated)
-family_consensus['genus'] = 'NA'
-family_unannotated = genus_unannotated[~genus_unannotated['phage'].isin(
-    family_consensus['phage'])]
-
-# determine order level consensus
-order_consensus = determine_consensus('order', family_unannotated)
-order_consensus[['genus', 'family']] = 'NA'
-order_unannotated = family_unannotated[~family_unannotated['phage'].isin(
-    order_consensus['phage'])]
-
-# determine class level consensus
-class_consensus = determine_consensus('class', order_unannotated)
-class_consensus[['genus', 'family', 'order']] = 'NA'
-class_unannotated = order_unannotated[~order_unannotated['phage'].isin(
-    class_consensus['phage'])]
-
-# determine phylum level consensus
-phylum_consensus = determine_consensus('phylum', class_unannotated)
-phylum_consensus[['genus', 'family', 'order', 'class']] = 'NA'
-phylum_unannotated = class_unannotated[~class_unannotated['phage'].isin(
-    phylum_consensus['phage'])]
-
-# determine superkingdom level consensus
-superkingdom_consensus = determine_consensus('superkingdom', phylum_unannotated)
-superkingdom_consensus[['genus', 'family', 'order', 'class', 'phylum']] = 'NA'
-superkingdom_unannotated = phylum_unannotated[~phylum_unannotated['phage'].isin(
-    superkingdom_consensus['phage'])]
-
-# merge all results
-final_consensus = pd.concat([genus_consensus, family_consensus, order_consensus,
-    class_consensus, phylum_consensus, superkingdom_consensus])
-final_consensus = final_consensus.fillna('NA')
-final_consensus['taxonomy'] = (final_consensus['superkingdom'] + ';'
-    + final_consensus['phylum'] + ';' + final_consensus['class'] + ';'
-    + final_consensus['order'] + ';' + final_consensus['family'] + ';'
-    + final_consensus['genus'])
-
 # format results file and save
-final_consensus = final_consensus[['phage', 'common_kmers', 'total_kmers',
-'superkingdom','superkingdom_kmers','superkingdom_percent_agreement','phylum','phylum_kmers','phylum_percent_agreement',
-'class','class_kmers','class_percent_agreement','order','order_kmers','order_percent_agreement',
-'family','family_kmers','family_percent_agreement','genus','genus_kmers','genus_percent_agreement', 'taxonomy']]
+final_consensus = genus_consensus[['phage', 'common_kmers', 'total_kmers','Genus','Genus_kmers','Genus_percent_agreement', 'taxonomy']]
 final_consensus = final_consensus.add_prefix('phist_',)
 final_consensus.rename(columns = {'phist_phage': 'viral_genome'}, inplace=True)
 final_consensus['viral_genome'] = final_consensus['viral_genome'].str.split('.fna', expand=True)[0]
