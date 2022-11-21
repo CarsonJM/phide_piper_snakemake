@@ -341,7 +341,7 @@ rule phist_host_taxonomy:
         "benchmark/08_VIRUS_HOST/phist_host_taxonomy.tsv"
     resources:
         runtime="00:10:00",
-        mem_mb="1000",
+        mem_mb="10000",
     script:
         "../scripts/08_phist_host_taxonomy.py"
 
