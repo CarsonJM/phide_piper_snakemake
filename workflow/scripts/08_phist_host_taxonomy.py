@@ -88,10 +88,10 @@ genus_unannotated = phist_counts_taxonomy[~phist_counts_taxonomy['phage'].isin(
 
 
 # format results file and save
-final_consensus = genus_consensus[['phage', 'common_kmers', 'total_kmers','Genus','Genus_kmers','Genus_percent_agreement', 'taxonomy']]
+final_consensus = genus_consensus[['phage', 'common_kmers', 'total_kmers','Genus','Genus_kmers','Genus_percent_agreement']]
 final_consensus = final_consensus.add_prefix('phist_',)
 final_consensus.rename(columns = {'phist_phage': 'viral_genome'}, inplace=True)
 final_consensus['viral_genome'] = final_consensus['viral_genome'].str.split('.fna', expand=True)[0]
 final_consensus.to_csv(str(snakemake.output.report), index=False)
-host_results = final_consensus[['viral_genome', 'phist_taxonomy']]
+host_results = final_consensus[['viral_genome', 'phist_Genus']]
 host_results.to_csv(str(snakemake.output.taxonomy), index=False)

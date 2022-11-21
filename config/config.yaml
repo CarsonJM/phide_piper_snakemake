@@ -15,8 +15,8 @@ resources: "/gscratch/scrubbed/carsonjm/resources/"
 # used to search for external viruses in samples
 virus_db: "/gscratch/scrubbed/carsonjm/resources/hq_virus_db/combined_hq_genomes.fa"
 # used for PHIST search
-bacteria_db: "/gscratch/scrubbed/carsonjm/resources/uhog/bacteria/"
-bacteria_db_meta: "/gscratch/scrubbed/carsonjm/resources/uhog/uhog_genome-all_metadata.tsv"
+bacteria_db: "/gscratch/scrubbed/carsonjm/resources/oral_bacteria_db/fastas/"
+bacteria_db_meta: "/gscratch/stf/carsonjm/projects/oral_microbiome_benchmark/analysis/combined_metadata.csv"
 
 #------------------------------------
 # Input data options
@@ -164,7 +164,7 @@ virus_host:
   min_phist_common_kmers: 2
   # Min agreement amongst PHIST kmers (all kmers from genomes with > min_phist_common_kmers)
   min_phist_agreement: 50
-  phist_threads: 8
+  phist_threads: 32
 
 # Module 9: Virus Taxonomy
 include_taxonomy_module: True
@@ -190,6 +190,8 @@ virus_lifestyle:
 # Module 11: Virus Function
 include_function_module: True
 virus_function:
+  virsorter2_arguments: ""
+  virsorter2_threads: 16
   dramv_arguments: ""
   dramv_threads: 10
 
