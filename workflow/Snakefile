@@ -48,60 +48,60 @@ def get_final_output(wildcards):
 
     final_output = []
 
-    # if config["input_data"] == "reads":
-    #     final_output.append(results + "01_READ_PREPROCESSING/fastp_multiqc_report.html")
-    #     final_output.append(results + "01_READ_PREPROCESSING/kneaddata_analysis.html")
+    if config["input_data"] == "reads":
+        final_output.append(results + "01_READ_PREPROCESSING/fastp_multiqc_report.html")
+        final_output.append(results + "01_READ_PREPROCESSING/kneaddata_analysis.html")
 
-    # if config["include_enrichment_module"] and config["input_data"] == "reads":
-    #     final_output.append(results + "02_VIRUS_ENRICHMENT/virus_enrichment_figure.svg")
+    if config["include_enrichment_module"] and config["input_data"] == "reads":
+        final_output.append(results + "02_VIRUS_ENRICHMENT/virus_enrichment_figure.svg")
 
-    # if config["input_data"] == "reads":
-    #     final_output.append(results + "03_READ_ASSEMBLY/quast_multiqc_report.html")
+    if config["input_data"] == "reads":
+        final_output.append(results + "03_READ_ASSEMBLY/quast_multiqc_report.html")
 
-    # if config["input_data"] == "reads" or config["input_data"] == "contigs":
-    #     final_output.append(
-    #         results + "04_VIRUS_IDENTIFICATION/virus_identification_boxplot.svg"
-    #     )
+    if config["input_data"] == "reads" or config["input_data"] == "contigs":
+        final_output.append(
+            results + "04_VIRUS_IDENTIFICATION/virus_identification_boxplot.svg"
+        )
 
-    # if (
-    #     config["input_data"] == "reads"
-    #     or config["input_data"] == "contigs"
-    #     or config["input_data"] == "vls"
-    # ):
-    #     final_output.append(results + "05_VIRUS_QUALITY/virus_quality_figure.svg")
+    if (
+        config["input_data"] == "reads"
+        or config["input_data"] == "contigs"
+        or config["input_data"] == "vls"
+    ):
+        final_output.append(results + "05_VIRUS_QUALITY/virus_quality_figure.svg")
 
-    # final_output.append(
-    #     results + "06_VIRUS_DEREPLICATION/virus_dereplication_figure.svg"
-    # )
+    final_output.append(
+        results + "06_VIRUS_DEREPLICATION/virus_dereplication_figure.svg"
+    )
 
-    # final_output.append(results + "07_VIRUS_DIVERSITY/virus_diversity_votu_figure.svg")
-    # final_output.append(
-    #     results + "07_VIRUS_DIVERSITY/virus_diversity_genus_figure.html",
-    # )
+    final_output.append(results + "07_VIRUS_DIVERSITY/virus_diversity_votu_figure.svg")
+    final_output.append(
+        results + "07_VIRUS_DIVERSITY/virus_diversity_genus_figure.html",
+    )
 
-    # if config["include_phylogeny_module"]:
-    #     final_output.append(results + "07_VIRUS_DIVERSITY/virus_phylogeny.png")
+    if config["include_phylogeny_module"]:
+        final_output.append(results + "07_VIRUS_DIVERSITY/virus_phylogeny.png")
 
     if config["include_host_module"]:
         final_output.append(results + "08_VIRUS_HOST/virus_host_taxonomy.csv")
 
-    # if config["include_taxonomy_module"]:
-    #     final_output.append(results + "09_VIRUS_TAXONOMY/virus_taxonomy_analysis.svg")
+    if config["include_taxonomy_module"]:
+        final_output.append(results + "09_VIRUS_TAXONOMY/virus_taxonomy_analysis.svg")
 
-    # if config["include_lifestyle_module"]:
-    #     final_output.append(results + "10_VIRUS_LIFESTYLE/virus_lifestyle_analysis.svg")
+    if config["include_lifestyle_module"]:
+        final_output.append(results + "10_VIRUS_LIFESTYLE/virus_lifestyle_analysis.svg")
 
-    # if config["include_function_module"]:
-    #     final_output.append(
-    #         results + "11_VIRUS_FUNCTION/02_dramv/distillate/product.html"
-    #     )
+    if config["include_function_module"]:
+        final_output.append(
+            results + "11_VIRUS_FUNCTION/02_dramv/distillate/product.html"
+        )
 
-    # if config["include_analysis_module"]:
-    #     final_output.append(results + "12_VIRUS_ANALYSIS/bowtie2_multiqc.html")
-    #     final_output.append(
-    #         results
-    #         + "12_VIRUS_ANALYSIS/02_metapop/MetaPop/12.Visualizations/preprocessing_summaries.pdf"
-    #     )
+    if config["include_analysis_module"]:
+        final_output.append(results + "12_VIRUS_ANALYSIS/bowtie2_multiqc.html")
+        final_output.append(
+            results
+            + "12_VIRUS_ANALYSIS/02_metapop/MetaPop/12.Visualizations/preprocessing_summaries.pdf"
+        )
 
     return final_output
 
