@@ -25,8 +25,7 @@ report: "report/workflow.rst"
 # -----------------------------------------------------
 # Virus lifestyle rules
 # -----------------------------------------------------
-localrules: combine_genomad_lifestyles,
-            virus_lifestyle_analysis
+localrules: extract_hq_for_bacphlip
 
 # -----------------------------------------------------
 # 01 BACPHLIP
@@ -55,6 +54,27 @@ rule build_bacphlip:
         touch {output}
         """
 
+# predict virus lifestyle using bacphlip
+rule extract_hq_for_bacphlip:
+    message:
+        "Extracting HQ viruses to run BACPHLIP on"
+    input:
+        checkv=results + "05_VIRUS_QUALITY/virus_quality_report.tsv",
+        clusters=results + "07_VIRUS_DIVERSITY/01_votu_clusters/votu_clusters.tsv",
+        viruses=results + "07_VIRUS_DIVERSITY/01_votu_clusters/votu_representatives.fna",
+    output:
+        results + "10_VIRUS_LIFESTYLE/01_bacphlip/hq_viruses.fna",
+    params:
+        min_completeness=config["virus_lifestyle"]["min_completeness"]
+    conda:
+        "../envs/jupyter.yml"
+    benchmark:
+        "benchmark/10_VIRUS_LIFESTYLE/bacpextract_hq_for_bacphliphlip.tsv"
+    resources:
+        runtime="00:10:00",
+        mem_mb="10000",
+    script: "../scripts/10_extract_hq_viruses.py"
+
 
 # predict virus lifestyle using bacphlip
 rule bacphlip:
@@ -62,14 +82,11 @@ rule bacphlip:
         "Running BACPHLIP to determine virus lifestyles"
     input:
         bacphlip=resources + "bacphlip/bacphlip_build_complete",
-        viruses=results + "07_VIRUS_DIVERSITY/01_votu_clusters/votu_representatives.fna",
+        viruses=results + "10_VIRUS_LIFESTYLE/01_bacphlip/hq_viruses.fna",
     output:
-        bac_final=results + "10_VIRUS_LIFESTYLE/01_bacphlip/lifestyles.tsv",
-        hmm_final=results + "10_VIRUS_LIFESTYLE/01_bacphlip/hmmsearch.tsv",
+        bac_final=results + "10_VIRUS_LIFESTYLE/01_bacphlip/hq_viruses.fna.bacphlip",
+        hmm_final=results + "10_VIRUS_LIFESTYLE/01_bacphlip/hq_viruses.fna.hmmsearch.tsv",
     params:
-        bac_out=results + "07_VIRUS_DIVERSITY/01_votu_clusters/votu_representatives.fna.bacphlip",
-        hmm_out=results + "07_VIRUS_DIVERSITY/01_votu_clusters/votu_representatives.fna.hmmsearch.tsv",
-        ind_out=results + "07_VIRUS_DIVERSITY/01_votu_clusters/votu_representatives.fna.BACPHLIP_DIR",
         ind_final=results + "10_VIRUS_LIFESTYLE/01_bacphlip/",
     conda:
         "../envs/bacphlip:0.9.6--py_0.yml"
@@ -86,11 +103,6 @@ rule bacphlip:
         # run bacphlip
         bacphlip -i {input.viruses} \
         --multi_fasta
-
-        # move output files to bacphlip dir
-        mv {params.bac_out} {output.bac_final}
-        mv {params.hmm_out} {output.hmm_final}
-        mv {params.ind_out} {params.ind_final}
         """
 
 
@@ -102,7 +114,7 @@ rule virus_lifestyle_analysis:
     message:
         "Visualizing virus lifestyle outputs as determined using BACPHLIP"
     input:
-        results + "10_VIRUS_LIFESTYLE/01_bacphlip/lifestyles.tsv",
+        results + "10_VIRUS_LIFESTYLE/01_bacphlip/hq_viruses.fna.bacphlip",
     output:
         svg=report(
             results + "10_VIRUS_LIFESTYLE/virus_lifestyle_analysis.svg",

@@ -182,13 +182,14 @@ virus_taxonomy:
 # Module 10: Virus Lifestyle
 include_lifestyle_module: True
 virus_lifestyle:
+  min_completeness: 90
   bacphlip_arguments: ""
   # Min BACPHLIP confidence to assign lifestyle
   bacphlip_confidence: 0.5
   bacphlip_threads: 8
 
 # Module 11: Virus Function
-include_function_module: True
+include_function_module: False
 virus_function:
   virsorter2_arguments: ""
   virsorter2_threads: 16
@@ -196,7 +197,7 @@ virus_function:
   dramv_threads: 10
 
 # Module 12: Virus Analysis
-include_analysis_module: True
+include_analysis_module: False
 virus_analysis:
   bowtie2_threads: 8
   metapop_arguments: ""
