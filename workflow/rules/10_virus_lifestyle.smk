@@ -97,7 +97,6 @@ rule bacphlip:
     resources:
         runtime="12:00:00",
         mem_mb="10000",
-    threads: config["virus_lifestyle"]["bacphlip_threads"]
     shell:
         """
         # run bacphlip
