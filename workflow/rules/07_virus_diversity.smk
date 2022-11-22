@@ -107,11 +107,9 @@ rule extract_votu_reps:
         viruses=results
         + "06_VIRUS_DEREPLICATION/02_dereplicate_viruses/dereplicated_viruses.fna",
         untrimmed_viruses=results + "06_VIRUS_DEREPLICATION/02_dereplicate_viruses/dereplicated_untrimmed_viruses.fna",
-        proteins=results + "06_VIRUS_DEREPLICATION/02_dereplicate_viruses/dereplicated_virus_proteins.faa",
     output:
         viruses=results + "07_VIRUS_DIVERSITY/01_votu_clusters/votu_representatives.fna",
         untrimmed_viruses=results + "07_VIRUS_DIVERSITY/01_votu_clusters/votu_representatives_untrimmed.fna",
-        proteins=results + "07_VIRUS_DIVERSITY/01_votu_clusters/votu_representatives_proteins.faa",
     benchmark:
         "benchmark/07_VIRUS_DIVERSITY/extract_votu_reps.tsv"
     resources:
@@ -126,12 +124,37 @@ rule extract_votu_reps:
 # -----------------------------------------------------
 # 02 vContact2
 # -----------------------------------------------------
+# prodigal-gv
+rule prodigal_gv:
+    input:
+        results + "07_VIRUS_DIVERSITY/01_votu_clusters/votu_representatives.fna"
+    output:
+        faa=results + "07_VIRUS_DIVERSITY/02_vcontact2/votu_representatives_proteins.faa",
+        fna=results + "07_VIRUS_DIVERSITY/02_vcontact2/votu_representatives_proteins.fna",
+    conda:
+        "../envs/prodigal_gv.yml"
+    benchmark:
+        "benchmark/07_VIRUS_DIVERSITY/prodigal_gv.tsv"
+    resources:
+        runtime="04:00:00",
+        mem_mb="10000",
+    shell:
+        """
+        # create gene2genome file for vcontact2
+        parallel-prodigal-gv.py -t {threads} \
+        -q \
+        -i {input} \
+        -d {output.fna} \
+        -a {output.faa}
+        """
+
+
 # create gene2genome file for input to vcontact2
 rule gene2genome:
     message:
         "Creating a file that links genes to genomes for vContact2"
     input:
-        results + "07_VIRUS_DIVERSITY/01_votu_clusters/votu_representatives_proteins.faa",
+        results + "07_VIRUS_DIVERSITY/02_vcontact2/votu_representatives_proteins.faa",
     output:
         results + "07_VIRUS_DIVERSITY/02_vcontact2/vcontact2_gene2genome.csv",
     container:
@@ -156,7 +179,7 @@ rule vcontact2:
     message:
         "Run vContact2 to group viruses into approximately genus-level clusters"
     input:
-        proteins=results + "07_VIRUS_DIVERSITY/01_votu_clusters/votu_representatives_proteins.faa",
+        proteins=results + "07_VIRUS_DIVERSITY/02_vcontact2/votu_representatives_proteins.faa",
         g2g=results + "07_VIRUS_DIVERSITY/02_vcontact2/vcontact2_gene2genome.csv",
     output:
         clusters=results + "07_VIRUS_DIVERSITY/02_vcontact2/output/viral_cluster_overview.csv",
@@ -250,7 +273,7 @@ rule ccp77_hmmsearch:
         "Searching viral genes against CCP77 HMMs to identify Caudoviricetes marker genes"
     input:
         resources + "ccp77/ccp77/VOG21972.hmm",
-        viruses=results + "07_VIRUS_DIVERSITY/01_votu_clusters/votu_representatives_proteins.faa",
+        viruses=results + "07_VIRUS_DIVERSITY/02_vcontact2/votu_representatives_proteins.faa",
     output:
         ccp77_hmms=resources + "ccp77/ccp77/ccp77.hmm",
         table=results + "07_VIRUS_DIVERSITY/03_caudoviricetes_phylogeny/01_hmmsearch/ccp77.out",
@@ -285,7 +308,7 @@ rule extract_top_ccp77_hits:
     message:
         "Extracting top CCP77 HMM hits for each genome"
     input:
-        viruses=results + "07_VIRUS_DIVERSITY/01_votu_clusters/votu_representatives_proteins.faa",
+        viruses=results + "07_VIRUS_DIVERSITY/02_vcontact2/votu_representatives_proteins.faa",
         hmmsearch=results + "07_VIRUS_DIVERSITY/03_caudoviricetes_phylogeny/01_hmmsearch/ccp77.out",
     output:
         results + "07_VIRUS_DIVERSITY/03_caudoviricetes_phylogeny/top_hits_extracted",
@@ -386,7 +409,7 @@ rule concatenate_and_filter_msa:
         "Concatenating MSA and filtering based on a minimum of {params.min_hits} hits per genome and max of {params.max_percent_gaps} percent gaps"
     input:
         results + "07_VIRUS_DIVERSITY/03_caudoviricetes_phylogeny/msa_trimmed",
-        viruses=results + "07_VIRUS_DIVERSITY/01_votu_clusters/votu_representatives_proteins.faa",
+        viruses=results + "07_VIRUS_DIVERSITY/02_vcontact2/votu_representatives_proteins.faa",
     output:
         results + "07_VIRUS_DIVERSITY/03_caudoviricetes_phylogeny/05_concatenated_msa/concat.faa",
     params:

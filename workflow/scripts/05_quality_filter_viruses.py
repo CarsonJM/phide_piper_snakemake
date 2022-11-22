@@ -27,11 +27,6 @@ for record in SeqIO.parse(str(snakemake.input.checkv_viruses), "fasta"):
     if record.id in hq_viruses:
         hq_virus_seqs.append(record)
 
-# parse through and combine virus sequences for each sample
-for record in SeqIO.parse(str(snakemake.input.checkv_proteins), "fasta"):
-    if record.id.rpartition('_')[0] in hq_viruses:
-        hq_virus_prots.append(record)
-
 
 for record in SeqIO.parse(str(snakemake.input.untrimmed_viruses), "fasta"):
     if record.id in hq_viruses:
@@ -39,5 +34,4 @@ for record in SeqIO.parse(str(snakemake.input.untrimmed_viruses), "fasta"):
 
 # save all sequences to specified file
 SeqIO.write(hq_virus_seqs, str(snakemake.output.viruses), "fasta")
-SeqIO.write(hq_virus_prots, str(snakemake.output.proteins), "fasta")
 SeqIO.write(hq_untrimmed_seqs, str(snakemake.output.untrimmed_viruses), "fasta")

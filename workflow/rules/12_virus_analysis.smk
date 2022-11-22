@@ -159,107 +159,70 @@ rule bowtie2_multiqc:
 
 
 # -----------------------------------------------------
-# 02 Metapop
+# 02 inStrain
 # -----------------------------------------------------
-# generate read counts using bam files
-rule read_counts:
+# Run instrain to preprocess and analyze alignments
+rule make_stb_file:
     message:
-        "Generating read counts for {wildcards.sample} FastQ"
+        "Making scaffold to bin file for inStrain"
     input:
-        results + "12_VIRUS_ANALYSIS/01_align_viruses/bam_files/{sample}.bam",
+        results + "07_VIRUS_DIVERSITY/01_votu_clusters/votu_representatives.fna",
     output:
-        results + "12_VIRUS_ANALYSIS/02_metapop/{sample}_read_counts.tsv",
+        results + "12_VIRUS_ANALYSIS/02_instrain/stb_file.tsv",
     conda:
-        "../envs/kneaddata:0.10.0--pyhdfd78af_0.yml"
+        "../envs/jupyter.yml"
     benchmark:
-        "benchmark/12_VIRUS_ANALYSIS/read_counts_{sample}.tsv"
+        "benchmark/12_VIRUS_ANALYSIS/make_stb_file.tsv"
     resources:
-        runtime="00:10:00",
-        mem_mb="1000",
-    shell:
-        """
-        # print read counts out to file
-        echo -e {wildcards.sample}"\t"$(samtools view -c {input}) > {output}
-        """
+        runtime="04:00:00",
+        mem_mb="10000",
+    script:
+        "../scripts/12_generate_stb_file.py"
 
 
-# combine read counts files across all sampels
-rule combine_read_counts_across_samples:
+# Run instrain to preprocess and analyze alignments
+rule instrain_profile:
     message:
-        "Combining read counts files across all samples"
-    input:
-        expand(
-            results + "12_VIRUS_ANALYSIS/02_metapop/{sample}_read_counts.tsv",
-            sample=samples,
-        ),
-    output:
-        results + "12_VIRUS_ANALYSIS/02_metapop/combined_read_counts.tsv",
-    benchmark:
-        "benchmark/12_VIRUS_ANALYSIS/combine_read_counts_across_samples.tsv"
-    resources:
-        runtime="00:10:00",
-        mem_mb="1000",
-    shell:
-        """
-        # combine read counts files
-        cat {input} > {output}
-        """
-
-
-# Run metapop to preprocess and analyze alignments
-rule metapop:
-    message:
-        "Running MetaPop to preprocess and analyze virus alignments"
+        "Running inStrain to preprocess alignments and calculate diversity metrics"
     input:
         bam=expand(
             results + "12_VIRUS_ANALYSIS/01_align_viruses/bam_files/{sample}.bam",
             sample=samples,
         ),
-        read_counts=results + "12_VIRUS_ANALYSIS/02_metapop/combined_read_counts.tsv",
-        viruses=results + "07_VIRUS_DIVERSITY/01_votu_clusters/votu_representatives.fna",
+        fasta=results + "07_VIRUS_DIVERSITY/01_votu_clusters/votu_representatives.fna",
+        genes=results
+        + "07_VIRUS_DIVERSITY/02_vcontact2/votu_representatives_proteins.fna",
+        stb=results + "12_VIRUS_ANALYSIS/02_instrain/stb_file.tsv",
     output:
-        breadth=expand(
-            results
-            + "12_VIRUS_ANALYSIS/02_metapop/MetaPop/03.Breadth_and_Depth/{sample}_breadth_and_depth.tsv",
+        profile=expand(
+            results + "12_VIRUS_ANALYSIS/02_instrain/{sample}_profile",
             sample=samples,
         ),
-        pdf=report(
-            results
-            + "12_VIRUS_ANALYSIS/02_metapop/MetaPop/12.Visualizations/preprocessing_summaries.pdf",
-            category="Step 12: Virus analysis",
-        ),
     params:
-        bam_dir=results + "12_VIRUS_ANALYSIS/01_align_viruses/bam_files/",
-        viruses_dir=results + "07_VIRUS_DIVERSITY/01_votu_clusters/fasta/",
-        viruses=results
-        + "07_VIRUS_DIVERSITY/01_votu_clusters/fasta/votu_representatives.fna",
-        out_dir=results + "12_VIRUS_ANALYSIS/02_metapop/",
+        out_dir=results + "12_VIRUS_ANALYSIS/02_instrain/",
         min_id=config["virus_analysis"]["min_id"],
         min_breadth=config["virus_analysis"]["min_breadth"],
         min_depth=config["virus_analysis"]["min_depth"],
-        extra_args=config["virus_analysis"]["metapop_arguments"],
-    conda:
-        "../envs/metapop:1.0.2.yml"
+        extra_args=config["virus_analysis"]["instrain_arguments"],
+    container:
+        "docker://quay.io/biocontainers/instrain:1.5.7--pyhdfd78af_0"
     benchmark:
-        "benchmark/12_VIRUS_ANALYSIS/metapop.tsv"
+        "benchmark/12_VIRUS_ANALYSIS/instrain_profile.tsv"
     resources:
         runtime="04:00:00",
         mem_mb="10000",
-    threads: config["virus_analysis"]["metapop_threads"]
+    threads: config["virus_analysis"]["instrain_threads"]
     shell:
         """
-        rm -rf {params.viruses_dir}
-        mkdir {params.viruses_dir}
-        cp {input.viruses} {params.viruses}
-
-        # run metapop to identify viruses present in samples
-        metapop --input_samples {params.bam_dir} \
-        --norm {input.read_counts} \
-        --reference {params.viruses_dir} \
-        --output {params.out_dir} \
-        --id_min {params.min_id} \
-        --min_cov {params.min_breadth} \
-        --min_dep {params.min_depth} \
-        --threads {threads} \
+        # run instrain profile
+        inStrain profile \
+        {input.bam} \
+        {input.fasta} \
+        --output {params.output_dir} \
+        --processes {threads} \
+        --min_read_ani {params.min_id} \
+        --min_cov {params.min_depth} \
+        --gene_file {input.genes} \
+        --stb {input.stb} \
         {params.extra_args}
         """

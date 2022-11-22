@@ -171,7 +171,6 @@ rule checkv:
         checkv_results=results
         + "05_VIRUS_QUALITY/02_checkv/{sample}/quality_summary.tsv",
         checkv_viruses=results + "05_VIRUS_QUALITY/02_checkv/{sample}/viruses.fna",
-        checkv_proteins=results + "05_VIRUS_QUALITY/02_checkv/{sample}/tmp/proteins.faa",
     params:
         checkv_dir=results + "05_VIRUS_QUALITY/02_checkv/{sample}/",
         checkv_db=resources + "checkv/checkv-db-v1.4",
@@ -197,6 +196,9 @@ rule checkv:
         sed -i "s/$/\t$s/" {output.checkv_results}
         sample="sample"
         sed -i "1s/$s/$sample/" {output.checkv_results}
+
+        # combine protein fna files into one
+        cat tmp/*.fna > {output.proteins_fna}
         """
 
 
@@ -211,13 +213,10 @@ rule quality_filter_viruses:
         checkv_results=results
         + "05_VIRUS_QUALITY/02_checkv/{sample}/quality_summary.tsv",
         checkv_viruses=results + "05_VIRUS_QUALITY/02_checkv/{sample}/viruses.fna",
-        checkv_proteins=results + "05_VIRUS_QUALITY/02_checkv/{sample}/tmp/proteins.faa",
         untrimmed_viruses=vls,
     output:
         viruses=results
         + "05_VIRUS_QUALITY/03_quality_filter/{sample}/quality_filtered_viruses.fna",
-        proteins=results
-        + "05_VIRUS_QUALITY/03_quality_filter/{sample}/quality_filtered_proteins.faa",
         untrimmed_viruses=results
         + "05_VIRUS_QUALITY/03_quality_filter/{sample}/untrimmed_quality_filtered_viruses.fna",
     params:

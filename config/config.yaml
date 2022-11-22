@@ -199,8 +199,8 @@ virus_function:
 include_analysis_module: False
 virus_analysis:
   bowtie2_threads: 8
-  metapop_arguments: ""
-  metapop_threads: 8
+  instrain_arguments: ""
+  instrain_threads: 8
   min_id: 95
   min_breadth: 85
   min_depth: 1

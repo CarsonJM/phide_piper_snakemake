@@ -40,14 +40,11 @@ rule combine_viruses:
     input:
         viruses=expand(results + "05_VIRUS_QUALITY/03_quality_filter/{sample}/quality_filtered_viruses.fna", sample=samples),
         untrimmed_viruses=expand(results + "05_VIRUS_QUALITY/03_quality_filter/{sample}/untrimmed_quality_filtered_viruses.fna", sample=samples),
-        proteins=expand(results + "05_VIRUS_QUALITY/03_quality_filter/{sample}/quality_filtered_proteins.faa", sample=samples)
     output:
         viruses=results
         + "06_VIRUS_DEREPLICATION/01_combine_viruses/combined_viruses.fasta",
         untrimmed_viruses=results
         + "06_VIRUS_DEREPLICATION/01_combine_viruses/combined_untrimmed_viruses.fasta",
-        proteins=results
-        + "06_VIRUS_DEREPLICATION/01_combine_viruses/combined_virus_proteins.faa",
     benchmark:
         "benchmark/06_VIRUS_DEREPLICATION/combine_viruses.tsv"
     resources:
@@ -60,9 +57,6 @@ rule combine_viruses:
 
         # combine untrimmed viruses (for host identification)
         cat {input.untrimmed_viruses} > {output.untrimmed_viruses}
-
-        # combine proteins (for taxonomy)
-        cat {input.proteins} > {output.proteins}
         """
 
 
@@ -149,15 +143,11 @@ rule extract_virus_replicate_representatives:
         + "06_VIRUS_DEREPLICATION/01_combine_viruses/combined_viruses.fasta",
         untrimmed_viruses=results
         + "06_VIRUS_DEREPLICATION/01_combine_viruses/combined_untrimmed_viruses.fasta",
-        proteins=results
-        + "06_VIRUS_DEREPLICATION/01_combine_viruses/combined_virus_proteins.faa",
     output:
         viruses=results
         + "06_VIRUS_DEREPLICATION/02_dereplicate_viruses/dereplicated_viruses.fna",
         untrimmed_viruses=results
         + "06_VIRUS_DEREPLICATION/02_dereplicate_viruses/dereplicated_untrimmed_viruses.fna",
-        proteins=results
-        + "06_VIRUS_DEREPLICATION/02_dereplicate_viruses/dereplicated_virus_proteins.faa",
     conda:
         "../envs/jupyter.yml"
     benchmark:
