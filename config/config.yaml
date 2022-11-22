@@ -122,10 +122,10 @@ virus_dereplication:
   # average nucleotide identity
   min_ani: 99
   # query coverage
-  min_qcov: 100
-  # target coverage
   # typically left at 0, so AF is relative only to shorter sequence
-  min_tcov: 0
+  min_qcov: 0
+  # target coverage
+  min_tcov: 100
   blast_threads: 8
 
 # Module 7: Virus Diversity
@@ -134,10 +134,10 @@ virus_diversity:
   # average nucleotide identity
   min_ani: 95
   # query coverage
-  min_qcov: 85
-  # target coverage
   # typically left at 0, so AF is relative only to shorter sequence
-  min_tcov: 0
+  min_qcov: 0
+  # target coverage
+  min_tcov: 85
   blast_threads: 8
   vcontact2_arguments: "--db 'None'"
   vcontact2_threads: 20
@@ -171,9 +171,9 @@ include_taxonomy_module: True
 virus_taxonomy:
   # Min annotated genomad genes per genome to assign taxonomy
   genomad_min_genes: 1
-  genomad_threads: 8
   # Min taxonomic agreement amongst all genomad hits
   genomad_min_agreement: 0.5
+  genomad_threads: 8
   mmseqs_arguments: ""
   # Min agreement amongst all MMSeqs2 NCBI NR hits
   mmseqs_min_agreement: 0.5
@@ -186,7 +186,6 @@ virus_lifestyle:
   bacphlip_arguments: ""
   # Min BACPHLIP confidence to assign lifestyle
   bacphlip_confidence: 0.5
-  bacphlip_threads: 8
 
 # Module 11: Virus Function
 include_function_module: False
