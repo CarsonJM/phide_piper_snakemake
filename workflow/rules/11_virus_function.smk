@@ -54,6 +54,7 @@ rule build_dramv:
         DRAM-setup.py prepare_databases \
         --skip_uniref \
         --output_dir {params.dram_dir} \
+        --threads {threads} \
         --verbose
 
         touch {output.test}
