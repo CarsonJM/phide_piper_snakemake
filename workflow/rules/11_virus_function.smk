@@ -51,7 +51,10 @@ rule build_dramv:
     shell:
         """
         # download dram databases except uniref
-        DRAM-setup.py prepare_databases --skip_uniref --output_dir {params.dram_dir}
+        DRAM-setup.py prepare_databases \
+        --skip_uniref \
+        --output_dir {params.dram_dir} \
+        --verbose
 
         touch {output.test}
         """
