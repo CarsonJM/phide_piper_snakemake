@@ -196,9 +196,6 @@ rule checkv:
         sed -i "s/$/\t$s/" {output.checkv_results}
         sample="sample"
         sed -i "1s/$s/$sample/" {output.checkv_results}
-
-        # combine protein fna files into one
-        cat tmp/*.fna > {output.proteins_fna}
         """
 
 
