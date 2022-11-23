@@ -213,6 +213,7 @@ rule instrain_profile:
         --min_cov {params.min_depth} \
         --gene_file {input.genes} \
         --stb {input.stb} \
+        --skip_plot_generation \
         {params.extra_args}
         """
 
@@ -265,5 +266,6 @@ rule instrain_compare:
         --breadth {params.min_breadth} \
         --ani_threshold {params.min_id} \
         --coverage_treshold {params.min_breadth} \
+        --skip_plot_generation \
         {params.extra_args}
         """
