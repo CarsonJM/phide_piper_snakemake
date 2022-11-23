@@ -141,8 +141,8 @@ rule prodigal_gv:
     shell:
         """
         # create gene2genome file for vcontact2
-        parallel-prodigal-gv.py -t {threads} \
-        -q \
+        prodigal-gv \
+        -p meta \
         -i {input} \
         -d {output.fna} \
         -a {output.faa}

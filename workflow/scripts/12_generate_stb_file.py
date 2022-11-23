@@ -1,4 +1,4 @@
-import os
+import pandas as pd
 from Bio import SeqIO
 
 # create list to store contig names in

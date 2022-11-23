@@ -99,7 +99,7 @@ virus_identification:
   genomad_threads: 8
   run_external: True
   # Roughly equates to identity (0.95 score ~= 95% identity)
-  min_mash_score: 0.95
+  min_mash_score: 0.99
   # Roughly equates to breadth (850 hashes out of 1000 ~= 85% breadth)
   min_mash_hashes: 850
   # Roughly equates to coverage (3 multiplicity ~= 3x coverage)
@@ -143,7 +143,7 @@ virus_diversity:
   vcontact2_threads: 20
 
 # Module 7 extra: Virus Phylogeny
-include_phylogeny_module: True
+include_phylogeny_module: False
 virus_phylogeny:
   hmmsearch_threads: 8
   max_evalue: 1
@@ -153,7 +153,7 @@ virus_phylogeny:
   min_hits_per_genome: 3
 
 # Module 8: Virus Host
-include_host_module: True
+include_host_module: False
 virus_host:
   iphop_split_num_seqs: 5
   # Roughly equates to precision
@@ -167,7 +167,7 @@ virus_host:
   phist_threads: 32
 
 # Module 9: Virus Taxonomy
-include_taxonomy_module: True
+include_taxonomy_module: False
 virus_taxonomy:
   # Min annotated genomad genes per genome to assign taxonomy
   genomad_min_genes: 1
@@ -180,7 +180,7 @@ virus_taxonomy:
   mmseqs_threads: 16
 
 # Module 10: Virus Lifestyle
-include_lifestyle_module: True
+include_lifestyle_module: False
 virus_lifestyle:
   min_completeness: 90
   bacphlip_arguments: ""
@@ -196,11 +196,12 @@ virus_function:
   dramv_threads: 10
 
 # Module 12: Virus Analysis
-include_analysis_module: False
+include_analysis_module: True
 virus_analysis:
   bowtie2_threads: 8
-  instrain_arguments: ""
-  instrain_threads: 8
-  min_id: 95
-  min_breadth: 85
+  instrain_compare_arguments: ""
+  min_id: 0.95
+  min_breadth: 0.85
   min_depth: 1
+  instrain_profile_arguments: ""
+  instrain_threads: 8

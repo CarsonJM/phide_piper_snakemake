@@ -89,11 +89,10 @@ rule align_reads_to_viruses:
         R2=R2,
         db=results + "12_VIRUS_ANALYSIS/01_align_viruses/virus_catalog.1.bt2",
     output:
-        bam=results + "12_VIRUS_ANALYSIS/01_align_viruses/bam_files/{sample}.bam",
+        sam=results + "12_VIRUS_ANALYSIS/01_align_viruses/{sample}.sam",
         log=results + "12_VIRUS_ANALYSIS/01_align_viruses/{sample}.log",
     params:
         db=results + "12_VIRUS_ANALYSIS/01_align_viruses/virus_catalog",
-        sam=results + "12_VIRUS_ANALYSIS/01_align_viruses/{sample}.sam",
     # conda:
     #     "../envs/kneaddata:0.10.0--pyhdfd78af_0.yml"
     container:
@@ -112,12 +111,7 @@ rule align_reads_to_viruses:
         -x {params.db} \
         -1 {input.R1} \
         -2 {input.R2} \
-        -S {params.sam} > {output.log} 2>&1
-
-
-        # convert sam to bam
-        samtools view -S -b {params.sam} > {output.bam}
-        rm {params.sam}
+        -S {output.sam} > {output.log} 2>&1
         """
 
 
@@ -185,29 +179,24 @@ rule instrain_profile:
     message:
         "Running inStrain to preprocess alignments and calculate diversity metrics"
     input:
-        bam=expand(
-            results + "12_VIRUS_ANALYSIS/01_align_viruses/bam_files/{sample}.bam",
-            sample=samples,
-        ),
+        sam=results + "12_VIRUS_ANALYSIS/01_align_viruses/{sample}.sam",
         fasta=results + "07_VIRUS_DIVERSITY/01_votu_clusters/votu_representatives.fna",
         genes=results
         + "07_VIRUS_DIVERSITY/02_vcontact2/votu_representatives_proteins.fna",
         stb=results + "12_VIRUS_ANALYSIS/02_instrain/stb_file.tsv",
     output:
-        profile=expand(
-            results + "12_VIRUS_ANALYSIS/02_instrain/{sample}_profile",
-            sample=samples,
-        ),
+        results
+        + "12_VIRUS_ANALYSIS/02_instrain/{sample}/output/{sample}_genome_info.tsv",
     params:
-        out_dir=results + "12_VIRUS_ANALYSIS/02_instrain/",
+        out_dir=results + "12_VIRUS_ANALYSIS/02_instrain/{sample}",
         min_id=config["virus_analysis"]["min_id"],
         min_breadth=config["virus_analysis"]["min_breadth"],
         min_depth=config["virus_analysis"]["min_depth"],
-        extra_args=config["virus_analysis"]["instrain_arguments"],
+        extra_args=config["virus_analysis"]["instrain_profile_arguments"],
     container:
         "docker://quay.io/biocontainers/instrain:1.5.7--pyhdfd78af_0"
     benchmark:
-        "benchmark/12_VIRUS_ANALYSIS/instrain_profile.tsv"
+        "benchmark/12_VIRUS_ANALYSIS/instrain_profile_{sample}.tsv"
     resources:
         runtime="04:00:00",
         mem_mb="10000",
@@ -216,13 +205,65 @@ rule instrain_profile:
         """
         # run instrain profile
         inStrain profile \
-        {input.bam} \
+        {input.sam} \
         {input.fasta} \
-        --output {params.output_dir} \
+        --output {params.out_dir} \
         --processes {threads} \
         --min_read_ani {params.min_id} \
         --min_cov {params.min_depth} \
         --gene_file {input.genes} \
         --stb {input.stb} \
+        {params.extra_args}
+        """
+
+
+# Run instrain to preprocess and analyze alignments
+rule instrain_compare:
+    message:
+        "Running inStrain to preprocess alignments and calculate diversity metrics"
+    input:
+        profiles=expand(
+            results
+            + "12_VIRUS_ANALYSIS/02_instrain/{sample}/output/{sample}_genome_info.tsv",
+            sample=samples,
+        ),
+        sam=expand(
+            results + "12_VIRUS_ANALYSIS/01_align_viruses/{sample}.sam",
+            sample=samples,
+        ),
+        stb=results + "12_VIRUS_ANALYSIS/02_instrain/stb_file.tsv",
+    output:
+        results
+        + "12_VIRUS_ANALYSIS/02_instrain/compare/output/compare_genomeWide_compare.tsv",
+    params:
+        bams_dir=results + "12_VIRUS_ANALYSIS/01_align_viruses/",
+        profiles=expand(
+            results + "12_VIRUS_ANALYSIS/02_instrain/{sample}/",
+            sample=samples,
+        ),
+        out_dir=results + "12_VIRUS_ANALYSIS/02_instrain/compare",
+        min_id=config["virus_analysis"]["min_id"],
+        min_breadth=config["virus_analysis"]["min_breadth"],
+        min_depth=config["virus_analysis"]["min_depth"],
+        extra_args=config["virus_analysis"]["instrain_compare_arguments"],
+    container:
+        "docker://quay.io/biocontainers/instrain:1.5.7--pyhdfd78af_0"
+    benchmark:
+        "benchmark/12_VIRUS_ANALYSIS/instrain_compare.tsv"
+    resources:
+        runtime="04:00:00",
+        mem_mb="10000",
+    threads: config["virus_analysis"]["instrain_threads"]
+    shell:
+        """
+        # run instrain profile
+        inStrain compare \
+        --input {params.profiles} \
+        --output {output} \
+        --processes {threads} \
+        --stb {input.stb} \
+        --breadth {params.min_breadth} \
+        --ani_threshold {params.min_id} \
+        --coverage_treshold {params.min_breadth} \
         {params.extra_args}
         """
