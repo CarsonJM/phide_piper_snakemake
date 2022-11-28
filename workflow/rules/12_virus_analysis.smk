@@ -309,6 +309,5 @@ rule coverm:
         --methods {params.method} \
         --output-file {output} \
         --threads {threads} \
-        --verbose \
         {params.extra_args}
         """
