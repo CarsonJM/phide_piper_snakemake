@@ -205,3 +205,6 @@ virus_analysis:
   min_depth: 1
   instrain_profile_arguments: ""
   instrain_threads: 8
+  coverm_arguments: "--min-read-aligned-length 30 --min-covered-fraction 85"
+  coverm_method: "rpkm"
+  coverm_threads: 8

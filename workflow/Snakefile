@@ -102,6 +102,11 @@ def get_final_output(wildcards):
             results
             + "12_VIRUS_ANALYSIS/02_instrain/compare/output/compare_genomeWide_compare.tsv"
         )
+        final_output.append(
+            results
+            + "12_VIRUS_ANALYSIS/03_coverm/"
+            + config["virus_analysis"]["coverm_method"]
+        )
 
     return final_output
 

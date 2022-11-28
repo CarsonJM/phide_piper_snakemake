@@ -185,7 +185,8 @@ rule instrain_profile:
         + "07_VIRUS_DIVERSITY/02_vcontact2/votu_representatives_proteins.fna",
         stb=results + "12_VIRUS_ANALYSIS/02_instrain/stb_file.tsv",
     output:
-        results
+        sorted_bam=results + "12_VIRUS_ANALYSIS/01_align_viruses/{sample}.sorted.bam",
+        instrain=results
         + "12_VIRUS_ANALYSIS/02_instrain/{sample}/output/{sample}_genome_info.tsv",
     params:
         out_dir=results + "12_VIRUS_ANALYSIS/02_instrain/{sample}",
@@ -267,5 +268,49 @@ rule instrain_compare:
         --ani_threshold {params.min_id} \
         --coverage_treshold {params.min_breadth} \
         --skip_plot_generation \
+        {params.extra_args}
+        """
+
+
+# -----------------------------------------------------
+# 03 CoverM
+# -----------------------------------------------------
+# Run instrain to preprocess and analyze alignments
+rule coverm:
+    message:
+        "Running inStrain to preprocess alignments and calculate diversity metrics"
+    input:
+        sorted_bam=expand(
+            results + "12_VIRUS_ANALYSIS/01_align_viruses/{sample}.sorted.bam",
+            sample=samples,
+        ),
+        fasta=results + "07_VIRUS_DIVERSITY/01_votu_clusters/votu_representatives.fna",
+    output:
+        results
+        + "12_VIRUS_ANALYSIS/03_coverm/"
+        + config["virus_analysis"]["coverm_method"],
+    params:
+        min_id=config["virus_analysis"]["min_id"],
+        method=config["virus_analysis"]["coverm_method"],
+        extra_args=config["virus_analysis"]["coverm_arguments"],
+    container:
+        "docker://quay.io/biocontainers/coverm:0.6.1--h8b24846_3"
+    benchmark:
+        "benchmark/12_VIRUS_ANALYSIS/coverm.tsv"
+    resources:
+        runtime="04:00:00",
+        mem_mb="10000",
+    threads: config["virus_analysis"]["coverm_threads"]
+    shell:
+        """
+        # run coverm
+        coverm contig \
+        --bam-files {input.sorted_bam} \
+        --reference {input.fasta} \
+        --min-read-percent-identity {params.min_id} \
+        --methods {params.method} \
+        --output {output} \
+        --threads {threads} \
+        --verbose \
         {params.extra_args}
         """
