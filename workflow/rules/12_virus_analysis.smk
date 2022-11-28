@@ -260,7 +260,7 @@ rule instrain_compare:
         # run instrain profile
         inStrain compare \
         --input {params.profiles} \
-        --output {output} \
+        --output {params.out_dir} \
         --processes {threads} \
         --stb {input.stb} \
         --breadth {params.min_breadth} \
