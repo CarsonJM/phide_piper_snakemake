@@ -188,7 +188,7 @@ virus_lifestyle:
   bacphlip_confidence: 0.5
 
 # Module 11: Virus Function
-include_function_module: False
+include_function_module: True
 virus_function:
   virsorter2_arguments: ""
   virsorter2_threads: 16
