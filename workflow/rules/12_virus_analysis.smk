@@ -287,7 +287,8 @@ rule coverm:
     output:
         results
         + "12_VIRUS_ANALYSIS/03_coverm/"
-        + config["virus_analysis"]["coverm_method"],
+        + config["virus_analysis"]["coverm_method"]
+        + ".tsv",
     params:
         min_id=config["virus_analysis"]["min_id"],
         method=config["virus_analysis"]["coverm_method"],
