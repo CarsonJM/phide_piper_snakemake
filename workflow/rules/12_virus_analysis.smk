@@ -309,7 +309,7 @@ rule coverm:
         --reference {input.fasta} \
         --min-read-percent-identity {params.min_id} \
         --methods {params.method} \
-        --output {output} \
+        --output-file {output} \
         --threads {threads} \
         --verbose \
         {params.extra_args}
