@@ -280,11 +280,10 @@ rule coverm:
     message:
         "Running inStrain to preprocess alignments and calculate diversity metrics"
     input:
-        sorted_bam=expand(
+        expand(
             results + "12_VIRUS_ANALYSIS/01_align_viruses/{sample}.sorted.bam",
             sample=samples,
         ),
-        fasta=results + "07_VIRUS_DIVERSITY/01_votu_clusters/votu_representatives.fna",
     output:
         results
         + "12_VIRUS_ANALYSIS/03_coverm/"
@@ -305,8 +304,7 @@ rule coverm:
         """
         # run coverm
         coverm contig \
-        --bam-files {input.sorted_bam} \
-        --reference {input.fasta} \
+        --bam-files {input} \
         --min-read-percent-identity {params.min_id} \
         --methods {params.method} \
         --output-file {output} \
