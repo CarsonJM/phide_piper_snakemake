@@ -190,7 +190,7 @@ virus_lifestyle:
 # Module 11: Virus Function
 include_function_module: True
 virus_function:
-  virsorter2_arguments: ""
+  virsorter2_arguments: "--provirus-off"
   virsorter2_threads: 16
   dramv_arguments: ""
   dramv_threads: 10
