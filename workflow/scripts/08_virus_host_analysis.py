@@ -19,7 +19,7 @@ merged.to_csv(str(snakemake.output.report), sep=',', index=False)
 merged['iPHoP'] = merged.apply(lambda x: str(x.iphop_genus).split(';')[1] if str(x.iphop_genus).count(';') > 0 else 'Unknown', axis=1)
 merged['iPHoP'] = merged.apply(lambda x: str(x.iPHoP).split('p__')[1] if str(x.iPHoP).count('p__') > 0 else 'Unknown', axis=1)
 merged['iPHoP'] = merged.apply(lambda x: str(x.iPHoP).split('_')[0] if str(x.iPHoP).count('_') > 0 else x.iPHoP, axis=1)
-merged['PHIST'] = merged.apply(lambda x: str(x.phist_taxonomy).split(';')[1] if str(x.phist_taxonomy).count(';') > 0 else 'Unknown', axis=1)
+merged['PHIST'] = merged.apply(lambda x: str(x.phist_Genus) if len(str(x.phist_Genus)) > 3 else 'Unknown', axis=1)
 
 
 merged_melt = merged.melt(id_vars=['viral_genome'], value_vars=['iPHoP', 'PHIST'])
