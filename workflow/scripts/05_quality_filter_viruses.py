@@ -31,6 +31,8 @@ for record in SeqIO.parse(str(snakemake.input.checkv_viruses), "fasta"):
 for record in SeqIO.parse(str(snakemake.input.untrimmed_viruses), "fasta"):
     if record.id in hq_viruses:
         hq_untrimmed_seqs.append(record)
+    elif record.id + "_1" in hq_viruses:
+        hq_untrimmed_seqs.append(record)
 
 # save all sequences to specified file
 SeqIO.write(hq_virus_seqs, str(snakemake.output.viruses), "fasta")

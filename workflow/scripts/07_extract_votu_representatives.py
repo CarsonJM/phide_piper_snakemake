@@ -14,42 +14,29 @@ votu_reps_set = set(votu_reps)
 
 # extract representative sequences from fasta file
 votu_rep_sequences = []
-votu_rep_ids = []
 rep = 1
 for record in SeqIO.parse(str(snakemake.input.viruses), "fasta"):
     if record.id in votu_reps_set:
-        if record.id in set(votu_rep_ids):
-            record.id = record.id + "_" + str(rep)
-            rep += 1
-        votu_rep_ids.append(record.id)
         votu_rep_sequences.append(record)
 
 votu_reps_set = set(votu_reps)
 
 # extract representative sequences from fasta file
 votu_rep_sequences_untrimmed = []
-votu_rep_ids_untrimmed = []
 rep = 1
 for record in SeqIO.parse(str(snakemake.input.untrimmed_viruses), "fasta"):
     if record.id in votu_reps_set:
-        if record.id in set(votu_rep_ids_untrimmed):
-            record.id = record.id + "_" + str(rep)
-            rep += 1
-        votu_rep_ids_untrimmed.append(record.id)
+        votu_rep_sequences_untrimmed.append(record)
+    elif record.id + "_1" in votu_reps_set:
         votu_rep_sequences_untrimmed.append(record)
 
 
 # extract representative sequences from fasta file
-votu_rep_prot_ids= []
 votu_rep_prots = []
 rep = 1
 for record in SeqIO.parse(str(snakemake.input.proteins), "fasta"):
     contig_id = record.id.rpartition('_')[0]
     if contig_id in votu_reps_set:
-        if contig_id in set(votu_rep_prot_ids):
-            record.id = record.id + "_" + str(rep)
-            rep += 1
-        votu_rep_prot_ids.append(record.id)
         votu_rep_prots.append(record)
 
 # save all sequences to specified file
