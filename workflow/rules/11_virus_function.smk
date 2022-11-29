@@ -154,6 +154,8 @@ rule dramv_annotate:
     threads: config["virus_function"]["dramv_threads"]
     shell:
         """
+        rm -rf {params.out_dir}
+
         # annotate proteins with dramv
         DRAM-v.py annotate \
         -i {input.viruses} \
@@ -188,6 +190,8 @@ rule dramv_distill:
     threads: config["virus_function"]["dramv_threads"]
     shell:
         """
+        rm -rf {params.out_dir}
+        
         # run dramv distill
         DRAM-v.py distill \
         -i {input} \
