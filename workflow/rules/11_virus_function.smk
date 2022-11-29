@@ -45,7 +45,7 @@ rule build_dramv:
     benchmark:
         "benchmark/11_VIRUS_FUNCTION/build_dramv.tsv"
     resources:
-        runtime="4:00:00",
+        runtime="12:00:00",
         mem_mb="100000",
     threads: config["virus_function"]["dramv_threads"]
     shell:
