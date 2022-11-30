@@ -27,8 +27,6 @@ report: "../report/workflow.rst"
 # -----------------------------------------------------
 # Virus clustering rules
 # -----------------------------------------------------
-localrules:
-    virus_diversity_genus_anlysis
 
 # -----------------------------------------------------
 # 01 Cluster viruses into vOTUs
