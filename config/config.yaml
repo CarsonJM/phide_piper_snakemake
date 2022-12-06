@@ -13,7 +13,8 @@ resources: "/gscratch/scrubbed/carsonjm/resources/"
 # Database options
 #------------------------------------
 # used to search for external viruses in samples
-virus_db: "/gscratch/scrubbed/carsonjm/resources/hq_virus_db/combined_hq_genomes.fa"
+virus_db: "/gscratch/scrubbed/carsonjm/resources/inphrared/vmr_sequences.fasta"
+virus_db_meta: "/gscratch/scrubbed/carsonjm/resources/inphrared/vmr_metadata.csv"
 # used for PHIST search
 bacteria_db: "/gscratch/scrubbed/carsonjm/resources/oral_bacteria_db/fastas/"
 bacteria_db_meta: "/gscratch/stf/carsonjm/projects/oral_microbiome_benchmark/analysis/combined_metadata.csv"
@@ -142,7 +143,7 @@ virus_diversity:
   vcontact2_arguments: "--db 'None'"
   vcontact2_threads: 20
 
-# Module 7 extra: Virus Phylogeny
+# Module 7B: Virus Phylogeny
 include_phylogeny_module: False
 virus_phylogeny:
   hmmsearch_threads: 8
@@ -179,6 +180,23 @@ virus_taxonomy:
   mmseqs_min_agreement: 0.5
   mmseqs_threads: 16
 
+# Module 9B: Reference comparison
+include_comparison_module: True
+virus_comparison:
+  mash_arguments: ""
+  max_dist_species: 0.5
+  max_dist_genus: 0.1
+  max_dist_family: 0.5
+  mash_threads: 8
+  blast_arguments: ""
+  # average nucleotide identity
+  min_ani: 95
+  # virus coverage
+  min_virus_cov: 85
+  # reference coverage
+  min_ref_cov: 0
+  blast_threads: 8
+
 # Module 10: Virus Lifestyle
 include_lifestyle_module: False
 virus_lifestyle:
@@ -188,7 +206,7 @@ virus_lifestyle:
   bacphlip_confidence: 0.5
 
 # Module 11: Virus Function
-include_function_module: True
+include_function_module: False
 virus_function:
   virsorter2_arguments: "--provirus-off"
   virsorter2_threads: 16
@@ -196,7 +214,7 @@ virus_function:
   dramv_threads: 10
 
 # Module 12: Virus Analysis
-include_analysis_module: True
+include_analysis_module: False
 virus_analysis:
   bowtie2_threads: 8
   instrain_compare_arguments: ""

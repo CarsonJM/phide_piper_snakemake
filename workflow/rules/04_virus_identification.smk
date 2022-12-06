@@ -699,7 +699,7 @@ rule deepvirfinder:
     resources:
         runtime="10:00:00",
         mem_mb="10000",
-    threads: config["virus_identification"]["virfinder_threads"]
+    threads: config["virus_identification"]["deepvirfinder_threads"]
     shell:
         """
         # run deepvirfinder
