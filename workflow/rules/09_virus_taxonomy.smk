@@ -261,7 +261,7 @@ rule ani_external:
         """
 
 # identify top hit for each virus
-rule predict_novel_species:
+rule identify_novel_species:
     message:
         "Identifying top external hits and determining if viruses represent novel species"
     input:
@@ -275,12 +275,12 @@ rule predict_novel_species:
     conda:
         "../envs/jupyter.yml"
     benchmark:
-        "benchmark/09_VIRUS_TAXONOMY/predict_novel_species.tsv"
+        "benchmark/09_VIRUS_TAXONOMY/identify_novel_species.tsv"
     resources:
         runtime="00:10:00",
         mem_mb="10000",
     script:
-        "../scripts/09_predict_novel_species.py"
+        "../scripts/09_identify_novel_species.py"
 
 
 # -----------------------------------------------------
