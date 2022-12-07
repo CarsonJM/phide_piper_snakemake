@@ -38,7 +38,7 @@ localrules:
 # symlink input reads to new paths
 rule symlink_input_reads:
     message:
-        "Symlinking {wildcards.sample} input files to new location"
+        "Symlinking {wildcards.sample_replicate} input files to new location"
     input:
         R1=lambda wildcards: samples_df[
             (+samples_df["sample"] + "_" + samples_df["replicate"])
