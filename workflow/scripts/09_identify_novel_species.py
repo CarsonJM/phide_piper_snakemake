@@ -2,13 +2,13 @@ import pandas as pd
 
 # load ani results
 ani = pd.read_csv(str(snakemake.input.ani), sep='\t')
+ani['accession'] = ani['tname'].str.split('.', expand=True)[0]
 
 # load virus metadata
 metadata = pd.read_csv(str(snakemake.input.meta))
-metadata.rename(columns={'accession':'tname'}, inplace=True)
 
 # merge mash hits and metadata
-ani_meta = ani.merge(metadata, on='tname', how='left')
+ani_meta = ani.merge(metadata, on='accession', how='left')
 
 # identify top hits
 ani_id95 = ani_meta[ani_meta['pid'] >= snakemake.params.min_ani]
