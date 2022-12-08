@@ -1,7 +1,7 @@
 import pandas as pd
 
 # load ani results
-ani = pd.read_csv(str(snakemake.input), sep='\t')
+ani = pd.read_csv(str(snakemake.input.ani), sep='\t')
 
 # load virus metadata
 metadata = pd.read_csv(str(snakemake.input.meta), sep='\t')

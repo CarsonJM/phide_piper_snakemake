@@ -265,7 +265,8 @@ rule identify_novel_species:
     message:
         "Identifying top external hits and determining if viruses represent novel species"
     input:
-        results + "09_VIRUS_TAXONOMY/03_external_comparison/viruses_v_external_ani.tsv",
+        ani=results + "09_VIRUS_TAXONOMY/03_external_comparison/viruses_v_external_ani.tsv",
+        meta=config["virus_db_meta"],
     output:
         results + "09_VIRUS_TAXONOMY/03_external_comparison/species_comparisons.tsv",
     params:
