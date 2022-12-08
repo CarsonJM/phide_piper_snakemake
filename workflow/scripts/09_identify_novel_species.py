@@ -4,7 +4,7 @@ import pandas as pd
 ani = pd.read_csv(str(snakemake.input.ani), sep='\t')
 
 # load virus metadata
-metadata = pd.read_csv(str(snakemake.input.meta), sep='\t')
+metadata = pd.read_csv(str(snakemake.input.meta))
 metadata.rename(columns={'accession':'tname'}, inplace=True)
 
 # merge mash hits and metadata
