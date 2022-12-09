@@ -54,8 +54,8 @@ rule symlink_input_reads:
     benchmark:
         "benchmark/01_READ_PREPROCESSING/symlink_reads_{sample_replicate}.tsv"
     resources:
-        runtime="00:00:10",
-        mem_mb="1000",
+        runtime="00:10:00",
+        mem_mb="10000",
     shell:
         """
         # symlink input reads to specified paths
@@ -93,8 +93,8 @@ rule merge_input_replicates:
     benchmark:
         "benchmark/01_READ_PREPROCESSING/merge_replicates_{sample}.tsv"
     resources:
-        runtime="00:01:00",
-        mem_mb="1000",
+        runtime="00:10:00",
+        mem_mb="10000",
     shell:
         """
         # symlink replicates into one combined file
@@ -127,8 +127,8 @@ rule fastp:
     benchmark:
         "benchmark/01_READ_PREPROCESSING/fastp_{sample}.tsv"
     resources:
-        runtime="00:15:00",
-        mem_mb="10000",
+        runtime=config["read_preprocessing"]["fastp_runtime"],
+        mem_mb=config["read_preprocessing"]["fastp_memory"],
     threads: config["read_preprocessing"]["fastp_threads"]
     shell:
         """
@@ -242,8 +242,8 @@ rule kneaddata:
     benchmark:
         "benchmark/01_READ_PREPROCESSING/kneaddata_{sample}.tsv"
     resources:
-        runtime="01:00:00",
-        mem_mb="10000",
+        runtime=config["read_preprocessing"]["kneaddata_runtime"],
+        mem_mb=config["read_preprocessing"]["kneaddata_memory"],
     threads: config["read_preprocessing"]["kneaddata_threads"]
     shell:
         """
@@ -284,8 +284,8 @@ rule kneaddata_read_counts:
     benchmark:
         "benchmark/01_READ_PREPROCESSING/kneaddata_read_counts.tsv"
     resources:
-        runtime="00:01:00",
-        mem_mb="1000",
+        runtime="00:10:00",
+        mem_mb="10000",
     shell:
         """
         # generate read counts from kneaddata log files
@@ -316,6 +316,6 @@ rule kneaddata_analysis:
         "benchmark/01_READ_PREPROCESSING/kneaddata_analysis.tsv"
     resources:
         runtime="00:10:00",
-        mem_mb="1000",
+        mem_mb="10000",
     script:
         "../scripts/01_kneaddata_analysis.py"

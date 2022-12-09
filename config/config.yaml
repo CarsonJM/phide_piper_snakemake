@@ -4,7 +4,7 @@
 #------------------------------------
 # path to where samples.tsv is stored
 samples_df: "/gscratch/stf/carsonjm/CarsonJM/phide_piper/config/samples.tsv"
-# path to folder where outputs should be stored
+# path to directory where outputs should be stored
 results: "/gscratch/scrubbed/carsonjm/results/phide_piper_test/"
 # path to directory where downloaded databases should be stored
 resources: "/gscratch/scrubbed/carsonjm/resources/"
@@ -49,55 +49,91 @@ input_data: "reads"
 # Ex. include_enrichment_module: True
 #
 
-# Module 1: Read Preprocessing
+### Module 1: Read Preprocessing ###
 read_preprocessing:
+  # I. fastp: trimming and deduplication
   fastp_arguments: "--disable_adapter_trimming --dedup --correction --overrepresentation_analysis"
   fastp_threads: 8
+  fastp_runtime: "00:10:00"
+  fastp_memory: "10000"
+  # II. KneadData: host read removal
   kneaddata_arguments: ""
   kneaddata_threads: 8
+  kneaddata_runtime: "01:00:00"
+  kneaddata_memory: "10000"
 
-# Module 2: Viral Enrichment
+### Module 2: Viral Enrichment ###
 include_enrichment_module: True
 virus_enrichment:
+  # I. ViromeQC: determine viral enrichment
   viromeqc_arguments: ""
   viromeqc_threads: 8
+  viromeqc_runtime: "01:00:00"
+  viromeqc_memory: "10000"
 
-# Module 3: Read Assembly
+### Module 3: Read Assembly ###
 read_assembly:
   # Possible options are "meta", "metaviral" and "rnaviral"
   assembly_modes: ["meta", "metaviral"]
+  # I. SPAdes: read assembly
   spades_arguments: ""
   spades_threads: 8
+  spades_runtime: "04:00:00"
+  spades_memory: "50000"
+  # II. QUAST: assembly statistics
   quast_arguments: "--max-ref-num 0"
+  # III. Contig filtering: removing contigs below specified length
   min_contig_length: 1000
 
-# Module 4: Virus Identification
+### Module 4: Virus Identification ###
 virus_identification:
+  # I. MGV: virus identification pipeline from https://doi.org/10.1038/s41564-021-00928-6
   run_mgv: True
   mgv_threads: 8
+  mgv_runtime: "02:00:00"
+  mgv_memory: 10000
+  # II. VirSorter: https://doi.org/10.7717/peerj.985
   run_virsorter: True
-  # Possible virsorter categories are 1,2,3,4,5 and 6
+  # Possible virsorter categories are 1,2,3,4,5,6
   virsorter_cat: [1, 2, 3, 4, 5, 6]
   virsorter_arguments: "--db 2 --diamond"
   virsorter_threads: 8
+  virsorter_runtime: "12:00:00"
+  virsorter_memory: "50000"
+  # III. VirFinder: https://doi.org/10.1186/s40168-017-0283-5
   run_virfinder: True
   virfinder_min_score: 0.9
   virfinder_threads: 1
+  virfinder_runtime: "01:00:00"
+  virfinder_memory: "10000"
+  # IV. VirSorter2: https://doi.org/10.1186/s40168-020-00990-y
   run_virsorter2: True
   virsorter2_min_score: 0.5
   virsorter2_arguments: "--include-groups dsDNAphage"
   virsorter2_threads: 8
+  virsorter2_runtime: "04:00:00"
+  virsorter2_memory: "10000"
+  # V. VIBRANT: https://doi.org/10.1186/s40168-020-00867-0
   run_vibrant: True
   vibrant_arguments: "-no_plot"
   vibrant_threads: 8
+  vibrant_runtime: "01:00:00"
+  vibrant_memory: "10000"
+  # VI. DeepVirFinder: https://doi.org/10.1007/s40484-019-0187-4
   run_deepvirfinder: True
   deepvirfinder_min_score: 0.9
   deepvirfinder_threads: 8
+  deepvirfinder_runtime: "01:00:00"
+  deepvirfinder_memory: "50000"
+  # VII. geNomad: https://doi.org/10.1093/nar/gkac1037
   run_genomad: True
   genomad_min_score: 0.8
   genomad_max_fdr: 0.05
   genomad_arguments: ""
   genomad_threads: 8
+  genomad_runtime: "01:00:00"
+  genomad_memory: "10000"
+  # VIII. MASH screen against user-provided database of viral genomes: https://doi.org/10.1186/s13059-019-1841-x
   run_external: True
   # Roughly equates to identity (0.95 score ~= 95% identity)
   min_mash_score: 0.99
@@ -106,32 +142,50 @@ virus_identification:
   # Roughly equates to coverage (3 multiplicity ~= 3x coverage)
   min_mash_multiplicity: 3
   mash_threads: 8
+  mash_runtime: "01:00:00"
+  mash_memory: "10000"
 
-# Module 5: Virus Quality
+### Module 5: Virus Quality ###
 virus_quality:
+  # I. CheckV: https://doi.org/10.1186/s13059-019-1841-x
   checkv_arguments: ""
+  checkv_threads: 8
+  checkv_runtime: "01:00:00"
+  checkv_memory: "10000"
+  # II. Quality filter: Filter virus like sequences based on user criteria
+  # only sequences with >= specified completeness
   min_completeness: 90
+  # only sequences with <= specified number of bacterial genes
   max_bacterial_genes: 2
+  # only sequences with >= specified number of viral genes
   min_viral_genes: 0
   # Remove any viruses flagged as provirus by CheckV
   remove_proviruses: True
-  checkv_threads: 8
 
-# Module 6: Virus Dereplication
+### Module 6: Virus Dereplication ###
 virus_dereplication:
+  # I. BLAST
   blast_arguments: ""
   # average nucleotide identity
+  blast_threads: 8
+  blast_runtime: "04:00:00"
+  blast_memory: "50000"
+  # II. Cluster
   min_ani: 99
   # query coverage
   # typically left at 0, so AF is relative only to shorter sequence
   min_qcov: 0
   # target coverage
   min_tcov: 100
-  blast_threads: 8
 
-# Module 7: Virus Diversity
+### Module 7: Virus Diversity ###
 virus_diversity:
+  # I. BLAST
   blast_arguments: ""
+  blast_threads: 8
+  blast_runtime: "04:00:00"
+  blast_memory: "50000"
+  # II. Cluster
   # average nucleotide identity
   min_ani: 95
   # query coverage
@@ -139,55 +193,77 @@ virus_diversity:
   min_qcov: 0
   # target coverage
   min_tcov: 85
-  blast_threads: 8
+  # III. vContact2:
   vcontact2_arguments: "--db 'None'"
   vcontact2_threads: 20
+  vontact2_runtime: "04:00:00"
+  vcontact2_memory: "50000"
 
-# Module 7B: Virus Phylogeny
+### Module 7B: Virus Phylogeny ###
 include_phylogeny_module: False
 virus_phylogeny:
+  # I. HMMsearch
   hmmsearch_threads: 8
+  hmmsearch_runtime: "04:00:00"
+  hmmsearch_memory: "50000"
+  # II. CCP77 phylogeny:
   max_evalue: 1
   # Max percent gaps in MSA
   max_percent_gaps: 95
   # Min number of CCP77 hits per genome to include in phylogeny
   min_hits_per_genome: 3
 
-# Module 8: Virus Host
+### Module 8: Virus Host ###
 include_host_module: False
 virus_host:
+  # I. iPHoP:
   iphop_split_num_seqs: 5
   # Roughly equates to precision
   iphop_min_score: 90
   iphop_arguments: ""
   iphop_threads: 8
+  iphop_runtime: "04:00:00"
+  iphop_memory: "50000"
+  # II. PHIST:
   # Min common kmers between virus and bacterial genome to consider towards total
   min_phist_common_kmers: 2
   # Min agreement amongst PHIST kmers (all kmers from genomes with > min_phist_common_kmers)
   min_phist_agreement: 50
   phist_threads: 32
+  phist_runtime: "04:00:00"
+  phist_memory: "50000"
 
-# Module 9: Virus Taxonomy
+### Module 9: Virus Taxonomy ###
 include_taxonomy_module: False
 virus_taxonomy:
+  # I. geNomad:
   # Min annotated genomad genes per genome to assign taxonomy
   genomad_min_genes: 1
   # Min taxonomic agreement amongst all genomad hits
   genomad_min_agreement: 0.5
   genomad_threads: 8
+  genomad_runtime: "04:00:00"
+  genomad_memory: "50000"
+  # II. MMSeqs2:
   mmseqs_arguments: ""
   # Min agreement amongst all MMSeqs2 NCBI NR hits
   mmseqs_min_agreement: 0.5
   mmseqs_threads: 16
+  mmseqs_runtime: "04:00:00"
+  mmseqs_memory: "50000"
 
-# Module 9B: Reference comparison
+### Module 9B: Reference comparison ###
 include_comparison_module: True
 virus_comparison:
+  # I. Mash:
   mash_arguments: ""
   max_dist_species: 0.5
   max_dist_genus: 0.1
   max_dist_family: 0.5
   mash_threads: 8
+  mash_runtime: "04:00:00"
+  mash_memory: "50000"
+  # II. BLAST:
   blast_arguments: ""
   # average nucleotide identity
   min_ani: 95
@@ -196,33 +272,54 @@ virus_comparison:
   # reference coverage
   min_ref_cov: 0
   blast_threads: 8
+  blast_runtime: "04:00:00"
+  blast_memory: "50000"
 
-# Module 10: Virus Lifestyle
+### Module 10: Virus Lifestyle ###
 include_lifestyle_module: False
 virus_lifestyle:
+  # minimum completeness to run lifestlye module on genome
   min_completeness: 90
+  # I. BACPHLIP:
   bacphlip_arguments: ""
   # Min BACPHLIP confidence to assign lifestyle
   bacphlip_confidence: 0.5
+  bacphlip_runtime: "04:00:00"
+  bacphlip_memory: "50000"
 
-# Module 11: Virus Function
+### Module 11: Virus Function ###
 include_function_module: False
 virus_function:
+  # I. VirSorter2:
   virsorter2_arguments: "--provirus-off"
   virsorter2_threads: 16
+  virsorter2_runtime: "04:00:00"
+  virsorter2_memory: "50000"
+  # II. DRAMv:
   dramv_arguments: ""
   dramv_threads: 10
+  dramv_runtime: "04:00:00"
+  dramv_memory: "50000"
 
-# Module 12: Virus Analysis
+### Module 12: Virus Analysis ###
 include_analysis_module: False
 virus_analysis:
+  # I. bowtie2:
   bowtie2_threads: 8
+  bowtie2_runtime: "04:00:00"
+  bowtie2_memory: "50000"
+  # II. coverM
+  coverm_arguments: "--min-read-aligned-length 30 --min-covered-fraction 85"
+  coverm_method: "rpkm"
+  coverm_threads: 8
+  coverm_runtime: "04:00:00"
+  coverm_memory: "50000"
+  # III. inStrain:
   instrain_compare_arguments: ""
   min_id: 0.95
   min_breadth: 0.85
   min_depth: 1
   instrain_profile_arguments: ""
   instrain_threads: 8
-  coverm_arguments: "--min-read-aligned-length 30 --min-covered-fraction 85"
-  coverm_method: "rpkm"
-  coverm_threads: 8
+  instrain_runtime: "04:00:00"
+  instrain_memory: "50000"

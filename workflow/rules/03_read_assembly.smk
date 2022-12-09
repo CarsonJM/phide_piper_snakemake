@@ -54,8 +54,8 @@ rule metaspades:
     benchmark:
         "benchmark/03_READ_ASSEMBLY/metaspades_{sample}.tsv"
     resources:
-        runtime="05:00:00",
-        mem_mb="100000",
+        runtime=config["read_assembly"]["viromeqc_runtime"],
+        mem_mb=config["read_assembly"]["viromeqc_memory"],
     threads: config["read_assembly"]["spades_threads"]
     shell:
         """

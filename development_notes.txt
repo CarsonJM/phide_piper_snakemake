@@ -1,10 +1,9 @@
 Pipeline To Do:
-- Add ability to split virus file for iphop
+- Use combined virus db for mash screen
 - Change virus quality figure to boxplot
 - Change virus identification output format
 - Change host output format
 - Add additional HMM databases to DRAMv
-- Get all MetaPop visualizations
 - pin genomad environment
 - pin deepvirfinder environment
 - pin checkv environment
@@ -14,14 +13,6 @@ Pipeline To Do:
 - containerize entire workflow
 
 Benchmarking To Do:
-- Benchmark virus enrichment (virome vs bulk)
-- Benchmark virus identification (Individual vs combined)
-- Benchmark virus quality (HQ, MQ, all viruses)
-- Benchmark virus recovery/chimera
-- Benchmark virus host PHIST, iPHoP, and vOTU (HQ, MQ, all viruses)
-- Benchmark virus taxonomy MMseqs2 & geNomad (HQ, MQ, all viruses)
-- Benchmark virus lifestyle (HQ, MQ, all viruses)
-- Benchmark virus abundance (breadth & depth)
 - Analyze TIP samples with pipeline
 - Analyze SA isolates with pipeline
 

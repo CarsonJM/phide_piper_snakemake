@@ -49,7 +49,7 @@ rule build_viromeqc:
     benchmark:
         "benchmark/02_VIRUS_ENRICHMENT/build_viromeqc.tsv"
     resources:
-        runtime="00:30:00",
+        runtime="04:00:00",
         mem_mb="10000",
     shell:
         """
@@ -98,8 +98,8 @@ rule viromeqc:
     benchmark:
         "benchmark/02_VIRUS_ENRICHMENT/viromeqc_{sample}.tsv"
     resources:
-        runtime="02:30:00",
-        mem_mb="10000",
+        runtime=config["virus_enrichment"]["viromeqc_runtime"],
+        mem_mb=config["virus_enrichment"]["viromeqc_memory"],
     threads: config["virus_enrichment"]["viromeqc_threads"]
     shell:
         """
@@ -141,7 +141,7 @@ rule combine_viromeqc_across_samples:
         "benchmark/02_VIRUS_ENRICHMENT/combine_viromeqc_across_samples.tsv"
     resources:
         runtime="00:10:00",
-        mem_mb="1000",
+        mem_mb="10000",
     shell:
         """
         # combine all viromeqc outputs, only keeping header from one file
@@ -170,6 +170,6 @@ rule virus_enrichment_analysis:
         "benchmark/02_VIRUS_ENRICHMENT/virus_enrichment_analysis.tsv"
     resources:
         runtime="00:10:00",
-        mem_mb="1000",
+        mem_mb="10000",
     script:
         "../scripts/02_virus_enrichment_analysis.py"
