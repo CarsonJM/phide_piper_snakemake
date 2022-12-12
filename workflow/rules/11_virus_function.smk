@@ -45,8 +45,8 @@ rule build_dramv:
     benchmark:
         "benchmark/11_VIRUS_FUNCTION/build_dramv.tsv"
     resources:
-        runtime="12:00:00",
-        mem_mb="100000",
+        runtime=config["virus_function"]["dramv_runtime"],
+        mem_mb=config["virus_function"]["dramv_memory"],
     threads: config["virus_function"]["dramv_threads"]
     shell:
         """
@@ -78,8 +78,8 @@ rule update_dram:
     benchmark:
         "benchmark/11_VIRUS_FUNCTION/update_dram.tsv"
     resources:
-        runtime="4:00:00",
-        mem_mb="100000",
+        runtime=config["virus_function"]["dramv_runtime"],
+        mem_mb=config["virus_function"]["dramv_memory"],
     threads: config["virus_function"]["dramv_threads"]
     shell:
         """
@@ -111,8 +111,8 @@ rule virsorter2_dram:
     benchmark:
         "benchmark/11_VIRUS_FUNCTION/virsorter2_dram.tsv"
     resources:
-        runtime="12:00:00",
-        mem_mb="10000",
+        runtime=config["virus_function"]["dramv_runtime"],
+        mem_mb=config["virus_function"]["dramv_memory"],
     shell:
         """
         # remove output directory
@@ -149,8 +149,8 @@ rule dramv_annotate:
     # container:
     #     "docker://quay.io/biocontainers/dram:1.3.4--pyhdfd78af_0"
     resources:
-        runtime="12:00:00",
-        mem_mb="10000",
+        runtime=config["virus_function"]["dramv_runtime"],
+        mem_mb=config["virus_function"]["dramv_memory"],
     threads: config["virus_function"]["dramv_threads"]
     shell:
         """

@@ -49,8 +49,8 @@ rule blast_derep_viruses_v_derep_viruses:
     benchmark:
         "benchmark/07_VIRUS_DIVERSITY/blast_viral_contigs_cluster.tsv"
     resources:
-        runtime="04:00:00",
-        mem_mb="10000",
+        runtime=config["virus_diversity"]["blast_runtime"],
+        mem_mb=config["virus_diversity"]["blast_memory"],
     threads: config["virus_diversity"]["blast_threads"]
     shell:
         """
@@ -85,7 +85,7 @@ rule cluster_viruses:
         "benchmark/07_VIRUS_DIVERSITY/cluster_viruses.tsv"
     resources:
         runtime="00:10:00",
-        mem_mb="1000",
+        mem_mb="10000",
     shell:
         """
         # calculate ani and af from blast results
@@ -134,8 +134,8 @@ rule prodigal_gv:
     benchmark:
         "benchmark/07_VIRUS_DIVERSITY/prodigal_gv.tsv"
     resources:
-        runtime="04:00:00",
-        mem_mb="10000",
+        runtime=config["virus_diversity"]["vcontact2_runtime"],
+        mem_mb=config["virus_diversity"]["vcontact2_memory"],
     shell:
         """
         # create gene2genome file for vcontact2
@@ -190,8 +190,8 @@ rule vcontact2:
     benchmark:
         "benchmark/07_VIRUS_DIVERSITY/vcontact2.tsv"
     resources:
-        runtime="12:00:00",
-        mem_mb="100000",
+        runtime=config["virus_diversity"]["vcontact2_runtime"],
+        mem_mb=config["virus_diversity"]["vcontact2_memory"],
     threads: config["virus_diversity"]["vcontact2_threads"]
     shell:
         """
@@ -227,7 +227,7 @@ rule prepare_vogdb_hmms:
     benchmark:
         "benchmark/07_VIRUS_DIVERSITY/prepare_vogdb_hmms.tsv"
     resources:
-        runtime="00:30:00",
+        runtime="00:10:00",
         mem_mb="10000",
     shell:
         """
@@ -284,8 +284,8 @@ rule ccp77_hmmsearch:
     benchmark:
         "benchmark/07_VIRUS_DIVERSITY/ccp77_hmmsearch.tsv"
     resources:
-        runtime="4:00:00",
-        mem_mb="10000",
+        runtime=config["virus_phylogeny"]["hmmsearch_runtime"],
+        mem_mb=config["virus_phylogeny"]["hmmsearch_memory"],
     threads: config["virus_phylogeny"]["hmmsearch_threads"]
     shell:
         """
@@ -343,8 +343,8 @@ rule ccp77_hmmalign:
     benchmark:
         "benchmark/07_VIRUS_DIVERSITY/ccp77_hmmalign.tsv"
     resources:
-        runtime="4:00:00",
-        mem_mb="10000",
+        runtime=config["virus_phylogeny"]["hmmsearch_runtime"],
+        mem_mb=config["virus_phylogeny"]["hmmsearch_memory"],
     shell:
         """
         # change cwd
@@ -383,8 +383,8 @@ rule trim_msa:
     benchmark:
         "benchmark/07_VIRUS_DIVERSITY/trim_msa.tsv"
     resources:
-        runtime="01:00:00",
-        mem_mb="10000",
+        runtime=config["virus_phylogeny"]["hmmsearch_runtime"],
+        mem_mb=config["virus_phylogeny"]["hmmsearch_memory"],
     shell:
         """
         # change cwd
@@ -441,8 +441,8 @@ rule fasttree:
     benchmark:
         "benchmark/07_VIRUS_DIVERSITY/fasttree.tsv"
     resources:
-        runtime="01:00:00",
-        mem_mb="50000",
+        runtime=config["virus_phylogeny"]["hmmsearch_runtime"],
+        mem_mb=config["virus_phylogeny"]["hmmsearch_memory"],
     shell:
         """
         fasttree -wag -gamma -mlacc 2 -slownni {input} > {output}
@@ -463,7 +463,7 @@ rule virus_phylogeny_analysis:
         "benchmark/07_VIRUS_DIVERSITY/virus_phylogeny_analysis.tsv"
     resources:
         runtime="00:10:00",
-        mem_mb="1000",
+        mem_mb="10000",
     script:
         "../scripts/07_virus_phylogeny_analysis.py"
 
@@ -489,7 +489,7 @@ rule virus_diversity_votu_anlysis:
         "benchmark/07_VIRUS_DIVERSITY/virus_diversity_votu_anlysis.tsv"
     resources:
         runtime="00:10:00",
-        mem_mb="1000",
+        mem_mb="10000",
     script:
         "../scripts/06_virus_dereplication_analysis.py"
 
@@ -517,7 +517,7 @@ rule virus_diversity_genus_anlysis:
         "benchmark/07_VIRUS_DIVERSITY/virus_diversity_genus_anlysis.tsv"
     resources:
         runtime="00:10:00",
-        mem_mb="1000",
+        mem_mb="10000",
     script:
         "../scripts/07_virus_network_analysis.py"
 

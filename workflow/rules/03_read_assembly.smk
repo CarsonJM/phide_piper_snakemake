@@ -54,8 +54,8 @@ rule metaspades:
     benchmark:
         "benchmark/03_READ_ASSEMBLY/metaspades_{sample}.tsv"
     resources:
-        runtime=config["read_assembly"]["viromeqc_runtime"],
-        mem_mb=config["read_assembly"]["viromeqc_memory"],
+        runtime=config["read_assembly"]["spades_runtime"],
+        mem_mb=config["read_assembly"]["spades_memory"],
     threads: config["read_assembly"]["spades_threads"]
     shell:
         """
@@ -89,8 +89,8 @@ rule metaviralspades:
     benchmark:
         "benchmark/03_READ_ASSEMBLY/metaviralspades_{sample}.tsv"
     resources:
-        runtime="05:00:00",
-        mem_mb="100000",
+        runtime=config["read_assembly"]["spades_runtime"],
+        mem_mb=config["read_assembly"]["spades_memory"],
     threads: config["read_assembly"]["spades_threads"]
     shell:
         """
@@ -124,8 +124,8 @@ rule rnaviralspades:
     benchmark:
         "benchmark/03_READ_ASSEMBLY/rnaviralspades_{sample}.tsv"
     resources:
-        runtime="05:00:00",
-        mem_mb="100000",
+        runtime=config["read_assembly"]["spades_runtime"],
+        mem_mb=config["read_assembly"]["spades_memory"],
     threads: config["read_assembly"]["spades_threads"]
     shell:
         """
@@ -168,7 +168,7 @@ rule combine_spades_assemblies:
         "benchmark/03_READ_ASSEMBLY/combine_spades_assemblies_{sample}.tsv"
     resources:
         runtime="00:10:00",
-        mem_mb="1000",
+        mem_mb="10000",
     shell:
         """
         # combine assemblies from different assemblers
@@ -195,7 +195,7 @@ rule contig_length_filter:
         "benchmark/03_READ_ASSEMBLY/contig_length_filter_{sample}.tsv"
     resources:
         runtime="00:10:00",
-        mem_mb="1000",
+        mem_mb="10000",
     script:
         "../scripts/03_contig_length_filter.py"
 
@@ -246,7 +246,7 @@ rule build_mgv:
         "benchmark/03_READ_ASSEMBLY/build_mgv.tsv"
     resources:
         runtime="00:10:00",
-        mem_mb="1000",
+        mem_mb="10000",
     shell:
         """
         # clone MGV repository
@@ -305,7 +305,7 @@ rule extract_dereplicated_contigs_within_samples:
         "benchmark/03_READ_ASSEMBLY/extract_dereplicated_contigs_within_samples_{sample}.tsv"
     resources:
         runtime="00:10:00",
-        mem_mb="1000",
+        mem_mb="10000",
     script:
         "../scripts/03_extract_clustered_viruses.py"
 
@@ -376,7 +376,7 @@ rule quast_multiqc:
         "benchmark/03_READ_ASSEMBLY/quast_multiqc.tsv"
     resources:
         runtime="00:10:00",
-        mem_mb="1000",
+        mem_mb="10000",
     shell:
         """
         # Generate MULTIQC report from QUAST results

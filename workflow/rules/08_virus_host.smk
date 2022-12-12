@@ -46,7 +46,7 @@ rule symlink_preprocessed_viruses:
         "benchmark/06_VIRUS_HOST/symlink_preprocessed_viruses_{sample}.tsv"
     resources:
         runtime="00:10:00",
-        mem_mb="1000",
+        mem_mb="10000",
     shell:
         """
         # symlink input viruses to renamed files
@@ -148,7 +148,7 @@ checkpoint iphop_split:
         "benchmark/08_VIRUS_HOST/iphop_split.tsv"
     resources:
         runtime="00:10:00",
-        mem_mb="1000",
+        mem_mb="10000",
     shell:
         """
         rm -rf {params.out_dir}
@@ -187,8 +187,8 @@ rule iphop:
     benchmark:
         "benchmark/08_VIRUS_HOST/iphop_{batch}.tsv"
     resources:
-        runtime="12:00:00",
-        mem_mb="100000",
+        runtime=config["virus_host"]["iphop_runtime"],
+        mem_mb=config["virus_host"]["iphop_memory"],
     shell:
         """
         # run iphop predict
@@ -228,7 +228,7 @@ rule combine_iphop_reports:
         "benchmark/08_VIRUS_HOST/combine_iphop_reports.tsv"
     resources:
         runtime="00:10:00",
-        mem_mb="1000",
+        mem_mb="10000",
     shell:
         """
         # combine all outputs, only keeping header from one file
@@ -252,8 +252,8 @@ rule build_phist:
     benchmark:
         "benchmark/08_VIRUS_HOST/build_phist.tsv"
     resources:
-        runtime="00:30:00",
-        mem_mb="1000",
+        runtime="00:10:00",
+        mem_mb="10000",
     shell:
         """
         # git clone phist
@@ -285,8 +285,8 @@ rule split_viruses_for_phist:
     benchmark:
         "benchmark/08_VIRUS_HOST/split_viruses_for_phist.tsv"
     resources:
-        runtime="00:30:00",
-        mem_mb="1000",
+        runtime="00:10:00",
+        mem_mb="10000",
     script:
         "../scripts/08_split_viruses_for_phist.py"
 
@@ -312,8 +312,8 @@ rule phist:
     benchmark:
         "benchmark/08_VIRUS_HOST/phist.tsv"
     resources:
-        runtime="12:00:00",
-        mem_mb="100000",
+        runtime=config["virus_host"]["phist_runtime"],
+        mem_mb=config["virus_host"]["phist_memory"],
     shell:
         """
         # run phist
@@ -367,7 +367,7 @@ rule virus_host_analysis:
         "benchmark/08_VIRUS_HOST/virus_host_analysis.tsv"
     resources:
         runtime="00:10:00",
-        mem_mb="1000",
+        mem_mb="10000",
     conda:
         "../envs/jupyter.yml"
     script:

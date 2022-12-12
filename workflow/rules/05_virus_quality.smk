@@ -48,8 +48,8 @@ rule symlink_vls:
     benchmark:
         "benchmark/05_VIRUS_QUALITY/symlink_vls_{sample}.tsv"
     resources:
-        runtime="00:00:10",
-        mem_mb="1000",
+        runtime="00:10:00",
+        mem_mb="10000",
     shell:
         """
         # symlink input vls to renamed files
@@ -87,7 +87,7 @@ rule download_checkv:
         "benchmark/05_VIRUS_QUALITY/download_checkv.tsv"
     resources:
         runtime="01:00:00",
-        mem_mb="1000",
+        mem_mb="10000",
     shell:
         """
         # download checkv database
@@ -116,8 +116,8 @@ rule checkv_trim:
     benchmark:
         "benchmark/05_VIRUS_QUALITY/checkv_trim_{sample}.tsv"
     resources:
-        runtime="01:00:00",
-        mem_mb="10000",
+        runtime=config["virus_quality"]["checkv_runtime"],
+        mem_mb=config["virus_quality"]["checkv_memory"],
     threads: config["virus_quality"]["checkv_threads"]
     shell:
         """
@@ -144,7 +144,7 @@ rule combine_trimmed_vls:
         "benchmark/05_VIRUS_QUALITY/combine_trimmed_viruses_{sample}.tsv"
     resources:
         runtime="00:10:00",
-        mem_mb="1000",
+        mem_mb="10000",
     script:
         "../scripts/05_combine_trimmed_viruses.py"
 
@@ -181,8 +181,8 @@ rule checkv:
     benchmark:
         "benchmark/05_VIRUS_QUALITY/checkv_{sample}.tsv"
     resources:
-        runtime="01:00:00",
-        mem_mb="10000",
+        runtime=config["virus_quality"]["checkv_runtime"],
+        mem_mb=config["virus_quality"]["checkv_memory"],
     threads: config["virus_quality"]["checkv_threads"]
     shell:
         """
@@ -227,7 +227,7 @@ rule quality_filter_viruses:
         "benchmark/05_VIRUS_QUALITY/quality_filter_viruses_{sample}.tsv"
     resources:
         runtime="00:10:00",
-        mem_mb="1000",
+        mem_mb="10000",
     script:
         "../scripts/05_quality_filter_viruses.py"
 
@@ -250,7 +250,7 @@ rule combine_checkv_reports:
         "benchmark/05_VIRUS_QUALITY/combine_checkv_reports.tsv"
     resources:
         runtime="00:10:00",
-        mem_mb="1000",
+        mem_mb="10000",
     shell:
         """
         # combine all outputs, only keeping header from one file
@@ -276,6 +276,6 @@ rule virus_quality_analysis:
         "benchmark/05_VIRUS_QUALITY/virus_quality_analysis.tsv"
     resources:
         runtime="00:10:00",
-        mem_mb="1000",
+        mem_mb="10000",
     script:
         "../scripts/05_virus_quality_analysis.py"

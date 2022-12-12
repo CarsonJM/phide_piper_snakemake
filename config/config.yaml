@@ -196,7 +196,7 @@ virus_diversity:
   # III. vContact2:
   vcontact2_arguments: "--db 'None'"
   vcontact2_threads: 20
-  vontact2_runtime: "04:00:00"
+  vcontact2_runtime: "04:00:00"
   vcontact2_memory: "50000"
 
 ### Module 7B: Virus Phylogeny ###

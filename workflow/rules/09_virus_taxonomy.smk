@@ -48,8 +48,8 @@ rule genomad_taxonomy:
     benchmark:
         "benchmark/09_VIRUS_TAXONOMY/genomad.tsv"
     resources:
-        runtime="04:00:00",
-        mem_mb="10000",
+        runtime=config["virus_taxonomy"]["genomad_runtime"],
+        mem_mb=config["virus_taxonomy"]["genomad_memory"],
     shell:
         """
         # run genomad on viruses to predict taxonomy
@@ -80,7 +80,7 @@ rule build_mmseqs:
         "benchmark/09_VIRUS_TAXONOMY/build_mmseqs.tsv"
     resources:
         runtime="00:30:00",
-        mem_mb="1000",
+        mem_mb="10000",
     shell:
         """
         # download database
@@ -110,8 +110,8 @@ rule mmseqs2:
     benchmark:
         "benchmark/09_VIRUS_TAXONOMY/mmseqs2.tsv"
     resources:
-        runtime="12:00:00",
-        mem_mb="150000",
+        runtime=config["virus_taxonomy"]["mmseqs_runtime"],
+        mem_mb=config["virus_taxonomy"]["mmseqs_memory"],
     threads: config["virus_taxonomy"]["mmseqs_threads"]
     shell:
         """
@@ -156,8 +156,8 @@ rule external_mash:
     benchmark:
         "benchmark/09_VIRUS_TAXONOMY/external_mash.tsv"
     resources:
-        runtime="04:00:00",
-        mem_mb="150000",
+        runtime=config["virus_comparison"]["mash_runtime"],
+        mem_mb=config["virus_comparison"]["mash_memory"],
     threads: config["virus_comparison"]["mash_threads"]
     shell:
         """
@@ -224,8 +224,8 @@ rule blast_viruses_v_external:
     benchmark:
         "benchmark/09_VIRUS_TAXONOMY/blast_viruses_v_external.tsv"
     resources:
-        runtime="04:00:00",
-        mem_mb="10000",
+        runtime=config["virus_comparison"]["blast_runtime"],
+        mem_mb=config["virus_comparison"]["blast_memory"],
     threads: config["virus_comparison"]["blast_threads"]
     shell:
         """
@@ -308,7 +308,7 @@ rule virus_taxonomy_analysis:
         "benchmark/09_VIRUS_TAXONOMY/virus_taxonomy_analysis.tsv"
     resources:
         runtime="00:10:00",
-        mem_mb="1000",
+        mem_mb="10000",
     conda:
         "../envs/jupyter.yml"
     script:

@@ -42,7 +42,7 @@ rule build_bacphlip:
         "benchmark/10_VIRUS_LIFESTYLE/build_bacphlip.tsv"
     resources:
         runtime="00:10:00",
-        mem_mb="1000",
+        mem_mb="10000",
     conda:
         "../envs/bacphlip:0.9.6--py_0.yml"
     # container:
@@ -95,8 +95,8 @@ rule bacphlip:
     benchmark:
         "benchmark/10_VIRUS_LIFESTYLE/bacphlip.tsv"
     resources:
-        runtime="12:00:00",
-        mem_mb="10000",
+        runtime=config["virus_lifestyle"]["bacphlip_runtime"],
+        mem_mb=config["virus_lifestyle"]["bacphlip_memory"],
     shell:
         """
         # run bacphlip
@@ -127,7 +127,7 @@ rule virus_lifestyle_analysis:
     benchmark:
         "benchmark/10_VIRUS_LIFESTYLE/virus_lifestyle_analysis.tsv"
     resources:
-        runtime="00:30:00",
-        mem_mb="1000",
+        runtime="00:10:00",
+        mem_mb="10000",
     script:
         "../scripts/10_virus_lifestyle_analysis.py"

@@ -70,8 +70,8 @@ rule build_viruses_bowtie2db:
     benchmark:
         "benchmark/12_VIRUS_ANALYSIS/build_viruses_bowtie2db.tsv"
     resources:
-        runtime="04:00:00",
-        mem_mb="10000",
+        runtime=config["virus_analysis"]["bowtie2_runtime"],
+        mem_mb=config["virus_analysis"]["bowtie2_memory"],
     threads: config["virus_analysis"]["bowtie2_threads"]
     shell:
         """
@@ -100,8 +100,8 @@ rule align_reads_to_viruses:
     benchmark:
         "benchmark/12_VIRUS_ANALYSIS/align_reads_to_viruses_{sample}.tsv"
     resources:
-        runtime="12:00:00",
-        mem_mb="10000",
+        runtime=config["virus_analysis"]["bowtie2_runtime"],
+        mem_mb=config["virus_analysis"]["bowtie2_memory"],
     threads: config["virus_analysis"]["bowtie2_threads"]
     shell:
         """
@@ -141,7 +141,7 @@ rule bowtie2_multiqc:
         "benchmark/12_VIRUS_ANALYSIS/bowtie2_multiqc.tsv"
     resources:
         runtime="00:10:00",
-        mem_mb="1000",
+        mem_mb="10000",
     shell:
         """
         # run multiqc on bowtie2 outputs
@@ -168,7 +168,7 @@ rule make_stb_file:
     benchmark:
         "benchmark/12_VIRUS_ANALYSIS/make_stb_file.tsv"
     resources:
-        runtime="04:00:00",
+        runtime="00:10:00",
         mem_mb="10000",
     script:
         "../scripts/12_generate_stb_file.py"
@@ -199,8 +199,8 @@ rule instrain_profile:
     benchmark:
         "benchmark/12_VIRUS_ANALYSIS/instrain_profile_{sample}.tsv"
     resources:
-        runtime="04:00:00",
-        mem_mb="10000",
+        runtime=config["virus_analysis"]["instrain_runtime"],
+        mem_mb=config["virus_analysis"]["instrain_memory"],
     threads: config["virus_analysis"]["instrain_threads"]
     shell:
         """
@@ -253,8 +253,8 @@ rule instrain_compare:
     benchmark:
         "benchmark/12_VIRUS_ANALYSIS/instrain_compare.tsv"
     resources:
-        runtime="04:00:00",
-        mem_mb="10000",
+        runtime=config["virus_analysis"]["instrain_runtime"],
+        mem_mb=config["virus_analysis"]["instrain_memory"],
     threads: config["virus_analysis"]["instrain_threads"]
     shell:
         """
@@ -298,8 +298,8 @@ rule coverm:
     benchmark:
         "benchmark/12_VIRUS_ANALYSIS/coverm.tsv"
     resources:
-        runtime="04:00:00",
-        mem_mb="10000",
+        runtime=config["virus_analysis"]["coverm_runtime"],
+        mem_mb=config["virus_analysis"]["coverm_memory"],
     threads: config["virus_analysis"]["coverm_threads"]
     shell:
         """

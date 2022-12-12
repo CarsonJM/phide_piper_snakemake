@@ -72,7 +72,7 @@ rule filter_symlinked_contigs:
         "benchmark/04_VIRUS_IDENTIFICATION/filter_symlinked_contigs_{sample}.tsv"
     resources:
         runtime="00:10:00",
-        mem_mb="1000",
+        mem_mb="10000",
     script:
         "../scripts/03_contig_length_filter.py"
 
@@ -102,7 +102,7 @@ rule symlink_preprocessed_reads:
         R2=results + "00_INPUT/{sample}_preprocessed_2.fastq.gz",
     resources:
         runtime="00:10:00",
-        mem_mb="1000",
+        mem_mb="10000",
     shell:
         """
         # symlink input reads to renamed files
@@ -139,7 +139,7 @@ rule download_mgv_databases:
         "benchmark/04_VIRUS_IDENTIFICATION/download_mgv_databases.tsv"
     resources:
         runtime="00:30:00",
-        mem_mb="1000",
+        mem_mb="10000",
     shell:
         """
         # download MGV HMM databases
@@ -200,8 +200,8 @@ rule mgv_imgvr_hmmsearch:
     benchmark:
         "benchmark/04_VIRUS_IDENTIFICATION/mgv_imgvr_hmmsearch_{sample}.tsv"
     resources:
-        runtime="15:00:00",
-        mem_mb="10000",
+        runtime=config["virus_identification"]["mgv_runtime"],
+        mem_mb=config["virus_identification"]["mgv_memory"],
     threads: config["virus_identification"]["mgv_threads"]
     shell:
         """
@@ -231,8 +231,8 @@ rule mgv_pfam_hmmsearch:
     benchmark:
         "benchmark/04_VIRUS_IDENTIFICATION/mgv_pfam_hmmsearch_{sample}.tsv"
     resources:
-        runtime="10:00:00",
-        mem_mb="10000",
+        runtime=config["virus_identification"]["mgv_runtime"],
+        mem_mb=config["virus_identification"]["mgv_memory"],
     threads: config["virus_identification"]["mgv_threads"]
     shell:
         """
@@ -267,7 +267,7 @@ rule mgv_count_hmm_hits:
         "benchmark/04_VIRUS_IDENTIFICATION/mgv_count_hmm_hits_{sample}.tsv"
     resources:
         runtime="00:10:00",
-        mem_mb="1000",
+        mem_mb="10000",
     shell:
         """
         # change to mgv directory so scripts work correctly
@@ -299,8 +299,8 @@ rule mgv_virfinder:
     benchmark:
         "benchmark/04_VIRUS_IDENTIFICATION/mgv_virfinder_{sample}.tsv"
     resources:
-        runtime="05:00:00",
-        mem_mb="10000",
+        runtime=config["virus_identification"]["virfinder_runtime"],
+        mem_mb=config["virus_identification"]["virfinder_memory"],
     shell:
         """
         # change to mgv directory so scripts work correctly
@@ -336,7 +336,7 @@ rule mgv_strand_switch:
         "benchmark/04_VIRUS_IDENTIFICATION/mgv_strand_switch_{sample}.tsv"
     resources:
         runtime="00:10:00",
-        mem_mb="1000",
+        mem_mb="10000",
     shell:
         """
         # change to mgv directory so scripts work correctly
@@ -368,7 +368,7 @@ rule mgv_master_table:
         "benchmark/04_VIRUS_IDENTIFICATION/mgv_master_table_{sample}.tsv"
     resources:
         runtime="00:10:00",
-        mem_mb="1000",
+        mem_mb="10000",
     shell:
         """
         # change to mgv directory so scripts run correctly
@@ -401,7 +401,7 @@ rule mgv_viral_classify:
         "benchmark/04_VIRUS_IDENTIFICATION/mgv_viral_classify_{sample}.tsv"
     resources:
         runtime="00:10:00",
-        mem_mb="1000",
+        mem_mb="10000",
     shell:
         """
         # change to mgv directory so scripts run correctly
@@ -434,7 +434,7 @@ rule download_virsorter:
         "docker://quay.io/biocontainers/virsorter:1.0.6--pl526h516909a_0"
     resources:
         runtime="00:30:00",
-        mem_mb="1000",
+        mem_mb="10000",
     shell:
         """
         # download virsorter database
@@ -456,7 +456,7 @@ rule extract_virsorter_db:
         "benchmark/04_VIRUS_IDENTIFICATION/extract_virsorter_db.tsv"
     resources:
         runtime="00:30:00",
-        mem_mb="1000",
+        mem_mb="10000",
     shell:
         """
         # download virsorter database
@@ -487,8 +487,8 @@ rule virsorter:
     benchmark:
         "benchmark/04_VIRUS_IDENTIFICATION/virsorter_{sample}.tsv"
     resources:
-        runtime="25:00:00",
-        mem_mb="10000",
+        runtime=config["virus_identification"]["virsorter_runtime"],
+        mem_mb=config["virus_identification"]["virsorter_memory"],
     threads: config["virus_identification"]["virsorter_threads"]
     shell:
         """
@@ -522,7 +522,7 @@ rule download_virsorter2:
         "benchmark/04_VIRUS_IDENTIFICATION/download_virsorter2.tsv"
     resources:
         runtime="00:30:00",
-        mem_mb="1000",
+        mem_mb="10000",
     threads: config["virus_identification"]["virsorter2_threads"]
     shell:
         """
@@ -556,8 +556,8 @@ rule virsorter2:
     benchmark:
         "benchmark/04_VIRUS_IDENTIFICATION/virsorter2_{sample}.tsv"
     resources:
-        runtime="20:00:00",
-        mem_mb="100000",
+        runtime=config["virus_identification"]["virsorter2_runtime"],
+        mem_mb=config["virus_identification"]["virsorter2_memory"],
     threads: config["virus_identification"]["virsorter2_threads"]
     shell:
         """
@@ -594,7 +594,7 @@ rule download_vibrant:
         "benchmark/04_VIRUS_IDENTIFICATION/download_vibrant.tsv"
     resources:
         runtime="02:00:00",
-        mem_mb="1000",
+        mem_mb="10000",
     shell:
         """
         # clear output directory
@@ -634,8 +634,8 @@ rule vibrant:
     benchmark:
         "benchmark/04_VIRUS_IDENTIFICATION/vibrant_{sample}.tsv"
     resources:
-        runtime="10:00:00",
-        mem_mb="10000",
+        runtime=config["virus_identification"]["vibrant_runtime"],
+        mem_mb=config["virus_identification"]["vibrant_memory"],
     threads: config["virus_identification"]["vibrant_threads"]
     shell:
         """
@@ -697,8 +697,8 @@ rule deepvirfinder:
     benchmark:
         "benchmark/04_VIRUS_IDENTIFICATION/deepvirfinder_{sample}.tsv"
     resources:
-        runtime="10:00:00",
-        mem_mb="10000",
+        rruntime=config["virus_identification"]["deepvirfinder_runtime"],
+        mem_mb=config["virus_identification"]["deepvirfinder_memory"],
     threads: config["virus_identification"]["deepvirfinder_threads"]
     shell:
         """
@@ -759,8 +759,8 @@ rule genomad:
     benchmark:
         "benchmark/04_VIRUS_IDENTIFICATION/genomad_{sample}.tsv"
     resources:
-        runtime="05:00:00",
-        mem_mb="10000",
+        runtime=config["virus_identification"]["genomad_runtime"],
+        mem_mb=config["virus_identification"]["genomad_memory"],
     threads: config["virus_identification"]["genomad_threads"]
     shell:
         """
@@ -796,8 +796,8 @@ rule mash_sketch_virusdb:
     benchmark:
         "benchmark/04_VIRUS_IDENTIFICATION/mash_sketch_virusdb.tsv"
     resources:
-        runtime="04:00:00",
-        mem_mb="500000",
+        runtime=config["virus_identification"]["mash_runtime"],
+        mem_mb=config["virus_identification"]["mash_memory"],
     threads: config["virus_identification"]["mash_threads"]
     shell:
         """
@@ -829,8 +829,8 @@ rule screen_reads_against_virusdb:
     benchmark:
         "benchmark/04_VIRUS_IDENTIFICATION/screen_reads_against_virusdb_sketch_{sample}.tsv"
     resources:
-        runtime="01:00:00",
-        mem_mb="100000",
+        runtime=config["virus_identification"]["mash_runtime"],
+        mem_mb=config["virus_identification"]["mash_memory"],
     threads: config["virus_identification"]["mash_threads"]
     shell:
         """
@@ -867,7 +867,7 @@ rule extract_external_hits:
         "benchmark/04_VIRUS_IDENTIFICATION/extract_virusdb_hits_{sample}.tsv"
     resources:
         runtime="00:10:00",
-        mem_mb="1000",
+        mem_mb="10000",
     script:
         "../scripts/04_extract_virusdb_hits.py"
 
@@ -887,7 +887,7 @@ rule combine_external_hits_with_contigs:
         "benchmark/04_VIRUS_IDENTIFICATION/combine_mash_hits_with_contigs_{sample}.tsv"
     resources:
         runtime="00:10:00",
-        mem_mb="1000",
+        mem_mb="10000",
     shell:
         """
         # combine hits fasta with contigs
@@ -1002,7 +1002,7 @@ rule merge_reports_within_samples:
         "benchmark/04_VIRUS_IDENTIFICATION/merge_reports_within_samples_{sample}.tsv"
     resources:
         runtime="00:10:00",
-        mem_mb="1000",
+        mem_mb="10000",
     script:
         "../scripts/04_merge_reports_within_samples.py"
 
@@ -1053,7 +1053,7 @@ rule merge_viral_contigs_within_samples:
         "benchmark/04_VIRUS_IDENTIFICATION/merge_viral_contigs_within_samples_{sample}.tsv"
     resources:
         runtime="00:10:00",
-        mem_mb="1000",
+        mem_mb="10000",
     script:
         "../scripts/04_merge_viral_contigs_within_samples.py"
 
@@ -1077,7 +1077,7 @@ rule combine_reports_across_samples:
         "benchmark/04_VIRUS_IDENTIFICATION/combine_reports_across_samples.tsv"
     resources:
         runtime="00:10:00",
-        mem_mb="1000",
+        mem_mb="10000",
     shell:
         """
         # combine all outputs, only keeping header from one file
@@ -1126,6 +1126,6 @@ rule virus_identification_analysis:
         "benchmark/04_VIRUS_IDENTIFICATION/virus_identification_analysis.tsv"
     resources:
         runtime="00:10:00",
-        mem_mb="1000",
+        mem_mb="10000",
     script:
         "../scripts/04_virus_identification_analysis.py"
