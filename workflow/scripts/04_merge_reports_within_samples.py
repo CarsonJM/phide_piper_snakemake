@@ -64,6 +64,8 @@ if snakemake.params.run_genomad:
         genomad_results = pd.read_csv(str(snakemake.input.genomad_results), sep='\t')
         if len(genomad_results['seq_name'].str.split('|', expand=True)) > 1:
             genomad_results['contig_id'] = genomad_results['seq_name'].str.split('|', expand=True)[0]
+        else:
+            genomad_results['contig_id'] = genomad_results['seq_name']
         virus_report = virus_report.merge(genomad_results[['contig_id', 'topology', 'n_genes', 'genetic_code', 'virus_score', 'fdr', 'n_hallmarks', 'marker_enrichment']], on='contig_id', how='outer')
 
 # extract diamond virus sequences
