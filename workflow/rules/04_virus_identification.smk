@@ -650,6 +650,8 @@ rule vibrant:
         -folder {params.vb_dir} \
         -t {threads} \
         {params.extra_args}
+
+        touch {output}
         """
 
 

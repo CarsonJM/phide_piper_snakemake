@@ -1,5 +1,13 @@
 Pipeline To Do:
-- Use combined virus db for mash screen
+- Test geNomad recovery alone (is it worth using other tools?)
+- Use UHGV for mash screen
+- incorporate UHGV host info
+- incorporate UHGV taxonomy info
+- incorporate UHGV lifestyle info
+- Incorporate UHGV clustering for species, genus and family levels
+- Use UHGV method for extracting vOTU rep
+- Use UHGV method for assigning taxonomy
+
 - Change virus quality figure to boxplot
 - Change virus identification output format
 - Change host output format
