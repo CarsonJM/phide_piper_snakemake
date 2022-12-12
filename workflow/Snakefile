@@ -52,7 +52,7 @@ def get_final_output(wildcards):
         final_output.append(results + "01_READ_PREPROCESSING/fastp_multiqc_report.html")
         final_output.append(results + "01_READ_PREPROCESSING/kneaddata_analysis.html")
 
-    if config["include_enrichment_module"] and config["input_data"] == "reads":
+    if config["include_enrichment_module"]:
         final_output.append(results + "02_VIRUS_ENRICHMENT/virus_enrichment_figure.svg")
 
     if config["input_data"] == "reads":

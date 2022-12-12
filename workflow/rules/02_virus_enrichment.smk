@@ -46,6 +46,8 @@ rule build_viromeqc:
         viromeqc_dir=resources + "viromeqc",
         index_dir=resources + "viromeqc/index",
         viromeqc_tmp=resources + "viromeqc/tmp/",
+    conda:
+        "../envs/viromeqc.yml"
     benchmark:
         "benchmark/02_VIRUS_ENRICHMENT/build_viromeqc.tsv"
     resources:
@@ -58,7 +60,7 @@ rule build_viromeqc:
         git clone --recurse-submodules https://github.com/SegataLab/viromeqc.git {params.viromeqc_dir}
 
         cd {params.viromeqc_dir}
-        viromeQC.py --install
+        python viromeQC.py --install
 
         # # install the viromeqc databases
         # mkdir {params.index_dir}

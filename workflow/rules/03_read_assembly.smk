@@ -102,6 +102,8 @@ rule metaviralspades:
         -o {params.output_dir} \
         --threads {threads} \
         {params.extra_args}
+
+        touch {output}
         """
 
 
@@ -137,6 +139,8 @@ rule rnaviralspades:
         -o {params.output_dir} \
         --threads {threads} \
         {params.extra_args}
+
+        touch {output}
         """
 
 
