@@ -28,8 +28,9 @@ report: "../report/workflow.rst"
 # Preprocessing Rules
 # -------------------------------------
 localrules:
-    symlink_reads,
-    merge_replicates,
+    symlink_input_reads,
+    merge_input_replicates,
+    kneaddata_analysis,
 
 
 # -----------------------------------------------------

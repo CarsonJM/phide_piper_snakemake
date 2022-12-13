@@ -1,5 +1,5 @@
 Pipeline To Do:
-- Test geNomad recovery alone (is it worth using other tools?)
+- Use geNomad to identify/extract viruses
 - Use UHGV for mash screen
 - incorporate UHGV host info
 - incorporate UHGV taxonomy info
@@ -7,16 +7,14 @@ Pipeline To Do:
 - Incorporate UHGV clustering for species, genus and family levels
 - Use UHGV method for extracting vOTU rep
 - Use UHGV method for assigning taxonomy
+- Add PHROGs to DRAMv
 
 - Change virus quality figure to boxplot
 - Change virus identification output format
 - Change host output format
-- Add additional HMM databases to DRAMv
 - pin genomad environment
-- pin deepvirfinder environment
 - pin checkv environment
 - pin jupyter environment
-- pin phist environment
 - pin iPhoP environment
 - containerize entire workflow
 

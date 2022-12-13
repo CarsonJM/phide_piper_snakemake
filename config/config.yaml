@@ -15,9 +15,6 @@ resources: "/gscratch/scrubbed/carsonjm/resources/"
 # used to search for external viruses in samples
 virus_db: "/gscratch/scrubbed/carsonjm/resources/inphrared/vmr_sequences.fasta"
 virus_db_meta: "/gscratch/scrubbed/carsonjm/resources/inphrared/vmr_metadata.csv"
-# used for PHIST search
-bacteria_db: "/gscratch/scrubbed/carsonjm/resources/oral_bacteria_db/fastas/"
-bacteria_db_meta: "/gscratch/stf/carsonjm/projects/oral_microbiome_benchmark/analysis/combined_metadata.csv"
 
 #------------------------------------
 # Input data options
@@ -87,45 +84,7 @@ read_assembly:
 
 ### Module 4: Virus Identification ###
 virus_identification:
-  # I. MGV: virus identification pipeline from https://doi.org/10.1038/s41564-021-00928-6
-  run_mgv: True
-  mgv_threads: 8
-  mgv_runtime: "02:00:00"
-  mgv_memory: 10000
-  # II. VirSorter: https://doi.org/10.7717/peerj.985
-  run_virsorter: True
-  # Possible virsorter categories are 1,2,3,4,5,6
-  virsorter_cat: [1, 2, 3, 4, 5, 6]
-  virsorter_arguments: "--db 2 --diamond"
-  virsorter_threads: 8
-  virsorter_runtime: "12:00:00"
-  virsorter_memory: "50000"
-  # III. VirFinder: https://doi.org/10.1186/s40168-017-0283-5
-  run_virfinder: True
-  virfinder_min_score: 0.9
-  virfinder_threads: 1
-  virfinder_runtime: "01:00:00"
-  virfinder_memory: "10000"
-  # IV. VirSorter2: https://doi.org/10.1186/s40168-020-00990-y
-  run_virsorter2: True
-  virsorter2_min_score: 0.5
-  virsorter2_arguments: "--include-groups dsDNAphage"
-  virsorter2_threads: 8
-  virsorter2_runtime: "04:00:00"
-  virsorter2_memory: "10000"
-  # V. VIBRANT: https://doi.org/10.1186/s40168-020-00867-0
-  run_vibrant: True
-  vibrant_arguments: "-no_plot"
-  vibrant_threads: 8
-  vibrant_runtime: "01:00:00"
-  vibrant_memory: "10000"
-  # VI. DeepVirFinder: https://doi.org/10.1007/s40484-019-0187-4
-  run_deepvirfinder: True
-  deepvirfinder_min_score: 0.9
-  deepvirfinder_threads: 8
-  deepvirfinder_runtime: "01:00:00"
-  deepvirfinder_memory: "50000"
-  # VII. geNomad: https://doi.org/10.1093/nar/gkac1037
+  # I. geNomad: https://doi.org/10.1093/nar/gkac1037
   run_genomad: True
   genomad_min_score: 0.8
   genomad_max_fdr: 0.05
@@ -133,7 +92,7 @@ virus_identification:
   genomad_threads: 8
   genomad_runtime: "01:00:00"
   genomad_memory: "10000"
-  # VIII. MASH screen against user-provided database of viral genomes: https://doi.org/10.1186/s13059-019-1841-x
+  # II. MASH screen against user-provided database of viral genomes: https://doi.org/10.1186/s13059-019-1841-x
   run_external: True
   # Roughly equates to identity (0.95 score ~= 95% identity)
   min_mash_score: 0.99
@@ -224,14 +183,6 @@ virus_host:
   iphop_threads: 8
   iphop_runtime: "04:00:00"
   iphop_memory: "50000"
-  # II. PHIST:
-  # Min common kmers between virus and bacterial genome to consider towards total
-  min_phist_common_kmers: 2
-  # Min agreement amongst PHIST kmers (all kmers from genomes with > min_phist_common_kmers)
-  min_phist_agreement: 50
-  phist_threads: 32
-  phist_runtime: "04:00:00"
-  phist_memory: "50000"
 
 ### Module 9: Virus Taxonomy ###
 include_taxonomy_module: False
@@ -244,13 +195,6 @@ virus_taxonomy:
   genomad_threads: 8
   genomad_runtime: "04:00:00"
   genomad_memory: "50000"
-  # II. MMSeqs2:
-  mmseqs_arguments: ""
-  # Min agreement amongst all MMSeqs2 NCBI NR hits
-  mmseqs_min_agreement: 0.5
-  mmseqs_threads: 16
-  mmseqs_runtime: "04:00:00"
-  mmseqs_memory: "50000"
 
 ### Module 9B: Reference comparison ###
 include_comparison_module: True

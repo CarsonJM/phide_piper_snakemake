@@ -29,6 +29,7 @@ report: "../report/workflow.rst"
 # -----------------------------------------------------
 localrules:
     combine_viromeqc_across_samples,
+    virus_enrichment_analysis,
 
 
 # -----------------------------------------------------

@@ -30,6 +30,7 @@ report: "../report/workflow.rst"
 localrules:
     combine_spades_assemblies,
     combine_quast_across_samples,
+    build_mgv,
 
 
 # -----------------------------------------------------

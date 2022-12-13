@@ -27,7 +27,10 @@ report: "../report/workflow.rst"
 # -----------------------------------------------------
 # Virus clustering rules
 # -----------------------------------------------------
-localrules: combine_viruses
+localrules: 
+    combine_viruses,
+    virus_dereplication_analysis,
+
 
 
 # -----------------------------------------------------
