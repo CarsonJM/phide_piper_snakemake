@@ -205,116 +205,6 @@ rule contig_length_filter:
         "../scripts/03_contig_length_filter.py"
 
 
-# blast contigs against one another for dereplication
-rule blast_contigs_within_samples:
-    message:
-        "BLASTing {wildcards.sample} contigs against one another to dererplicate dataset"
-    input:
-        results + "03_READ_ASSEMBLY/02_contig_filters/{sample}/{sample}_contigs.fasta",
-    output:
-        results + "03_READ_ASSEMBLY/02_contig_filters/{sample}/contigs_blast.tsv",
-    params:
-        blastdb=results + "03_READ_ASSEMBLY/02_contig_filters/{sample}/contigs_blastdb",
-        blast_tsv=results
-        + "03_READ_ASSEMBLY/02_contig_filters/{sample}/contigs_blast.tsv",
-    # conda:
-    #     "../envs/blast:2.12.0--h3289130_3.yml"
-    container:
-        "docker://quay.io/biocontainers/blast:2.12.0--h3289130_3"
-    benchmark:
-        "benchmark/03_READ_ASSEMBLY/blast_contigs_within_samples_{sample}.tsv"
-    resources:
-        runtime="00:30:00",
-        mem_mb="10000",
-    threads: config["virus_dereplication"]["blast_threads"]
-    shell:
-        """
-        # make a blast db from contigs
-        makeblastdb -in {input} -out {params.blastdb} -dbtype nucl
-
-        # all against all blast
-        blastn -query {input} -db {params.blastdb} -out {output} -num_threads {threads} -outfmt '6 std qlen slen' -max_target_seqs 25000 -perc_identity 90
-        """
-
-
-# download build mgv repo and HMM files
-rule build_mgv:
-    message:
-        "Cloning MGV repository to obtain dereplication script"
-    output:
-        blastani_script=resources + "mgv/ani_cluster/blastani.py",
-        cluster_script=resources + "mgv/ani_cluster/cluster.py",
-        amino_acid_script=resources + "mgv/aai_cluster/amino_acid_identity.py",
-    params:
-        mgv_dir=resources + "mgv",
-    benchmark:
-        "benchmark/03_READ_ASSEMBLY/build_mgv.tsv"
-    resources:
-        runtime="00:10:00",
-        mem_mb="10000",
-    shell:
-        """
-        # clone MGV repository
-        rm -rf {params.mgv_dir}
-        git clone https://github.com/snayfach/MGV.git {params.mgv_dir}
-        """
-
-
-# keep only one species representative from each sample
-rule dereplicate_contigs_within_samples:
-    message:
-        "Dereplicating {wildcards.sample} contigs using BLAST results"
-    input:
-        viruses=results
-        + "03_READ_ASSEMBLY/02_contig_filters/{sample}/{sample}_contigs.fasta",
-        blast=results + "03_READ_ASSEMBLY/02_contig_filters/{sample}/contigs_blast.tsv",
-        blastani_script=resources + "mgv/ani_cluster/blastani.py",
-        cluster_script=resources + "mgv/ani_cluster/cluster.py",
-    output:
-        results
-        + "03_READ_ASSEMBLY/02_contig_filters/{sample}/{sample}_contigs_clusters.tsv",
-    params:
-        ani_tsv=results + "03_READ_ASSEMBLY/02_contig_filters/{sample}/contigs_ani.tsv",
-    conda:
-        "../envs/jupyter.yml"
-    benchmark:
-        "benchmark/03_READ_ASSEMBLY/dereplicate_contigs_within_samples_{sample}.tsv"
-    resources:
-        runtime="00:10:00",
-        mem_mb="10000",
-    shell:
-        """
-        # calculate ani and af from blast results
-        python {input.blastani_script} -i {input.blast} -o {params.ani_tsv}
-
-        # cluster contigs based on 95% ANI and 85% AF
-        python {input.cluster_script} --fna {input.viruses} --ani {params.ani_tsv} --out {output} --min_ani 95 --min_qcov 0 --min_tcov 85
-        """
-
-
-# extract dereplicated contigs
-rule extract_dereplicated_contigs_within_samples:
-    message:
-        "Extracting {wildcards.sample} representatives to retain only one of each replicate"
-    input:
-        clusters=results
-        + "03_READ_ASSEMBLY/02_contig_filters/{sample}/{sample}_contigs_clusters.tsv",
-        viruses=results
-        + "03_READ_ASSEMBLY/02_contig_filters/{sample}/{sample}_contigs.fasta",
-    output:
-        results
-        + "03_READ_ASSEMBLY/02_contig_filters/{sample}/{sample}_contigs_dereplicated.fasta",
-    conda:
-        "../envs/jupyter.yml"
-    benchmark:
-        "benchmark/03_READ_ASSEMBLY/extract_dereplicated_contigs_within_samples_{sample}.tsv"
-    resources:
-        runtime="00:10:00",
-        mem_mb="10000",
-    script:
-        "../scripts/03_extract_clustered_viruses.py"
-
-
 # -----------------------------------------------------
 # 03 QUAST
 # -----------------------------------------------------
@@ -323,8 +213,7 @@ rule quast:
     message:
         "Running QUAST on {wildcards.sample} to determine assembly quality"
     input:
-        results
-        + "03_READ_ASSEMBLY/02_contig_filters/{sample}/{sample}_contigs_dereplicated.fasta",
+        results + "03_READ_ASSEMBLY/02_contig_filters/{sample}/{sample}_contigs.fasta",
     output:
         results + "03_READ_ASSEMBLY/03_quast/{sample}/transposed_report.tsv",
     params:

@@ -58,7 +58,7 @@ rule build_viruses_bowtie2db:
     message:
         "Building a bowtie2 db of vOTU representative viruses"
     input:
-        results + "07_VIRUS_DIVERSITY/01_votu_clusters/votu_representatives.fna",
+        results + "07_VIRUS_DIVERSITY/01_votu_clustering/votu_representatives.fasta",
     output:
         results + "12_VIRUS_ANALYSIS/01_align_viruses/virus_catalog.1.bt2",
     params:
@@ -160,7 +160,7 @@ rule make_stb_file:
     message:
         "Making scaffold to bin file for inStrain"
     input:
-        results + "07_VIRUS_DIVERSITY/01_votu_clusters/votu_representatives.fna",
+        results + "07_VIRUS_DIVERSITY/01_votu_clustering/votu_representatives.fasta",
     output:
         results + "12_VIRUS_ANALYSIS/02_instrain/stb_file.tsv",
     conda:
@@ -180,9 +180,10 @@ rule instrain_profile:
         "Running inStrain to preprocess alignments and calculate diversity metrics"
     input:
         sam=results + "12_VIRUS_ANALYSIS/01_align_viruses/{sample}.sam",
-        fasta=results + "07_VIRUS_DIVERSITY/01_votu_clusters/votu_representatives.fna",
+        fasta=results
+        + "07_VIRUS_DIVERSITY/01_votu_clustering/votu_representatives.fasta",
         genes=results
-        + "07_VIRUS_DIVERSITY/02_vcontact2/votu_representatives_proteins.fna",
+        + "07_VIRUS_DIVERSITY/02_proteins/votu_representatives_proteins.fna",
         stb=results + "12_VIRUS_ANALYSIS/02_instrain/stb_file.tsv",
     output:
         sorted_bam=results + "12_VIRUS_ANALYSIS/01_align_viruses/{sample}.sorted.bam",

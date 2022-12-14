@@ -35,7 +35,7 @@ rule build_dramv:
     message:
         "Downloading DRAM databases"
     output:
-        test="test"
+        resources + "dram/DRAM_downloaded",
     params:
         dram_dir=resources + "dram/DRAM_data",
     conda:
@@ -57,7 +57,7 @@ rule build_dramv:
         --threads {threads} \
         --verbose
 
-        touch {output.test}
+        touch {output}
         """
 
 
@@ -66,9 +66,9 @@ rule update_dram:
     message:
         "Updating DRAM's config file with database locations"
     input:
-        test="test"
+        resources + "dram/DRAM_downloaded",
     output:
-        test="update_test"
+        resources + "dram/DRAM_updated",
     params:
         dram_dir=resources + "dram/DRAM_data",
     conda:
@@ -86,7 +86,7 @@ rule update_dram:
         # update descriptions db
         DRAM-setup.py update_description_db
 
-        touch {output.test}
+        touch {output}
         """
 
 
@@ -95,7 +95,7 @@ rule virsorter2_dram:
     message:
         "Obtaining VirSorter2 output that is required to run DRAM-v"
     input:
-        contigs=results + "07_VIRUS_DIVERSITY/01_votu_clusters/votu_representatives.fna",
+        viruses=results + "07_VIRUS_DIVERSITY/01_votu_clustering/votu_representatives.fasta",
         vs2_db=resources + "virsorter2/Done_all_setup",
     output:
         tab=results
@@ -111,8 +111,10 @@ rule virsorter2_dram:
     benchmark:
         "benchmark/11_VIRUS_FUNCTION/virsorter2_dram.tsv"
     resources:
-        runtime=config["virus_function"]["dramv_runtime"],
-        mem_mb=config["virus_function"]["dramv_memory"],
+        runtime=config["virus_function"]["virsorter2_runtime"],
+        mem_mb=config["virus_function"]["virsorter2_memory"],
+    threads:
+        config["virus_function"]["virsorter2_threads"],
     shell:
         """
         # remove output directory
@@ -122,7 +124,7 @@ rule virsorter2_dram:
         virsorter run all --keep-original-seq \
         --db-dir {params.vs2_db} \
         -w {params.out_dir} \
-        -i {input.contigs} \
+        -i {input.viruses} \
         -j {threads} \
         --prep-for-dramv \
         --min-score 0.0 \
@@ -137,7 +139,7 @@ rule dramv_annotate:
     message:
         "Annotating proteins using DRAM-v"
     input:
-        test="update_test",
+        dram=resources + "dram/DRAM_updated",
         vs2=results + "11_VIRUS_FUNCTION/01_virsorter2/for-dramv/viral-affi-contigs-for-dramv.tab",
         viruses=results + "11_VIRUS_FUNCTION/01_virsorter2/for-dramv/final-viral-combined-for-dramv.fa",
     output:

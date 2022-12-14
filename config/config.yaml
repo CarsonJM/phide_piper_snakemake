@@ -13,7 +13,7 @@ resources: "/gscratch/scrubbed/carsonjm/resources/"
 # Database options
 #------------------------------------
 # used to search for external viruses in samples
-virus_db: "/gscratch/scrubbed/carsonjm/resources/inphrared/vmr_sequences.fasta"
+virus_db: "/gscratch/scrubbed/carsonjm/resources/uhgv/uhgv_hq_plus.fna"
 virus_db_meta: "/gscratch/scrubbed/carsonjm/resources/inphrared/vmr_metadata.csv"
 
 #------------------------------------
@@ -86,8 +86,8 @@ read_assembly:
 virus_identification:
   # I. geNomad: https://doi.org/10.1093/nar/gkac1037
   run_genomad: True
-  genomad_min_score: 0.8
-  genomad_max_fdr: 0.05
+  genomad_min_score: 0.7
+  genomad_max_fdr: 0.1
   genomad_arguments: ""
   genomad_threads: 8
   genomad_runtime: "01:00:00"
@@ -95,14 +95,14 @@ virus_identification:
   # II. MASH screen against user-provided database of viral genomes: https://doi.org/10.1186/s13059-019-1841-x
   run_external: True
   # Roughly equates to identity (0.95 score ~= 95% identity)
-  min_mash_score: 0.99
+  min_mash_score: 0.95
   # Roughly equates to breadth (850 hashes out of 1000 ~= 85% breadth)
   min_mash_hashes: 850
   # Roughly equates to coverage (3 multiplicity ~= 3x coverage)
   min_mash_multiplicity: 3
   mash_threads: 8
   mash_runtime: "01:00:00"
-  mash_memory: "10000"
+  mash_memory: "100000"
 
 ### Module 5: Virus Quality ###
 virus_quality:
@@ -125,58 +125,45 @@ virus_quality:
 virus_dereplication:
   # I. BLAST
   blast_arguments: ""
+  blast_min_id: 90
+  blast_max_evalue: 0.001
   # average nucleotide identity
   blast_threads: 8
   blast_runtime: "04:00:00"
   blast_memory: "50000"
-  # II. Cluster
-  min_ani: 99
-  # query coverage
-  # typically left at 0, so AF is relative only to shorter sequence
-  min_qcov: 0
-  # target coverage
-  min_tcov: 100
+  # II. Cluster (ani and coverage as decimals)
+  min_ani: 0.99
+  avg_ani: 0.99
+  min_cov: 0.99
+  leiden_resolution: 1.0
+  random_seed: 1953
 
 ### Module 7: Virus Diversity ###
 virus_diversity:
   # I. BLAST
   blast_arguments: ""
+  blast_min_id: 90
+  blast_max_evalue: 0.001
+  # average nucleotide identity
   blast_threads: 8
   blast_runtime: "04:00:00"
   blast_memory: "50000"
-  # II. Cluster
-  # average nucleotide identity
-  min_ani: 95
-  # query coverage
-  # typically left at 0, so AF is relative only to shorter sequence
-  min_qcov: 0
-  # target coverage
-  min_tcov: 85
-  # III. vContact2:
-  vcontact2_arguments: "--db 'None'"
-  vcontact2_threads: 20
-  vcontact2_runtime: "04:00:00"
-  vcontact2_memory: "50000"
-
-### Module 7B: Virus Phylogeny ###
-include_phylogeny_module: False
-virus_phylogeny:
-  # I. HMMsearch
-  hmmsearch_threads: 8
-  hmmsearch_runtime: "04:00:00"
-  hmmsearch_memory: "50000"
-  # II. CCP77 phylogeny:
-  max_evalue: 1
-  # Max percent gaps in MSA
-  max_percent_gaps: 95
-  # Min number of CCP77 hits per genome to include in phylogeny
-  min_hits_per_genome: 3
+  # II. Cluster (ani and coverage as decimals)
+  min_ani: 0.95
+  avg_ani: 0.95
+  min_cov: 0.85
+  leiden_resolution: 1.0
+  random_seed: 1953
+  # III. Prodigal-gv
+  prodigal_gv_arguments: ""
+  prodigal_gv_runtime: "04:00:00"
+  prodigal_gv_memory: "50000"
 
 ### Module 8: Virus Host ###
 include_host_module: False
 virus_host:
   # I. iPHoP:
-  iphop_split_num_seqs: 5
+  iphop_split_num_seqs: 100
   # Roughly equates to precision
   iphop_min_score: 90
   iphop_arguments: ""
@@ -185,7 +172,7 @@ virus_host:
   iphop_memory: "50000"
 
 ### Module 9: Virus Taxonomy ###
-include_taxonomy_module: False
+include_taxonomy_module: True
 virus_taxonomy:
   # I. geNomad:
   # Min annotated genomad genes per genome to assign taxonomy
@@ -196,31 +183,8 @@ virus_taxonomy:
   genomad_runtime: "04:00:00"
   genomad_memory: "50000"
 
-### Module 9B: Reference comparison ###
-include_comparison_module: True
-virus_comparison:
-  # I. Mash:
-  mash_arguments: ""
-  max_dist_species: 0.5
-  max_dist_genus: 0.1
-  max_dist_family: 0.5
-  mash_threads: 8
-  mash_runtime: "04:00:00"
-  mash_memory: "50000"
-  # II. BLAST:
-  blast_arguments: ""
-  # average nucleotide identity
-  min_ani: 95
-  # virus coverage
-  min_virus_cov: 85
-  # reference coverage
-  min_ref_cov: 0
-  blast_threads: 8
-  blast_runtime: "04:00:00"
-  blast_memory: "50000"
-
 ### Module 10: Virus Lifestyle ###
-include_lifestyle_module: False
+include_lifestyle_module: True
 virus_lifestyle:
   # minimum completeness to run lifestlye module on genome
   min_completeness: 90
@@ -232,21 +196,21 @@ virus_lifestyle:
   bacphlip_memory: "50000"
 
 ### Module 11: Virus Function ###
-include_function_module: False
+include_function_module: True
 virus_function:
   # I. VirSorter2:
   virsorter2_arguments: "--provirus-off"
-  virsorter2_threads: 16
+  virsorter2_threads: 32
   virsorter2_runtime: "04:00:00"
   virsorter2_memory: "50000"
   # II. DRAMv:
   dramv_arguments: ""
-  dramv_threads: 10
+  dramv_threads: 16
   dramv_runtime: "04:00:00"
-  dramv_memory: "50000"
+  dramv_memory: "100000"
 
 ### Module 12: Virus Analysis ###
-include_analysis_module: False
+include_analysis_module: True
 virus_analysis:
   # I. bowtie2:
   bowtie2_threads: 8

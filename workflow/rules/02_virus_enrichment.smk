@@ -162,11 +162,10 @@ rule virus_enrichment_analysis:
     input:
         results + "02_VIRUS_ENRICHMENT/virus_enrichment_report.tsv",
     output:
-        svg=report(
+        report(
             results + "02_VIRUS_ENRICHMENT/virus_enrichment_figure.svg",
             category="Step 02: Virus enrichment",
         ),
-        html=results + "02_VIRUS_ENRICHMENT/virus_enrichment_figure.html",
     conda:
         "../envs/jupyter.yml"
     benchmark:

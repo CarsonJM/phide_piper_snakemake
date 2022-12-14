@@ -60,8 +60,7 @@ if (
     or config["input_data"] == "vls"
 ):
     viruses = (
-        results
-        + "07_VIRUS_DIVERSITY/01_votu_clusters/votu_representatives_untrimmed.fna"
+        results + "07_VIRUS_DIVERSITY/01_votu_clustering/votu_representatives.fasta"
     )
 elif config["input_data"] == "viruses":
     viruses = results + "00_INPUT/{sample}_viruses.fasta"
@@ -242,17 +241,15 @@ rule combine_iphop_reports:
 # analyze virus host outputs
 rule virus_host_analysis:
     message:
-        "Visualizing iPHoP and PHIST taxonomy outputs"
+        "Visualizing iPHoP host taxonomy outputs"
     input:
-        iphop=results + "08_VIRUS_HOST/01_iphop/iphop_report.tsv",
-        phist=results + "08_VIRUS_HOST/02_phist/phist_host_taxonomy.csv",
+        results + "08_VIRUS_HOST/01_iphop/iphop_report.tsv",
     output:
-        report=results + "08_VIRUS_HOST/virus_host_taxonomy.csv",
         svg=report(
             results + "08_VIRUS_HOST/virus_host_taxonomy.svg",
             category="Step 08: Virus hosts",
         ),
-        html=results + "08_VIRUS_HOST/virus_host_taxonomy.html",
+        report=results + "08_VIRUS_HOST/virus_host_taxonomy.csv",
     benchmark:
         "benchmark/08_VIRUS_HOST/virus_host_analysis.tsv"
     resources:

@@ -62,7 +62,7 @@ rule symlink_vls:
 if config["input_data"] == "reads" or config["input_data"] == "contigs":
     vls = (
         results
-        + "04_VIRUS_IDENTIFICATION/08_combine_outputs/{sample}/combined_viral_contigs.fasta"
+        + "04_VIRUS_IDENTIFICATION/03_combine_outputs/{sample}/combined_viral_contigs.fasta"
     )
 # if input is vls, use symlinked vls
 elif config["input_data"] == "vls":
@@ -107,6 +107,7 @@ rule checkv:
         checkv_results=results
         + "05_VIRUS_QUALITY/01_checkv/{sample}/quality_summary.tsv",
         checkv_viruses=results + "05_VIRUS_QUALITY/01_checkv/{sample}/viruses.fna",
+        checkv_proviruses=results + "05_VIRUS_QUALITY/01_checkv/{sample}/proviruses.fna",
     params:
         checkv_dir=results + "05_VIRUS_QUALITY/01_checkv/{sample}/",
         checkv_db=resources + "checkv/checkv-db-v1.4",
@@ -146,12 +147,10 @@ rule quality_filter_viruses:
         checkv_results=results
         + "05_VIRUS_QUALITY/01_checkv/{sample}/quality_summary.tsv",
         checkv_viruses=results + "05_VIRUS_QUALITY/01_checkv/{sample}/viruses.fna",
-        untrimmed_viruses=vls,
+        checkv_proviruses=results + "05_VIRUS_QUALITY/01_checkv/{sample}/proviruses.fna",
     output:
-        viruses=results
+        results
         + "05_VIRUS_QUALITY/02_quality_filter/{sample}/quality_filtered_viruses.fna",
-        untrimmed_viruses=results
-        + "05_VIRUS_QUALITY/02_quality_filter/{sample}/untrimmed_quality_filtered_viruses.fna",
     params:
         min_completeness=config["virus_quality"]["min_completeness"],
         min_viral_genes=config["virus_quality"]["min_viral_genes"],
@@ -201,11 +200,10 @@ rule virus_quality_analysis:
     input:
         results + "05_VIRUS_QUALITY/virus_quality_report.tsv",
     output:
-        svg=report(
+        report(
             results + "05_VIRUS_QUALITY/virus_quality_figure.svg",
             category="Step 05: Virus quality",
         ),
-        html=results + "05_VIRUS_QUALITY/virus_quality_figure.html",
     conda:
         "../envs/jupyter.yml"
     benchmark:

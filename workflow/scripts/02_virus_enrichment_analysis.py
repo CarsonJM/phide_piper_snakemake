@@ -14,5 +14,4 @@ fig = px.box(vqc_melt, y="value", points="all", hover_name='Sample',
                  })
 fig.update_layout(title_text='Virome enrichment')
 fig.update_layout(showlegend=False)
-fig.write_html(str(snakemake.output.html))
-fig.write_image(str(snakemake.output.svg))
+fig.write_image(str(snakemake.output))

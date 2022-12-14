@@ -19,5 +19,4 @@ fig = px.bar(checkv_group, x='checkv_quality', y="contig_id", color="checkv_qual
 
 fig.update_layout(title_text='Virus-like sequence (VLS) quality assessment')
 fig.update_layout(showlegend=False)
-fig.write_html(str(snakemake.output.html))
-fig.write_image(str(snakemake.output.svg))
+fig.write_image(str(snakemake.output))

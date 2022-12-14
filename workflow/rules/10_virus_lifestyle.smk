@@ -25,7 +25,9 @@ report: "report/workflow.rst"
 # -----------------------------------------------------
 # Virus lifestyle rules
 # -----------------------------------------------------
-localrules: extract_hq_for_bacphlip
+localrules: 
+    virus_lifestyle_analysis,
+
 
 # -----------------------------------------------------
 # 01 BACPHLIP
@@ -60,8 +62,8 @@ rule extract_hq_for_bacphlip:
         "Extracting HQ viruses to run BACPHLIP on"
     input:
         checkv=results + "05_VIRUS_QUALITY/virus_quality_report.tsv",
-        clusters=results + "07_VIRUS_DIVERSITY/01_votu_clusters/votu_clusters.tsv",
-        viruses=results + "07_VIRUS_DIVERSITY/01_votu_clusters/votu_representatives.fna",
+        clusters=results + "07_VIRUS_DIVERSITY/01_votu_clustering/votu_clusters.tsv",
+        viruses=results + "07_VIRUS_DIVERSITY/01_votu_clustering/votu_representatives.fasta",
     output:
         results + "10_VIRUS_LIFESTYLE/01_bacphlip/hq_viruses.fna",
     params:
@@ -113,7 +115,9 @@ rule virus_lifestyle_analysis:
     message:
         "Visualizing virus lifestyle outputs as determined using BACPHLIP"
     input:
-        results + "10_VIRUS_LIFESTYLE/01_bacphlip/hq_viruses.fna.bacphlip",
+        bacphlip=results + "10_VIRUS_LIFESTYLE/01_bacphlip/hq_viruses.fna.bacphlip",
+        genomad=results
+        + "09_VIRUS_TAXONOMY/01_genomad/votu_representatives_find_proviruses/votu_representatives_provirus.tsv",
     output:
         svg=report(
             results + "10_VIRUS_LIFESTYLE/virus_lifestyle_analysis.svg",

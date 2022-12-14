@@ -28,5 +28,4 @@ fig = px.bar(cluster_group, x='node_lengths', y='count',
 
 fig.update_layout(title_text='Virus dereplication')
 fig.update_layout(showlegend=False)
-fig.write_html(str(snakemake.output.html))
-fig.write_image(str(snakemake.output.svg))
+fig.write_image(str(snakemake.output))

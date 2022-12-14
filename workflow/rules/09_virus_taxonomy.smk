@@ -25,9 +25,11 @@ resources = config["resources"]
 # -----------------------------------------------------
 # Virus taxonomy rules
 # -----------------------------------------------------
+localrules:
+    virus_taxonomy_analysis
 
 # -----------------------------------------------------
-# 01 geNomad's marker based taxonomy
+# 01 geNomad
 # -----------------------------------------------------
 # run genomad to identify virus taxonomy
 rule genomad_taxonomy:
@@ -35,18 +37,20 @@ rule genomad_taxonomy:
         "Running geNomad to predict virus taxonomy"
     input:
         genomad=resources + "genomad/genomad_db/virus_hallmark_annotation.txt",
-        contigs=results + "07_VIRUS_DIVERSITY/01_votu_clusters/votu_representatives.fna",
+        contigs=results + "07_VIRUS_DIVERSITY/01_votu_clustering/votu_representatives.fasta",
     output:
-        results
+        taxonomy=results
         + "09_VIRUS_TAXONOMY/01_genomad/votu_representatives_annotate/votu_representatives_taxonomy.tsv",
+        lifestyle=results
+        + "09_VIRUS_TAXONOMY/01_genomad/votu_representatives_find_proviruses/votu_representatives_provirus.tsv",
     params:
         out_dir=results + "09_VIRUS_TAXONOMY/01_genomad/",
         genomad_dir=resources + "genomad/genomad_db",
     conda:
-        "../envs/genomad:1.0.1.yml"
+        "../envs/genomad:1.3.0--pyhdfd78af_0.yml"
     threads: config["virus_taxonomy"]["genomad_threads"]
     benchmark:
-        "benchmark/09_VIRUS_TAXONOMY/genomad.tsv"
+        "benchmark/09_VIRUS_TAXONOMY/genomad_taxonomy.tsv"
     resources:
         runtime=config["virus_taxonomy"]["genomad_runtime"],
         mem_mb=config["virus_taxonomy"]["genomad_memory"],
@@ -59,160 +63,10 @@ rule genomad_taxonomy:
         --min-score 0.0 \
         --cleanup \
         --splits {threads} \
-        --enable-score-calibration \
         {input.contigs} \
         {params.out_dir} \
         {params.genomad_dir}
         """
-
-# -----------------------------------------------------
-# 02 Closest reference genome
-# -----------------------------------------------------
-# compare assembled phages to external database
-rule external_mash:
-    message:
-        "Running MASH against external database to determine novelty of assembled phages"
-    input:
-        viruses=results + "07_VIRUS_DIVERSITY/01_votu_clusters/votu_representatives.fna",
-        virus_db=config["virus_db"] + ".msh",
-    output:
-        sketch=results + "07_VIRUS_DIVERSITY/01_votu_clusters/votu_representatives.fna.msh",
-        mash=results + "09_VIRUS_TAXONOMY/03_external_comparison/votu_reps_v_external_mash.tsv",
-    params:
-        out_dir=results + "09_VIRUS_TAXONOMY/03_external_comparison/"
-    # conda:
-    #     "../envs/mash:2.3--ha61e061_0.yml"
-    container:
-        "docker://quay.io/biocontainers/mash:2.3--ha61e061_0"
-    benchmark:
-        "benchmark/09_VIRUS_TAXONOMY/external_mash.tsv"
-    resources:
-        runtime=config["virus_comparison"]["mash_runtime"],
-        mem_mb=config["virus_comparison"]["mash_memory"],
-    threads: config["virus_comparison"]["mash_threads"]
-    shell:
-        """
-        # create output directory
-        rm -rf {params.out_dir}
-        mkdir {params.out_dir}
-
-        # mash sketch assembled phage genomes
-        mash sketch \
-        {input.viruses} \
-        -s 1000 \
-        -i \
-        -p {threads}
-
-        # run mash distance against reference genomes
-        mash dist \
-        {output.sketch} {input.virus_db} \
-        -p {threads} > {output.mash}
-        """
-
-
-# filter highly similar genomes for species comparisons
-rule identify_novel_genera_and_families:
-    message:
-        "Identifying approximate genus/family level hits to reference databases"
-    input:
-        mash_dist=results + "09_VIRUS_TAXONOMY/03_external_comparison/votu_reps_v_external_mash.tsv",
-        virus_db=config["virus_db"],
-        meta=config["virus_db_meta"],
-    output:
-        mash_results=results + "09_VIRUS_TAXONOMY/03_external_comparison/genera_and_family_comparisons.csv",
-        hi_sim_viruses=results + "09_VIRUS_TAXONOMY/03_external_comparison/hi_sim_viruses.fasta",
-    params:
-        out_dir=results + "09_VIRUS_TAXONOMY/03_external_comparison/",
-        max_dist_species=config["virus_comparison"]["max_dist_species"],
-        max_dist_genus=config["virus_comparison"]["max_dist_genus"],
-        max_dist_family=config["virus_comparison"]["max_dist_family"],
-    conda:
-        "../envs/jupyter.yml"
-    benchmark:
-        "benchmark/09_VIRUS_TAXONOMY/identify_novel_genera_and_families.tsv"
-    resources:
-        runtime="00:10:00",
-        mem_mb="10000",
-    script:
-        "../scripts/09_identify_novel_genera_and_families.py"
-
-
-# blast viruses against highly similar database genomes and determine ANI and AF
-rule blast_viruses_v_external:
-    message:
-        "BLASTing viruses against external database and calculating ANI and AF"
-    input:
-        viruses=results + "07_VIRUS_DIVERSITY/01_votu_clusters/votu_representatives.fna",
-        hi_sim_viruses=results + "09_VIRUS_TAXONOMY/03_external_comparison/hi_sim_viruses.fasta",
-    output:
-        results + "09_VIRUS_TAXONOMY/03_external_comparison/viruses_v_external_blast.tsv",
-    params:
-        blastdb=results + "09_VIRUS_TAXONOMY/03_external_comparison/hi_sim_viruses",
-    # conda:
-    #     "../envs/blast:2.12.0--h3289130_3.yml"
-    container:
-        "docker://quay.io/biocontainers/blast:2.12.0--h3289130_3"
-    benchmark:
-        "benchmark/09_VIRUS_TAXONOMY/blast_viruses_v_external.tsv"
-    resources:
-        runtime=config["virus_comparison"]["blast_runtime"],
-        mem_mb=config["virus_comparison"]["blast_memory"],
-    threads: config["virus_comparison"]["blast_threads"]
-    shell:
-        """
-        # make a blast db from dereplicated viruses
-        makeblastdb -in {input.hi_sim_viruses} -out {params.blastdb} -dbtype nucl
-
-        # blast dereplicated viruses against one another
-        blastn -query {input.viruses} -db {params.blastdb} -out {output} -num_threads {threads} -outfmt '6 std qlen slen' -max_target_seqs 25000 -perc_identity 90
-        """
-
-
-# blast viruses against highly similar database genomes and determine ANI and AF
-rule ani_external:
-    message:
-        "BLASTing viruses against external database and calculating ANI and AF"
-    input:
-        results + "09_VIRUS_TAXONOMY/03_external_comparison/viruses_v_external_blast.tsv",
-    output:
-        results + "09_VIRUS_TAXONOMY/03_external_comparison/viruses_v_external_ani.tsv",
-    params:
-        blastani_script=resources + "mgv/ani_cluster/blastani.py",
-    conda:
-        "../envs/jupyter.yml"
-    benchmark:
-        "benchmark/09_VIRUS_TAXONOMY/ani_external.tsv"
-    resources:
-        runtime="00:10:00",
-        mem_mb="10000",
-    shell:
-        """
-        # calculate ani and af from blast results
-        python {params.blastani_script} -i {input} -o {output}
-        """
-
-# identify top hit for each virus
-rule identify_novel_species:
-    message:
-        "Identifying top external hits and determining if viruses represent novel species"
-    input:
-        ani=results + "09_VIRUS_TAXONOMY/03_external_comparison/viruses_v_external_ani.tsv",
-        meta=config["virus_db_meta"],
-    output:
-        results + "09_VIRUS_TAXONOMY/03_external_comparison/species_comparisons.tsv",
-    params:
-        min_ani=config["virus_comparison"]["min_ani"],
-        min_qcov=config["virus_comparison"]["min_virus_cov"],
-        min_tcov=config["virus_comparison"]["min_ref_cov"],
-    conda:
-        "../envs/jupyter.yml"
-    benchmark:
-        "benchmark/09_VIRUS_TAXONOMY/identify_novel_species.tsv"
-    resources:
-        runtime="00:10:00",
-        mem_mb="10000",
-    script:
-        "../scripts/09_identify_novel_species.py"
 
 
 # -----------------------------------------------------
@@ -221,20 +75,18 @@ rule identify_novel_species:
 # visualize virus taxonomy results
 rule virus_taxonomy_analysis:
     message:
-        "Visualizing virus taxonomy results from both tools"
+        "Visualizing virus taxonomy results from geNomad"
     input:
         genomad=results + "09_VIRUS_TAXONOMY/01_genomad/votu_representatives_annotate/votu_representatives_taxonomy.tsv",
-        mmseqs=results + "09_VIRUS_TAXONOMY/02_mmseqs2/taxonomy_lca.tsv",
     output:
         svg=report(
             results + "09_VIRUS_TAXONOMY/virus_taxonomy_analysis.svg",
             category="Step 09: Virus taxonomy",
         ),
-        html=results + "09_VIRUS_TAXONOMY/virus_taxonomy_analysis.html",
         report=results + "09_VIRUS_TAXONOMY/virus_taxonomy_report.tsv",
     params:
         min_genomad_agreement=config["virus_taxonomy"]["genomad_min_agreement"],
-        min_mmseqs_agreement=config["virus_taxonomy"]["mmseqs_min_agreement"],
+        min_genomad_genes=config["virus_taxonomy"]["genomad_min_genes"],
     benchmark:
         "benchmark/09_VIRUS_TAXONOMY/virus_taxonomy_analysis.tsv"
     resources:

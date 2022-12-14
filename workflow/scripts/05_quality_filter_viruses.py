@@ -19,21 +19,17 @@ if snakemake.params.remove_proviruses:
 
 hq_viruses = set(checkv_filtered["contig_id"])
 hq_virus_seqs = []
-hq_virus_prots = []
-hq_untrimmed_seqs = []
 
 # parse through and combine virus sequences for each sample
 for record in SeqIO.parse(str(snakemake.input.checkv_viruses), "fasta"):
     if record.id in hq_viruses:
         hq_virus_seqs.append(record)
 
+for record in SeqIO.parse(str(snakemake.input.checkv_proviruses), "fasta"):
+    if record.id.rpartition('_')[0] in hq_viruses:
+        record.id = record.id + "checkv_provirus"
+        hq_virus_seqs.append(record)
 
-for record in SeqIO.parse(str(snakemake.input.untrimmed_viruses), "fasta"):
-    if record.id in hq_viruses:
-        hq_untrimmed_seqs.append(record)
-    elif record.id + "_1" in hq_viruses:
-        hq_untrimmed_seqs.append(record)
 
 # save all sequences to specified file
-SeqIO.write(hq_virus_seqs, str(snakemake.output.viruses), "fasta")
-SeqIO.write(hq_untrimmed_seqs, str(snakemake.output.untrimmed_viruses), "fasta")
+SeqIO.write(hq_virus_seqs, str(snakemake.output), "fasta")

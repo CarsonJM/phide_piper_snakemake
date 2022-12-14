@@ -33,6 +33,7 @@ localrules:
     combine_reports_across_samples,
     merge_reports_within_samples,
     merge_viral_contigs_within_samples,
+    virus_identification_analysis,
 
 
 # -----------------------------------------------------
@@ -63,7 +64,7 @@ rule filter_symlinked_contigs:
     input:
         results + "00_INPUT/{sample}_contigs.fasta",
     output:
-        results + "00_INPUT/{sample}_contigs_dereplicated.fasta",
+        results + "00_INPUT/{sample}_contigs.fasta",
     params:
         min_length=config["read_assembly"]["min_contig_length"],
     conda:
@@ -80,12 +81,11 @@ rule filter_symlinked_contigs:
 # if reads are input type, use output from 03_read_assembly
 if config["input_data"] == "reads":
     assembly = (
-        results
-        + "03_READ_ASSEMBLY/02_contig_filters/{sample}/{sample}_contigs_dereplicated.fasta",
+        results + "03_READ_ASSEMBLY/02_contig_filters/{sample}/{sample}_contigs.fasta",
     )
 # if contigs are input, use symlinked contigs
 elif config["input_data"] == "contigs":
-    assembly = (results + "00_INPUT/{sample}_contigs_dereplicated.fasta",)
+    assembly = (results + "00_INPUT/{sample}_contigs.fasta",)
 
 
 # symlink preprocessed reads for external hits/abundances
@@ -133,7 +133,7 @@ rule download_genomad:
     params:
         genomad_dir=resources + "genomad/",
     conda:
-        "../envs/genomad:1.3.0.yml"
+        "../envs/genomad:1.3.0--pyhdfd78af_0.yml"
     benchmark:
         "benchmark/04_VIRUS_IDENTIFICATION/download_genomad.tsv"
     resources:
@@ -158,18 +158,16 @@ rule genomad:
         contigs=assembly,
     output:
         summary=results
-        + "04_VIRUS_IDENTIFICATION/01_genomad/{sample}/{sample}_contigs_dereplicated_summary/{sample}_contigs_dereplicated_virus_summary.tsv",
-        provirus=results
-        + "04_VIRUS_IDENTIFICATION/01_genomad/{sample}/{sample}_contigs_dereplicated_find_proviruses/{sample}_contigs_dereplicated_provirus.fna",
-        lifestyle=lifestyle,
-        taxonomy=taxonomy,
+        + "04_VIRUS_IDENTIFICATION/01_genomad/{sample}/{sample}_contigs_summary/{sample}_contigs_virus_summary.tsv",
+        viruses=results
+        + "04_VIRUS_IDENTIFICATION/01_genomad/{sample}/{sample}_contigs_summary/{sample}_contigs_virus.fna",
     params:
         out_dir=results + "04_VIRUS_IDENTIFICATION/01_genomad/{sample}/",
         genomad_dir=resources + "genomad/genomad_db",
-        min_score=config['virus_identification']['genomad_min_score'],
-        max_fdr=config['virus_identification']['genomad_max_fdr'],
+        min_score=config["virus_identification"]["genomad_min_score"],
+        max_fdr=config["virus_identification"]["genomad_max_fdr"],
     conda:
-        "../envs/genomad:1.3.0.yml"
+        "../envs/genomad:1.3.0--pyhdfd78af_0.yml"
     benchmark:
         "benchmark/04_VIRUS_IDENTIFICATION/genomad_{sample}.tsv"
     resources:
@@ -183,10 +181,8 @@ rule genomad:
         --threads {threads} \
         --verbose \
         --min-score {params.min_score} \
-        --max-fdr {params.max_fdr}
         --cleanup \
         --splits {threads} \
-        --enable-score-calibration \
         {input.contigs} \
         {params.out_dir} \
         {params.genomad_dir}
@@ -233,10 +229,10 @@ rule screen_reads_against_virusdb:
         sketch=config["virus_db"] + ".msh",
     output:
         results
-        + "04_VIRUS_IDENTIFICATION/07_external_hits/{sample}/virusdb_mash_screen.tab",
+        + "04_VIRUS_IDENTIFICATION/02_external_hits/{sample}/virusdb_mash_screen.tab",
     params:
         combined=results
-        + "04_VIRUS_IDENTIFICATION/07_external_hits/{sample}/combined_reads.fastq",
+        + "04_VIRUS_IDENTIFICATION/02_external_hits/{sample}/combined_reads.fastq",
     # conda:
     #     "../envs/mash:2.3--ha61e061_0.yml"
     container:
@@ -262,18 +258,20 @@ rule screen_reads_against_virusdb:
         rm {params.combined}
         """
 
+
 # filter to keep only external hits
 rule extract_external_hits:
     message:
         "Extracting external viruses present in {wildcards.sample}"
     input:
         read_screen=results
-        + "04_VIRUS_IDENTIFICATION/07_external_hits/{sample}/virusdb_mash_screen.tab",
+        + "04_VIRUS_IDENTIFICATION/02_external_hits/{sample}/virusdb_mash_screen.tab",
         virusdb=config["virus_db"],
     output:
-        results + "04_VIRUS_IDENTIFICATION/07_external_hits/{sample}/virusdb_hits.fna",
+        results + "04_VIRUS_IDENTIFICATION/02_external_hits/{sample}/virusdb_hits.fna",
     params:
         min_mash_score=config["virus_identification"]["min_mash_score"],
+        min_mash_hashes=config["virus_identification"]["min_mash_hashes"],
         min_mash_multiplicity=config["virus_identification"]["min_mash_multiplicity"],
     conda:
         "../envs/jupyter.yml"
@@ -286,89 +284,14 @@ rule extract_external_hits:
         "../scripts/04_extract_virusdb_hits.py"
 
 
-# add external hits to contigs fasta
-rule combine_external_hits_with_contigs:
-    message:
-        "Combining external viruses with {wildcards.sample} contigs"
-    input:
-        mash_hits=results
-        + "04_VIRUS_IDENTIFICATION/07_external_hits/{sample}/virusdb_hits.fna",
-        contigs=assembly,
-    output:
-        results
-        + "04_VIRUS_IDENTIFICATION/07_external_hits/{sample}/contigs_external_hits_combined.fna",
-    benchmark:
-        "benchmark/04_VIRUS_IDENTIFICATION/combine_mash_hits_with_contigs_{sample}.tsv"
-    resources:
-        runtime="00:10:00",
-        mem_mb="10000",
-    shell:
-        """
-        # combine hits fasta with contigs
-        cat {input.contigs} {input.mash_hits} > {output}
-        """
-
-
 # -----------------------------------------------------
 # 07 Combine outputs
 # -----------------------------------------------------
 # determine input files for detecting virus sequences
-if config["virus_identification"]["run_mgv"]:
-    mgv1 = (
-        results + "04_VIRUS_IDENTIFICATION/01_mgv/output/{sample}_master_table.tsv",
-    )
-    mgv2 = (results + "04_VIRUS_IDENTIFICATION/01_mgv/output/{sample}_final.tsv",)
-else:
-    mgv1 = pd.DataFrame()
-    mgv2 = pd.DataFrame()
-
-if config["virus_identification"]["run_virfinder"]:
-    virfinder = (
-        results + "04_VIRUS_IDENTIFICATION/01_mgv/output/{sample}_master_table.tsv",
-    )
-else:
-    virfinder = pd.DataFrame()
-
-if config["virus_identification"]["run_virsorter"]:
-    virsorter = (
-        results
-        + "04_VIRUS_IDENTIFICATION/02_virsorter/{sample}/Metric_files/VIRSorter_phage_signal.tab"
-    )
-    virsorter_translation = (
-        results
-        + "04_VIRUS_IDENTIFICATION/02_virsorter/{sample}/fasta/input_sequences_id_translation.tsv"
-    )
-else:
-    virsorter = pd.DataFrame()
-    virsorter_translation = pd.DataFrame()
-
-if config["virus_identification"]["run_virsorter2"]:
-    virsorter2 = (
-        results + "04_VIRUS_IDENTIFICATION/03_virsorter2/{sample}/final-viral-score.tsv"
-    )
-else:
-    virsorter2 = pd.DataFrame()
-
-if config["virus_identification"]["run_vibrant"]:
-    vibrant = (
-        results
-        + "04_VIRUS_IDENTIFICATION/04_vibrant/{sample}/VIBRANT_{sample}_contigs_dereplicated/VIBRANT_phages_{sample}_contigs_dereplicated/{sample}_contigs_dereplicated.phages_combined.txt"
-    )
-else:
-    vibrant = pd.DataFrame()
-
-if config["virus_identification"]["run_deepvirfinder"]:
-    deepvirfinder = (
-        results
-        + "04_VIRUS_IDENTIFICATION/05_deepvirfinder/{sample}_contigs_dereplicated.fasta_gt1000bp_dvfpred.txt",
-    )
-else:
-    deepvirfinder = pd.DataFrame()
-
 if config["virus_identification"]["run_genomad"]:
     genomad = (
         results
-        + "04_VIRUS_IDENTIFICATION/06_genomad/{sample}/{sample}_contigs_dereplicated_summary/{sample}_contigs_dereplicated_virus_summary.tsv"
+        + "04_VIRUS_IDENTIFICATION/01_genomad/{sample}/{sample}_contigs_summary/{sample}_contigs_virus_summary.tsv"
     )
 else:
     genomad = pd.DataFrame()
@@ -376,7 +299,7 @@ else:
 if config["virus_identification"]["run_external"] and config["input_data"] == "reads":
     external = (
         results
-        + "04_VIRUS_IDENTIFICATION/07_external_hits/{sample}/virusdb_mash_screen.tab"
+        + "04_VIRUS_IDENTIFICATION/02_external_hits/{sample}/virusdb_mash_screen.tab"
     )
 else:
     external = pd.DataFrame()
@@ -387,28 +310,17 @@ rule merge_reports_within_samples:
     message:
         "Merging all virus identification reports within {wildcards.sample}"
     input:
-        mgv_results=mgv1,
-        mgv_viruses=mgv2,
-        vf_results=virfinder,
-        vs_results=virsorter,
-        vs_translation=virsorter_translation,
-        vs2_results=virsorter2,
-        vb_results=vibrant,
-        dvf_results=deepvirfinder,
         genomad_results=genomad,
         external_results=external,
     output:
         results
-        + "04_VIRUS_IDENTIFICATION/08_combine_outputs/{sample}/combined_report.csv",
+        + "04_VIRUS_IDENTIFICATION/03_combine_outputs/{sample}/combined_report.csv",
     params:
-        run_mgv=config["virus_identification"]["run_mgv"],
-        run_virfinder=config["virus_identification"]["run_virfinder"],
-        run_virsorter=config["virus_identification"]["run_virsorter"],
-        run_virsorter2=config["virus_identification"]["run_virsorter2"],
-        run_vibrant=config["virus_identification"]["run_vibrant"],
-        run_deepvirfinder=config["virus_identification"]["run_deepvirfinder"],
         run_genomad=config["virus_identification"]["run_genomad"],
         run_external=config["virus_identification"]["run_external"],
+        min_mash_score=config["virus_identification"]["min_mash_score"],
+        min_mash_hashes=config["virus_identification"]["min_mash_hashes"],
+        min_mash_multiplicity=config["virus_identification"]["min_mash_multiplicity"],
         assembly="{sample}",
     conda:
         "../envs/jupyter.yml"
@@ -421,14 +333,18 @@ rule merge_reports_within_samples:
         "../scripts/04_merge_reports_within_samples.py"
 
 
-# if running external identification, use combined contigs file
-if config["virus_identification"]["run_external"] and config["input_data"] == "reads":
-    combined = (
-        results
-        + "04_VIRUS_IDENTIFICATION/07_external_hits/{sample}/contigs_external_hits_combined.fna"
+# determine which inputs are required for virus identification
+vls_contigs = []
+if config["virus_identification"]["run_external"]:
+    vls_contigs.append(
+        results + "04_VIRUS_IDENTIFICATION/02_external_hits/{sample}/virusdb_hits.fna",
     )
-else:
-    combined = assembly
+
+if config["virus_identification"]["run_genomad"]:
+    vls_contigs.append(
+        results
+        + "04_VIRUS_IDENTIFICATION/01_genomad/{sample}/{sample}_contigs_summary/{sample}_contigs_virus.fna",
+    )
 
 
 # combine viral contigs from all tool outputs using thresholds specified in config.yaml
@@ -436,40 +352,23 @@ rule merge_viral_contigs_within_samples:
     message:
         "Merging viral contigs meeting config.yaml criteria within {wildcards.sample}"
     input:
-        contigs=combined,
-        viral_report=results
-        + "04_VIRUS_IDENTIFICATION/08_combine_outputs/{sample}/combined_report.csv",
+        vls_contigs,
     output:
         results
-        + "04_VIRUS_IDENTIFICATION/08_combine_outputs/{sample}/combined_viral_contigs.fasta",
+        + "04_VIRUS_IDENTIFICATION/03_combine_outputs/{sample}/combined_viral_contigs.fasta",
     params:
-        run_mgv=config["virus_identification"]["run_mgv"],
-        run_vf=config["virus_identification"]["run_virfinder"],
-        vf_score=config["virus_identification"]["virfinder_min_score"],
-        run_vs=config["virus_identification"]["run_virsorter"],
-        vs_cat=config["virus_identification"]["virsorter_cat"],
-        run_vs2=config["virus_identification"]["run_virsorter2"],
-        vs2_score=config["virus_identification"]["virsorter2_min_score"],
-        run_dvf=config["virus_identification"]["run_deepvirfinder"],
-        dvf_score=config["virus_identification"]["deepvirfinder_min_score"],
-        run_vb=config["virus_identification"]["run_vibrant"],
         run_genomad=config["virus_identification"]["run_genomad"],
-        genomad_score=config["virus_identification"]["genomad_min_score"],
-        genomad_fdr=config["virus_identification"]["genomad_max_fdr"],
         run_external=config["virus_identification"]["run_external"],
-        min_mash_score=config["virus_identification"]["min_mash_score"],
-        min_mash_hashes=config["virus_identification"]["min_mash_hashes"],
-        min_mash_multiplicity=config["virus_identification"]["min_mash_multiplicity"],
         assembly="{sample}",
-    conda:
-        "../envs/jupyter.yml"
     benchmark:
         "benchmark/04_VIRUS_IDENTIFICATION/merge_viral_contigs_within_samples_{sample}.tsv"
     resources:
         runtime="00:10:00",
         mem_mb="10000",
-    script:
-        "../scripts/04_merge_viral_contigs_within_samples.py"
+    shell:
+        """
+        cat {input} > {output}
+        """
 
 
 # -----------------------------------------------------
@@ -482,7 +381,7 @@ rule combine_reports_across_samples:
     input:
         expand(
             results
-            + "04_VIRUS_IDENTIFICATION/08_combine_outputs/{sample}/combined_report.csv",
+            + "04_VIRUS_IDENTIFICATION/03_combine_outputs/{sample}/combined_report.csv",
             sample=samples,
         ),
     output:
@@ -506,27 +405,11 @@ rule virus_identification_analysis:
     input:
         results + "04_VIRUS_IDENTIFICATION/virus_identification_report.csv",
     output:
-        boxplot_svg=report(
+        report(
             results + "04_VIRUS_IDENTIFICATION/virus_identification_boxplot.svg",
             category="Step 04: Virus identification",
         ),
-        boxplot_html=results
-        + "04_VIRUS_IDENTIFICATION/virus_identification_boxplot.html",
-        upset=report(
-            results + "04_VIRUS_IDENTIFICATION/virus_identification_upsetplot.png",
-            category="Step 04: Virus identification",
-        ),
     params:
-        run_mgv=config["virus_identification"]["run_mgv"],
-        run_vf=config["virus_identification"]["run_virfinder"],
-        vf_score=config["virus_identification"]["virfinder_min_score"],
-        run_vs=config["virus_identification"]["run_virsorter"],
-        vs_cat=config["virus_identification"]["virsorter_cat"],
-        run_vs2=config["virus_identification"]["run_virsorter2"],
-        vs2_score=config["virus_identification"]["virsorter2_min_score"],
-        run_dvf=config["virus_identification"]["run_deepvirfinder"],
-        dvf_score=config["virus_identification"]["deepvirfinder_min_score"],
-        run_vb=config["virus_identification"]["run_vibrant"],
         run_genomad=config["virus_identification"]["run_genomad"],
         genomad_score=config["virus_identification"]["genomad_min_score"],
         genomad_fdr=config["virus_identification"]["genomad_max_fdr"],
