@@ -46,7 +46,7 @@ rule symlink_contigs:
             "contigs"
         ].iloc[0],
     output:
-        results + "00_INPUT/{sample}_symlink_contigs.fasta",
+        results + "00_INPUT/{sample}_contigs_symlink.fasta",
     benchmark:
         "benchmark/04_VIRUS_IDENTIFICATION/symlink_contigs_{sample}.tsv"
     resources:
@@ -62,7 +62,7 @@ rule symlink_contigs:
 # filter symlinked contigs based on contig length
 rule filter_symlinked_contigs:
     input:
-        results + "00_INPUT/{sample}_symlink_contigs.fasta",
+        results + "00_INPUT/{sample}_contigs_symlink.fasta",
     output:
         results + "00_INPUT/{sample}_contigs.fasta",
     params:
