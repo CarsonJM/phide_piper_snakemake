@@ -11,13 +11,13 @@ tool_counts = pd.DataFrame()
 if snakemake.params.run_genomad:
     genomad_report = report[(report['virus_score'] >= snakemake.params.genomad_score)]
     tools.append('geNomad')
-    tool_counts[['assembly', 'geNomad']] = genomad_report.groupby(['assembly'], as_index=False).count()[['assembly' 'vls_id']]
+    tool_counts[['assembly', 'geNomad']] = genomad_report.groupby(['assembly'], as_index=False).count()[['assembly', 'vls_id']]
 
 if snakemake.params.run_external:
     external_report = report[(report['identity'] >= snakemake.params.min_mash_score) & (report['shared-hashes'] >= snakemake.params.min_mash_hashes) & (report['median-multiplicity'] >= snakemake.params.min_mash_multiplicity)]
     external_report.rename(columns={'shared-hashes':'shared_hashes', 'median-multiplicity':'median_multiplicity'}, inplace=True)
     tools.append('external')
-    tool_counts[['assembly','external']] = external_report.groupby(['assembly'], as_index=False).count()[['assembly' 'vls_id']]
+    tool_counts[['assembly','external']] = external_report.groupby(['assembly'], as_index=False).count()[['assembly', 'vls_id']]
 
 tool_counts['tools'] = tools
 id = tool_counts.melt(id_vars=['assembly'], value_vars=tools)
