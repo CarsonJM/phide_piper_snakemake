@@ -19,7 +19,6 @@ if snakemake.params.run_external:
     tools.append('external')
     tool_counts[['assembly','external']] = external_report.groupby(['assembly'], as_index=False).count()[['assembly', 'vls_id']]
 
-tool_counts['tools'] = tools
 id = tool_counts.melt(id_vars=['assembly'], value_vars=tools)
 
 # plot kneaddata read counts and save
