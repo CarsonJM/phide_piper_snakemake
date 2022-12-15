@@ -14,8 +14,8 @@ if snakemake.params.run_external:
         external_results = pd.read_csv(str(snakemake.input.external_results), sep='\t', names=['identity', 'shared-hashes', 'median-multiplicity', 'p-value', 'vls_id', 'query-comment'])
         external_results['shared-hashes'] = external_results['shared-hashes'].str.partition('/')[0].astype(int)
         external_results = external_results[(external_results['identity'] >= snakemake.params.min_mash_score) & (external_results['shared-hashes'] >= snakemake.params.min_mash_hashes) & (external_results['median-multiplicity'] >= snakemake.params.min_mash_multiplicity)]
-        virus_report = pd.concat([genomad_results, external_results], axis=0, ignore_index=True)
 
+virus_report = pd.concat([genomad_results, external_results], axis=0, ignore_index=True)
 virus_report['assembly'] = snakemake.params.assembly
 virus_report['vls_id'] = virus_report['assembly'] + '_' + virus_report['vls_id']
 

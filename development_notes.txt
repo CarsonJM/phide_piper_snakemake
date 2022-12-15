@@ -1,13 +1,8 @@
 Pipeline To Do:
-- Use geNomad to identify/extract viruses
-- Use UHGV for mash screen
-- incorporate UHGV host info
-- incorporate UHGV taxonomy info
-- incorporate UHGV lifestyle info
-- Incorporate UHGV clustering for species, genus and family levels
-- Use UHGV method for extracting vOTU rep
-- Use UHGV method for assigning taxonomy
-- Add PHROGs to DRAMv
+- Extrsact oral contigs from HuVirDB (LungVir, FebrileVir)
+- Extract HQ viruses from oral virome db
+- Extract HQ viruses from oral IMGVR samples
+- Extract 
 
 - Change virus quality figure to boxplot
 - Change virus identification output format
