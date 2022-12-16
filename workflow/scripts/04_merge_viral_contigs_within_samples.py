@@ -4,12 +4,12 @@ combined_sequences = []
 # extract viral contigs
 if snakemake.params.run_genomad or snakemake.params.run_external:
     for record in SeqIO.parse(str(snakemake.input[0]), "fasta"):
-        record.id = snakemake.params.assembly + '_' + record.id
+        record.id = snakemake.params.assembly + '|' + record.id
         combined_sequences.append(record)
 
 if snakemake.params.run_genomad and snakemake.params.run_external:
     for record in SeqIO.parse(str(snakemake.input[1]), "fasta"):
-        record.id = snakemake.params.assembly + '_' + record.id
+        record.id = snakemake.params.assembly + '|' + record.id
         combined_sequences.append(record)
 
 # prophage = []

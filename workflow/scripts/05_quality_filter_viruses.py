@@ -17,6 +17,7 @@ elif snakemake.params.min_completeness != "":
 if snakemake.params.remove_proviruses:
     checkv_filtered = checkv_filtered[(checkv_filtered["provirus"] != 'Yes')]
 
+
 hq_viruses = set(checkv_filtered["contig_id"])
 hq_virus_seqs = []
 
@@ -27,7 +28,19 @@ for record in SeqIO.parse(str(snakemake.input.checkv_viruses), "fasta"):
 
 for record in SeqIO.parse(str(snakemake.input.checkv_proviruses), "fasta"):
     if record.id.rpartition('_')[0] in hq_viruses:
-        record.id = record.id + "checkv_provirus"
+        if '|' in record.id:
+            genomad_provirus = record.id.split('|')[1]
+            genomad_start = genomad_provirus.split('_')[1]
+            checkv_provirus = record.definition.split('/')[0]
+            checkv_start, checkv_stop = checkv_provirus.split('_')
+            checkv_start_total = int(checkv_start) + int(genomad_start)
+            checkv_stop_total = int(checkv_stop) + int(genomad_start)
+            record.id = record.id + "|checkv_provirus_" + str(checkv_start_total) + "_" + str(checkv_stop_total)
+        else:
+            checkv_provirus = record.definition.split('/')[0]
+            checkv_start, checkv_stop = checkv_provirus.split('_')
+            record.id = record.id + "|checkv_provirus_" + str(checkv_start) + "_" + str(checkv_stop)
+
         hq_virus_seqs.append(record)
 
 

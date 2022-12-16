@@ -6,10 +6,7 @@ samples = pd.read_csv(str(snakemake.input.samples), sep='\t')
 # read votu diversity report
 diversity = pd.read_csv(str(snakemake.input.diversity), sep='\t')
 diversity.rename(columns={'representative':'viral_genome', 'cluster_size':'votu_members'}, inplace=True)
-diversity['sample'] = ''
-for sample_name in samples['sample'].to_list():
-    diversity['sample'] = diversity.apply(lambda x: sample_name if sample_name in x.viral_genome else x.sample, axis=1)
-print(diversity)
+diversity['sample'] = diversity['viral_genome'].str.split('|', expand=True)[0]
 summary = samples.merge(diversity, on='sample', how='left')[['sample', 'viral_genome', 'votu_members']]
 
 dereplication = pd.read_csv(str(snakemake.input.dereplication), sep='\t')
