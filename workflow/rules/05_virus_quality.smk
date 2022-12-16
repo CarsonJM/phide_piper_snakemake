@@ -62,7 +62,7 @@ rule symlink_vls:
 if config["input_data"] == "reads" or config["input_data"] == "contigs":
     vls = (
         results
-        + "04_VIRUS_IDENTIFICATION/03_combine_outputs/{sample}/combined_viral_contigs.fasta"
+        + "04_VIRUS_IDENTIFICATION/02_genomad/{sample}/{sample}_contigs_summary/{sample}_contigs_virus.fna",
     )
 # if input is vls, use symlinked vls
 elif config["input_data"] == "vls":

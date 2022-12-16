@@ -13,7 +13,7 @@ resources: "/gscratch/scrubbed/carsonjm/resources/"
 # Database options
 #------------------------------------
 # used to search for external viruses in samples
-virus_db: "/gscratch/scrubbed/carsonjm/resources/uhgv/uhgv_hq_plus.fna"
+virus_db: "/gscratch/scrubbed/carsonjm/resources/uhgv/uhgv_oral_hq_combined.fna"
 virus_db_meta: "/gscratch/scrubbed/carsonjm/resources/inphrared/vmr_metadata.csv"
 # used to compare with validated phage genomes
 reference_db: "/gscratch/scrubbed/carsonjm/resources/vmr/VMR_21-221122_MSL37.fa"
@@ -87,27 +87,25 @@ read_assembly:
 
 ### Module 4: Virus Identification ###
 virus_identification:
-  # I. geNomad: https://doi.org/10.1093/nar/gkac1037
-  run_genomad: True
+  # I. MASH screen against user-provided database of viral genomes: https://doi.org/10.1186/s13059-019-1841-x
+  # if reads are not available, this can be set to contigs and contigs will be used to search databases for similar genomes
+  external_input: "reads"
+  # Roughly equates to identity (0.95 score ~= 95% identity)
+  min_mash_score: 0.99
+  # Roughly equates to breadth (850 hashes out of 1000 ~= 85% breadth)
+  min_mash_hashes: 0
+  # Roughly equates to coverage (3 multiplicity ~= 3x coverage)
+  min_mash_multiplicity: 3
+  mash_threads: 8
+  mash_runtime: "01:00:00"
+  mash_memory: "100000"
+  # II. geNomad: https://doi.org/10.1093/nar/gkac1037
   genomad_min_score: 0.7
   genomad_max_fdr: 0.1
   genomad_arguments: ""
   genomad_threads: 8
   genomad_runtime: "01:00:00"
   genomad_memory: "10000"
-  # II. MASH screen against user-provided database of viral genomes: https://doi.org/10.1186/s13059-019-1841-x
-  run_external: True
-  # if reads are not available, this can be set to contigs and contigs will be used to search databases for similar genomes
-  external_input: "reads"
-  # Roughly equates to identity (0.95 score ~= 95% identity)
-  min_mash_score: 0.95
-  # Roughly equates to breadth (850 hashes out of 1000 ~= 85% breadth)
-  min_mash_hashes: 850
-  # Roughly equates to coverage (3 multiplicity ~= 3x coverage)
-  min_mash_multiplicity: 3
-  mash_threads: 8
-  mash_runtime: "01:00:00"
-  mash_memory: "100000"
 
 ### Module 5: Virus Quality ###
 virus_quality:
@@ -118,7 +116,7 @@ virus_quality:
   checkv_memory: "10000"
   # II. Quality filter: Filter virus like sequences based on user criteria
   # only sequences with >= specified completeness
-  min_completeness: 90
+  min_completeness: 50
   # only sequences with <= specified number of bacterial genes
   max_bacterial_genes: 2
   # only sequences with >= specified number of viral genes

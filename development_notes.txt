@@ -1,8 +1,7 @@
 Pipeline To Do:
-- Extrsact oral contigs from HuVirDB (LungVir, FebrileVir)
-- Extract HQ viruses from oral virome db
-- Extract HQ viruses from oral IMGVR samples
-- Extract 
+- Extract HQ viruses from oral virome db and add to UHGV
+- Extract HQ viruses from oral/airway IMGVR6 samples and add to UHGV
+- Add INPHARED virus and add to UHGV
 
 - Change virus quality figure to boxplot
 - Change virus identification output format

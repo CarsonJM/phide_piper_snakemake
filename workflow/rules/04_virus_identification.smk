@@ -122,75 +122,7 @@ else:
 
 
 # -----------------------------------------------------
-# 01 geNomad
-# -----------------------------------------------------
-# download genomad database
-rule download_genomad:
-    message:
-        "Downloading geNomad database"
-    output:
-        resources + "genomad/genomad_db/virus_hallmark_annotation.txt",
-    params:
-        genomad_dir=resources + "genomad/",
-    conda:
-        "../envs/genomad:1.3.0--pyhdfd78af_0.yml"
-    benchmark:
-        "benchmark/04_VIRUS_IDENTIFICATION/download_genomad.tsv"
-    resources:
-        runtime="01:00:00",
-        mem_mb="10000",
-    shell:
-        """
-        # change to genomad directory
-        cd {params.genomad_dir}
-
-        # download genomad databases
-        genomad download-database .
-        """
-
-
-# run genomad to identify viral contigs
-rule genomad:
-    message:
-        "Running geNomad on {wildcards.sample} to identify viral contigs"
-    input:
-        genomad_db=resources + "genomad/genomad_db/virus_hallmark_annotation.txt",
-        contigs=assembly,
-    output:
-        summary=results
-        + "04_VIRUS_IDENTIFICATION/01_genomad/{sample}/{sample}_contigs_summary/{sample}_contigs_virus_summary.tsv",
-        viruses=results
-        + "04_VIRUS_IDENTIFICATION/01_genomad/{sample}/{sample}_contigs_summary/{sample}_contigs_virus.fna",
-    params:
-        out_dir=results + "04_VIRUS_IDENTIFICATION/01_genomad/{sample}/",
-        genomad_dir=resources + "genomad/genomad_db",
-        min_score=config["virus_identification"]["genomad_min_score"],
-        max_fdr=config["virus_identification"]["genomad_max_fdr"],
-    conda:
-        "../envs/genomad:1.3.0--pyhdfd78af_0.yml"
-    benchmark:
-        "benchmark/04_VIRUS_IDENTIFICATION/genomad_{sample}.tsv"
-    resources:
-        runtime=config["virus_identification"]["genomad_runtime"],
-        mem_mb=config["virus_identification"]["genomad_memory"],
-    threads: config["virus_identification"]["genomad_threads"]
-    shell:
-        """
-        # run genomad
-        genomad end-to-end \
-        --threads {threads} \
-        --verbose \
-        --min-score {params.min_score} \
-        --cleanup \
-        --splits {threads} \
-        {input.contigs} \
-        {params.out_dir} \
-        {params.genomad_dir}
-        """
-
-
-# -----------------------------------------------------
-# 02 Identify external hits
+# 01 Identify external hits
 # -----------------------------------------------------
 # create a mash sketch of virusdb
 rule mash_sketch_virusdb:
@@ -236,10 +168,10 @@ rule screen_reads_against_virusdb:
         sketch=config["virus_db"] + ".msh",
     output:
         results
-        + "04_VIRUS_IDENTIFICATION/02_external_hits/{sample}/virusdb_mash_screen.tab",
+        + "04_VIRUS_IDENTIFICATION/01_external_hits/{sample}/virusdb_mash_screen.tab",
     params:
         combined=results
-        + "04_VIRUS_IDENTIFICATION/02_external_hits/{sample}/combined_reads.fastq",
+        + "04_VIRUS_IDENTIFICATION/01_external_hits/{sample}/combined_reads.fastq",
     # conda:
     #     "../envs/mash:2.3--ha61e061_0.yml"
     container:
@@ -272,10 +204,10 @@ rule extract_external_hits:
         "Extracting external viruses present in {wildcards.sample}"
     input:
         read_screen=results
-        + "04_VIRUS_IDENTIFICATION/02_external_hits/{sample}/virusdb_mash_screen.tab",
+        + "04_VIRUS_IDENTIFICATION/01_external_hits/{sample}/virusdb_mash_screen.tab",
         virusdb=config["virus_db"],
     output:
-        results + "04_VIRUS_IDENTIFICATION/02_external_hits/{sample}/virusdb_hits.fna",
+        results + "04_VIRUS_IDENTIFICATION/01_external_hits/{sample}/virusdb_hits.fna",
     params:
         min_mash_score=config["virus_identification"]["min_mash_score"],
         min_mash_hashes=config["virus_identification"]["min_mash_hashes"],
@@ -291,40 +223,113 @@ rule extract_external_hits:
         "../scripts/04_extract_virusdb_hits.py"
 
 
+# combine external hits with assembly contigs
+rule combine_external_with_assembly:
+    message:
+        "Combining external hits in {wildcards.sample} with assembled contigs"
+    input:
+        contigs=assembly,
+        external_hits=results
+        + "04_VIRUS_IDENTIFICATION/01_external_hits/{sample}/virusdb_hits.fna",
+    output:
+        results
+        + "04_VIRUS_IDENTIFICATION/01_external_hits/{sample}/virusdb_hits_w_assembly.fna",
+    benchmark:
+        "benchmark/04_VIRUS_IDENTIFICATION/combine_external_with_assembly_{sample}.tsv"
+    resources:
+        runtime="00:10:00",
+        mem_mb="10000",
+    shell:
+        """
+        cat {input} > {output}
+        """
+
+
+# -----------------------------------------------------
+# 01 geNomad
+# -----------------------------------------------------
+# download genomad database
+rule download_genomad:
+    message:
+        "Downloading geNomad database"
+    output:
+        resources + "genomad/genomad_db/virus_hallmark_annotation.txt",
+    params:
+        genomad_dir=resources + "genomad/",
+    conda:
+        "../envs/genomad:1.3.0--pyhdfd78af_0.yml"
+    benchmark:
+        "benchmark/04_VIRUS_IDENTIFICATION/download_genomad.tsv"
+    resources:
+        runtime="01:00:00",
+        mem_mb="10000",
+    shell:
+        """
+        # change to genomad directory
+        cd {params.genomad_dir}
+
+        # download genomad databases
+        genomad download-database .
+        """
+
+
+# run genomad to identify viral contigs
+rule genomad:
+    message:
+        "Running geNomad on {wildcards.sample} to identify viral contigs"
+    input:
+        genomad_db=resources + "genomad/genomad_db/virus_hallmark_annotation.txt",
+        contigs=results
+        + "04_VIRUS_IDENTIFICATION/01_external_hits/{sample}/virusdb_hits_w_assembly.fna",
+    output:
+        summary=results
+        + "04_VIRUS_IDENTIFICATION/02_genomad/{sample}/{sample}_contigs_summary/{sample}_contigs_virus_summary.tsv",
+        viruses=results
+        + "04_VIRUS_IDENTIFICATION/02_genomad/{sample}/{sample}_contigs_summary/{sample}_contigs_virus.fna",
+    params:
+        out_dir=results + "04_VIRUS_IDENTIFICATION/02_genomad/{sample}/",
+        genomad_dir=resources + "genomad/genomad_db",
+        min_score=config["virus_identification"]["genomad_min_score"],
+        max_fdr=config["virus_identification"]["genomad_max_fdr"],
+    conda:
+        "../envs/genomad:1.3.0--pyhdfd78af_0.yml"
+    benchmark:
+        "benchmark/04_VIRUS_IDENTIFICATION/genomad_{sample}.tsv"
+    resources:
+        runtime=config["virus_identification"]["genomad_runtime"],
+        mem_mb=config["virus_identification"]["genomad_memory"],
+    threads: config["virus_identification"]["genomad_threads"]
+    shell:
+        """
+        # run genomad
+        genomad end-to-end \
+        --threads {threads} \
+        --verbose \
+        --min-score {params.min_score} \
+        --cleanup \
+        --splits {threads} \
+        {input.contigs} \
+        {params.out_dir} \
+        {params.genomad_dir}
+        """
+
+
 # -----------------------------------------------------
 # 07 Combine outputs
 # -----------------------------------------------------
-# determine input files for detecting virus sequences
-if config["virus_identification"]["run_genomad"]:
-    genomad = (
-        results
-        + "04_VIRUS_IDENTIFICATION/01_genomad/{sample}/{sample}_contigs_summary/{sample}_contigs_virus_summary.tsv"
-    )
-else:
-    genomad = pd.DataFrame()
-
-if config["virus_identification"]["run_external"] and config["input_data"] == "reads":
-    external = (
-        results
-        + "04_VIRUS_IDENTIFICATION/02_external_hits/{sample}/virusdb_mash_screen.tab"
-    )
-else:
-    external = pd.DataFrame()
-
-
 # combine outputs from all tools
 rule merge_reports_within_samples:
     message:
         "Merging all virus identification reports within {wildcards.sample}"
     input:
-        genomad_results=genomad,
-        external_results=external,
+        genomad_results=results
+        + "04_VIRUS_IDENTIFICATION/02_genomad/{sample}/{sample}_contigs_summary/{sample}_contigs_virus_summary.tsv",
+        external_results=results
+        + "04_VIRUS_IDENTIFICATION/01_external_hits/{sample}/virusdb_mash_screen.tab",
     output:
         results
         + "04_VIRUS_IDENTIFICATION/03_combine_outputs/{sample}/combined_report.tsv",
     params:
-        run_genomad=config["virus_identification"]["run_genomad"],
-        run_external=config["virus_identification"]["run_external"],
         min_mash_score=config["virus_identification"]["min_mash_score"],
         min_mash_hashes=config["virus_identification"]["min_mash_hashes"],
         min_mash_multiplicity=config["virus_identification"]["min_mash_multiplicity"],
@@ -338,44 +343,6 @@ rule merge_reports_within_samples:
         mem_mb="10000",
     script:
         "../scripts/04_merge_reports_within_samples.py"
-
-
-# determine which inputs are required for virus identification
-vls_contigs = []
-if config["virus_identification"]["run_external"]:
-    vls_contigs.append(
-        results + "04_VIRUS_IDENTIFICATION/02_external_hits/{sample}/virusdb_hits.fna"
-    )
-
-if config["virus_identification"]["run_genomad"]:
-    vls_contigs.append(
-        results
-        + "04_VIRUS_IDENTIFICATION/01_genomad/{sample}/{sample}_contigs_summary/{sample}_contigs_virus.fna"
-    )
-
-
-# combine viral contigs from all tool outputs using thresholds specified in config.yaml
-rule merge_viral_contigs_within_samples:
-    message:
-        "Merging viral contigs meeting config.yaml criteria within {wildcards.sample}"
-    input:
-        vls_contigs,
-    output:
-        results
-        + "04_VIRUS_IDENTIFICATION/03_combine_outputs/{sample}/combined_viral_contigs.fasta",
-    params:
-        run_genomad=config["virus_identification"]["run_genomad"],
-        run_external=config["virus_identification"]["run_external"],
-        assembly="{sample}",
-    conda:
-        "../envs/jupyter.yml"
-    benchmark:
-        "benchmark/04_VIRUS_IDENTIFICATION/merge_viral_contigs_within_samples_{sample}.tsv"
-    resources:
-        runtime="00:10:00",
-        mem_mb="10000",
-    script:
-        "../scripts/04_merge_viral_contigs_within_samples.py"
 
 
 # -----------------------------------------------------
@@ -417,10 +384,8 @@ rule virus_identification_analysis:
             category="Step 04: Virus identification",
         ),
     params:
-        run_genomad=config["virus_identification"]["run_genomad"],
         genomad_score=config["virus_identification"]["genomad_min_score"],
         genomad_fdr=config["virus_identification"]["genomad_max_fdr"],
-        run_external=config["virus_identification"]["run_external"],
         min_mash_score=config["virus_identification"]["min_mash_score"],
         min_mash_hashes=config["virus_identification"]["min_mash_hashes"],
         min_mash_multiplicity=config["virus_identification"]["min_mash_multiplicity"],
