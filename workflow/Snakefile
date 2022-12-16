@@ -44,6 +44,11 @@ include: "rules/12_virus_analysis.smk"
 # -------------------------------------
 # Pipeline outputs
 # -------------------------------------
+localrules:
+    summary,
+    all,
+
+
 def get_final_output(wildcards):
 
     final_output = []
@@ -77,13 +82,13 @@ def get_final_output(wildcards):
     final_output.append(results + "07_VIRUS_DIVERSITY/virus_diversity_votu_figure.svg")
 
     if config["include_host_module"]:
-        final_output.append(results + "08_VIRUS_HOST/virus_host_taxonomy.csv")
+        final_output.append(results + "08_VIRUS_HOST/virus_host_taxonomy_figure.svg")
 
     if config["include_taxonomy_module"]:
-        final_output.append(results + "09_VIRUS_TAXONOMY/virus_taxonomy_analysis.svg")
+        final_output.append(results + "09_VIRUS_TAXONOMY/virus_taxonomy_figure.svg")
 
     if config["include_lifestyle_module"]:
-        final_output.append(results + "10_VIRUS_LIFESTYLE/virus_lifestyle_analysis.svg")
+        final_output.append(results + "10_VIRUS_LIFESTYLE/virus_lifestyle_figure.svg")
 
     if config["include_function_module"]:
         final_output.append(
@@ -106,9 +111,88 @@ def get_final_output(wildcards):
     return final_output
 
 
-localrule: all
-
-
 rule all:
     input:
+        results + "phide_piper_report.tsv",
         get_final_output,
+
+
+def get_reports(wildcards):
+
+    reports = {}
+
+    if config["include_enrichment_module"]:
+        reports["enrichment"] = (
+            results + "02_VIRUS_ENRICHMENT/virus_enrichment_report.tsv"
+        )
+
+    if config["input_data"] == "reads":
+        reports["assembly"] = results + "03_READ_ASSEMBLY/assembly_report.tsv"
+
+    if config["input_data"] == "reads" or config["input_data"] == "contigs":
+        reports["identification"] = (
+            results + "04_VIRUS_IDENTIFICATION/virus_identification_report.tsv"
+        )
+
+    if (
+        config["input_data"] == "reads"
+        or config["input_data"] == "contigs"
+        or config["input_data"] == "vls"
+    ):
+        reports["quality"] = results + "05_VIRUS_QUALITY/virus_quality_report.tsv"
+
+    reports["dereplication"] = (
+        results + "06_VIRUS_DEREPLICATION/virus_dereplication_report.tsv"
+    )
+
+    reports["diversity"] = results + "07_VIRUS_DIVERSITY/votu_diversity_report.tsv"
+
+    if config["include_host_module"]:
+        reports["host"] = results + "08_VIRUS_HOST/virus_host_taxonomy_report.tsv"
+
+    if config["include_taxonomy_module"]:
+        reports["taxonomy"] = results + "09_VIRUS_TAXONOMY/virus_taxonomy_report.tsv"
+
+    if config["include_lifestyle_module"]:
+        reports["lifestyle"] = results + "10_VIRUS_LIFESTYLE/virus_lifestyle_report.tsv"
+
+    if config["include_function_module"]:
+        reports["function"] = (
+            results + "11_VIRUS_FUNCTION/02_dramv/distillate/product.html"
+        )
+
+    if config["include_analysis_module"]:
+        reports["evolution"] = (
+            results
+            + "12_VIRUS_ANALYSIS/02_instrain/compare/output/compare_genomeWide_compare.tsv"
+        )
+
+        reports["abundance"] = (
+            results
+            + "12_VIRUS_ANALYSIS/03_coverm/"
+            + config["virus_analysis"]["coverm_method"]
+            + ".tsv"
+        )
+
+    return reports
+
+
+rule summary:
+    input:
+        unpack(get_reports),
+        samples=config["samples_df"],
+    output:
+        results + "phide_piper_report.tsv",
+    params:
+        include_enrichment=config["include_enrichment_module"],
+        input_data=config["input_data"],
+        include_host=config["include_host_module"],
+    conda:
+        "envs/jupyter.yml"
+    benchmark:
+        "benchmark/summary.tsv"
+    resources:
+        runtime="00:10:00",
+        mem_mb="10000",
+    script:
+        "scripts/phide_piper_summary.py"

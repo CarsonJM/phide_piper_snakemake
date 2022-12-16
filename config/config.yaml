@@ -15,6 +15,9 @@ resources: "/gscratch/scrubbed/carsonjm/resources/"
 # used to search for external viruses in samples
 virus_db: "/gscratch/scrubbed/carsonjm/resources/uhgv/uhgv_hq_plus.fna"
 virus_db_meta: "/gscratch/scrubbed/carsonjm/resources/inphrared/vmr_metadata.csv"
+# used to compare with validated phage genomes
+reference_db: "/gscratch/scrubbed/carsonjm/resources/vmr/VMR_21-221122_MSL37.fa"
+reference_meta: "/gscratch/scrubbed/carsonjm/resources/vmr/VMR_21-221122_MSL37.tsv"
 
 #------------------------------------
 # Input data options
@@ -94,6 +97,8 @@ virus_identification:
   genomad_memory: "10000"
   # II. MASH screen against user-provided database of viral genomes: https://doi.org/10.1186/s13059-019-1841-x
   run_external: True
+  # if reads are not available, this can be set to contigs and contigs will be used to search databases for similar genomes
+  external_input: "reads"
   # Roughly equates to identity (0.95 score ~= 95% identity)
   min_mash_score: 0.95
   # Roughly equates to breadth (850 hashes out of 1000 ~= 85% breadth)
@@ -134,7 +139,7 @@ virus_dereplication:
   # II. Cluster (ani and coverage as decimals)
   min_ani: 0.99
   avg_ani: 0.99
-  min_cov: 0.99
+  min_cov: 1.00
   leiden_resolution: 1.0
   random_seed: 1953
 
@@ -172,7 +177,7 @@ virus_host:
   iphop_memory: "50000"
 
 ### Module 9: Virus Taxonomy ###
-include_taxonomy_module: True
+include_taxonomy_module: False
 virus_taxonomy:
   # I. geNomad:
   # Min annotated genomad genes per genome to assign taxonomy
@@ -184,7 +189,7 @@ virus_taxonomy:
   genomad_memory: "50000"
 
 ### Module 10: Virus Lifestyle ###
-include_lifestyle_module: True
+include_lifestyle_module: False
 virus_lifestyle:
   # minimum completeness to run lifestlye module on genome
   min_completeness: 90
@@ -196,7 +201,7 @@ virus_lifestyle:
   bacphlip_memory: "50000"
 
 ### Module 11: Virus Function ###
-include_function_module: True
+include_function_module: False
 virus_function:
   # I. VirSorter2:
   virsorter2_arguments: "--provirus-off"
@@ -210,7 +215,8 @@ virus_function:
   dramv_memory: "100000"
 
 ### Module 12: Virus Analysis ###
-include_analysis_module: True
+### To run this module, paths to reads must be included ###
+include_analysis_module: False
 virus_analysis:
   # I. bowtie2:
   bowtie2_threads: 8

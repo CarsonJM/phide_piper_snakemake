@@ -80,7 +80,7 @@ rule virus_taxonomy_analysis:
         genomad=results + "09_VIRUS_TAXONOMY/01_genomad/votu_representatives_annotate/votu_representatives_taxonomy.tsv",
     output:
         svg=report(
-            results + "09_VIRUS_TAXONOMY/virus_taxonomy_analysis.svg",
+            results + "09_VIRUS_TAXONOMY/virus_taxonomy_figure.svg",
             category="Step 09: Virus taxonomy",
         ),
         report=results + "09_VIRUS_TAXONOMY/virus_taxonomy_report.tsv",

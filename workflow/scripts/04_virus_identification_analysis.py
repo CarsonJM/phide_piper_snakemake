@@ -3,7 +3,7 @@ import plotly.express as px
 import matplotlib.pyplot as plt
 
 # read viral identification report
-report = pd.read_csv(str(snakemake.input))
+report = pd.read_csv(str(snakemake.input), sep='\t')
 
 tools = []
 tool_counts = pd.DataFrame()
@@ -25,7 +25,7 @@ id = tool_counts.melt(id_vars=['assembly'], value_vars=tools)
 fig = px.box(id, x='variable', y="value", points="all", color="variable", hover_name='assembly',
              labels={
                      "variable": "Virus identification tool",
-                     "value": "Number VLS identified"     
+                     "value": "Number VLS identified"
                  })
 
 fig.update_layout(title_text='Virus-like sequence (VLS) identification')

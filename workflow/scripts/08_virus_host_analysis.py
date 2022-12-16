@@ -7,7 +7,7 @@ iphop = pd.read_csv(str(snakemake.input.iphop))
 iphop.rename(columns = {'Virus':'viral_genome'}, inplace=True)
 
 # merge phist and iphop
-iphop.to_csv(str(snakemake.output.report), sep=',', index=False)
+iphop.to_csv(str(snakemake.output.report), sep='\t', index=False)
 
 # generate figure of taxonomy outputs
 iphop['iPHoP'] = iphop.apply(lambda x: str(x.iphop_genus).split(';')[1] if str(x.iphop_genus).count(';') > 0 else 'Unknown', axis=1)

@@ -186,10 +186,11 @@ rule virus_diversity_votu_anlysis:
     input:
         results + "07_VIRUS_DIVERSITY/01_votu_clustering/votu_clusters.tsv",
     output:
-        report(
+        svg=report(
             results + "07_VIRUS_DIVERSITY/virus_diversity_votu_figure.svg",
             category="Step 07: Virus diversity",
         ),
+        report=results + "07_VIRUS_DIVERSITY/votu_diversity_report.tsv",
     conda:
         "../envs/jupyter.yml"
     benchmark:

@@ -219,13 +219,20 @@ rule mash_sketch_virusdb:
         """
 
 
+external_input = []
+if config["virus_identification"]["external_input"] == "reads":
+    external_input.append(R1)
+    external_input.append(R2)
+elif config["virus_identification"]["external_input"] == "contigs":
+    external_input.append(assembly)
+
+
 # screen reads to identify external viruses
 rule screen_reads_against_virusdb:
     message:
         "Screening reads against {input.sketch} to identify external viruses present in {wildcards.sample}"
     input:
-        R1=R1,
-        R2=R2,
+        external_input=external_input,
         sketch=config["virus_db"] + ".msh",
     output:
         results
@@ -246,7 +253,7 @@ rule screen_reads_against_virusdb:
     shell:
         """
         # combine reads
-        cat {input.R1} {input.R2} > {params.combined}
+        cat {input.external_input} > {params.combined}
 
         # screen reads against virusdb
         mash screen \
@@ -314,7 +321,7 @@ rule merge_reports_within_samples:
         external_results=external,
     output:
         results
-        + "04_VIRUS_IDENTIFICATION/03_combine_outputs/{sample}/combined_report.csv",
+        + "04_VIRUS_IDENTIFICATION/03_combine_outputs/{sample}/combined_report.tsv",
     params:
         run_genomad=config["virus_identification"]["run_genomad"],
         run_external=config["virus_identification"]["run_external"],
@@ -337,13 +344,13 @@ rule merge_reports_within_samples:
 vls_contigs = []
 if config["virus_identification"]["run_external"]:
     vls_contigs.append(
-        results + "04_VIRUS_IDENTIFICATION/02_external_hits/{sample}/virusdb_hits.fna",
+        results + "04_VIRUS_IDENTIFICATION/02_external_hits/{sample}/virusdb_hits.fna"
     )
 
 if config["virus_identification"]["run_genomad"]:
     vls_contigs.append(
         results
-        + "04_VIRUS_IDENTIFICATION/01_genomad/{sample}/{sample}_contigs_summary/{sample}_contigs_virus.fna",
+        + "04_VIRUS_IDENTIFICATION/01_genomad/{sample}/{sample}_contigs_summary/{sample}_contigs_virus.fna"
     )
 
 
@@ -360,15 +367,15 @@ rule merge_viral_contigs_within_samples:
         run_genomad=config["virus_identification"]["run_genomad"],
         run_external=config["virus_identification"]["run_external"],
         assembly="{sample}",
+    conda:
+        "../envs/jupyter.yml"
     benchmark:
         "benchmark/04_VIRUS_IDENTIFICATION/merge_viral_contigs_within_samples_{sample}.tsv"
     resources:
         runtime="00:10:00",
         mem_mb="10000",
-    shell:
-        """
-        cat {input} > {output}
-        """
+    script:
+        "../scripts/04_merge_viral_contigs_within_samples.py"
 
 
 # -----------------------------------------------------
@@ -381,11 +388,11 @@ rule combine_reports_across_samples:
     input:
         expand(
             results
-            + "04_VIRUS_IDENTIFICATION/03_combine_outputs/{sample}/combined_report.csv",
+            + "04_VIRUS_IDENTIFICATION/03_combine_outputs/{sample}/combined_report.tsv",
             sample=samples,
         ),
     output:
-        results + "04_VIRUS_IDENTIFICATION/virus_identification_report.csv",
+        results + "04_VIRUS_IDENTIFICATION/virus_identification_report.tsv",
     benchmark:
         "benchmark/04_VIRUS_IDENTIFICATION/combine_reports_across_samples.tsv"
     resources:
@@ -403,7 +410,7 @@ rule virus_identification_analysis:
     message:
         "Visualizing virus identification"
     input:
-        results + "04_VIRUS_IDENTIFICATION/virus_identification_report.csv",
+        results + "04_VIRUS_IDENTIFICATION/virus_identification_report.tsv",
     output:
         report(
             results + "04_VIRUS_IDENTIFICATION/virus_identification_boxplot.svg",

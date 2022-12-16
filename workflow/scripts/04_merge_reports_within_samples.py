@@ -20,7 +20,6 @@ if snakemake.params.run_external:
         virus_report = pd.concat([virus_report, external_results], axis=0, ignore_index=True) 
 
 virus_report['assembly'] = snakemake.params.assembly
-virus_report['vls_id'] = virus_report['assembly'] + '_' + virus_report['vls_id']
 
-virus_report.to_csv(str(snakemake.output), index=False)
+virus_report.to_csv(str(snakemake.output), sep='\t', index=False)
 

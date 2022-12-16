@@ -8,11 +8,18 @@ clusters = open(
     , 'r')
 
 node_lengths = []
+centroids = []
 for line in clusters:
     stripped = line.strip()
     centroid, nodes = stripped.split('\t')
+    centroids.append(centroid)
     nodes_split = nodes.split(",")
     node_lengths.append(len(nodes_split))
+
+cluster_sizes = pd.DataFrame()
+cluster_sizes['representative'] = centroids
+cluster_sizes['cluster_size'] = node_lengths
+cluster_sizes.to_csv(str(snakemake.output.report), sep='\t', index=False)
 
 cluster_df = pd.DataFrame()
 cluster_df['node_lengths'] = node_lengths
@@ -28,4 +35,4 @@ fig = px.bar(cluster_group, x='node_lengths', y='count',
 
 fig.update_layout(title_text='Virus dereplication')
 fig.update_layout(showlegend=False)
-fig.write_image(str(snakemake.output))
+fig.write_image(str(snakemake.output.svg))

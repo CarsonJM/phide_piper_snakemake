@@ -120,10 +120,10 @@ rule virus_lifestyle_analysis:
         + "09_VIRUS_TAXONOMY/01_genomad/votu_representatives_find_proviruses/votu_representatives_provirus.tsv",
     output:
         svg=report(
-            results + "10_VIRUS_LIFESTYLE/virus_lifestyle_analysis.svg",
+            results + "10_VIRUS_LIFESTYLE/virus_lifestyle_figure.svg",
             category="Step 10: Virus lifestyle",
         ),
-        html=results + "10_VIRUS_LIFESTYLE/virus_lifestyle_analysis.html",
+        report=results + "10_VIRUS_LIFESTYLE/virus_lifestyle_report.tsv"
     params:
         bacphlip_prob=config["virus_lifestyle"]["bacphlip_confidence"],
     conda:

@@ -280,3 +280,26 @@ rule quast_multiqc:
         # move report to final destination
         mv {params.quast_out} {output}
         """
+
+
+# combine quast reports
+rule combine_quast:
+    message:
+        "Combining QUAST reports"
+    input:
+        expand(
+            results + "03_READ_ASSEMBLY/03_quast/{sample}/transposed_report.tsv",
+            sample=samples,
+        ),
+    output:
+        results + "03_READ_ASSEMBLY/assembly_report.tsv",
+    benchmark:
+        "benchmark/03_READ_ASSEMBLY/combine_quast.tsv"
+    resources:
+        runtime="00:10:00",
+        mem_mb="10000",
+    shell:
+        """
+        # combine all outputs, only keeping header from one file
+        awk 'FNR>1 || NR==1' {input} > {output}
+        """

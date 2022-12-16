@@ -246,10 +246,10 @@ rule virus_host_analysis:
         results + "08_VIRUS_HOST/01_iphop/iphop_report.tsv",
     output:
         svg=report(
-            results + "08_VIRUS_HOST/virus_host_taxonomy.svg",
+            results + "08_VIRUS_HOST/virus_host_taxonomy_figure.svg",
             category="Step 08: Virus hosts",
         ),
-        report=results + "08_VIRUS_HOST/virus_host_taxonomy.csv",
+        report=results + "08_VIRUS_HOST/virus_host_taxonomy_report.tsv",
     benchmark:
         "benchmark/08_VIRUS_HOST/virus_host_analysis.tsv"
     resources:
