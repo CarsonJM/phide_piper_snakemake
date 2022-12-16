@@ -187,6 +187,10 @@ rule summary:
         include_enrichment=config["include_enrichment_module"],
         input_data=config["input_data"],
         include_host=config["include_host_module"],
+        include_taxonomy=config["include_taxonomy_module"],
+        include_lifestyle=config["include_lifestyle_module"],
+        include_function=config["include_function_module"],
+        include_analysis=config["include_analysis_module"],
     conda:
         "envs/jupyter.yml"
     benchmark:

@@ -55,4 +55,15 @@ if snakemake.params.input_data == 'vls':
     quality_summary.rename(columns={'contig_id':'viral_genome', 'provirus':'checkv_provirus', 'proviral_length':'checkv_proviral_length', 'gene_count':'checkv_gene_count', "viral_genes":"checkv_viral_genes", "host_genes":"checkv_host_genes"}, inplace=True)
     summary = summary.merge(quality_summary, on='viral_genome', how='left')
 
+if snakemake.params.include_taxonomy:
+    taxonomy = pd.read_csv(str(snakemake.input.taxonomy), sep='\t')
+    taxonomy_summary = taxonomy[['seq_name', 'n_genes_with_taxonomy', 'agreement', 'lineage']]
+    taxonomy_summary.rename(columns={'seq_name':'viral_genome', 'agreement':'genomad_agreement', 'lineage':'genomad_taxonomy'}, inplace=True)
+    summary = summary.merge(taxonomy_summary, on='viral_genome', how='left')
+
+if snakemake.params.include_lifestyle:
+    lifestyle = pd.read_csv(str(snakemake.input.lifestyle), sep='\t')
+    lifestyle.rename(columns={'Virulent':'BACPHLIP_virulent_score', 'Temperate':'BACPHLIP_temperate_score', 'integrases':'genomad_integrases', 'Classification':'lifestyle_prediction'}, inplace=True)
+    summary = summary.merge(lifestyle, on='viral_genome', how='left')
+
 summary.to_csv(str(snakemake.output), sep='\t', index=False)
