@@ -32,7 +32,7 @@ localrules:
     symlink_preprocessed_reads,
     combine_reports_across_samples,
     merge_reports_within_samples,
-    merge_viral_contigs_within_samples,
+    rename_contigs_within_samples,
     virus_identification_analysis,
 
 
@@ -283,9 +283,9 @@ rule genomad:
         + "04_VIRUS_IDENTIFICATION/01_external_hits/{sample}/virusdb_hits_w_assembly.fna",
     output:
         summary=results
-        + "04_VIRUS_IDENTIFICATION/02_genomad/{sample}/{sample}_contigs_summary/{sample}_contigs_virus_summary.tsv",
+        + "04_VIRUS_IDENTIFICATION/02_genomad/{sample}/virusdb_hits_w_assembly_summary/virusdb_hits_w_assembly_virus_summary.tsv",
         viruses=results
-        + "04_VIRUS_IDENTIFICATION/02_genomad/{sample}/{sample}_contigs_summary/{sample}_contigs_virus.fna",
+        + "04_VIRUS_IDENTIFICATION/02_genomad/{sample}/virusdb_hits_w_assembly_summary/virusdb_hits_w_assembly_virus.fna",
     params:
         out_dir=results + "04_VIRUS_IDENTIFICATION/02_genomad/{sample}/",
         genomad_dir=resources + "genomad/genomad_db",
@@ -323,7 +323,7 @@ rule merge_reports_within_samples:
         "Merging all virus identification reports within {wildcards.sample}"
     input:
         genomad_results=results
-        + "04_VIRUS_IDENTIFICATION/02_genomad/{sample}/{sample}_contigs_summary/{sample}_contigs_virus_summary.tsv",
+        + "04_VIRUS_IDENTIFICATION/02_genomad/{sample}/virusdb_hits_w_assembly_summary/virusdb_hits_w_assembly_virus_summary.tsv",
         external_results=results
         + "04_VIRUS_IDENTIFICATION/01_external_hits/{sample}/virusdb_mash_screen.tab",
     output:
@@ -370,6 +370,29 @@ rule combine_reports_across_samples:
         # combine all outputs, only keeping header from one file
         awk 'FNR>1 || NR==1' {input} > {output}
         """
+
+
+# combine virus reports across samples
+rule rename_contigs_within_samples:
+    message:
+        "Renaming viral contigs for {wildcards.sample}"
+    input:
+        results
+        + "04_VIRUS_IDENTIFICATION/02_genomad/{sample}/virusdb_hits_w_assembly_summary/virusdb_hits_w_assembly_virus.fna",
+    output:
+        results
+        + "04_VIRUS_IDENTIFICATION/03_combine_outputs/{sample}/combined_viral_contigs.fna",
+    params:
+        assembly="{sample}",
+    conda:
+        "../envs/jupyter.yml"
+    benchmark:
+        "benchmark/04_VIRUS_IDENTIFICATION/rename_contigs_within_samples_{sample}.tsv"
+    resources:
+        runtime="00:10:00",
+        mem_mb="10000",
+    script:
+        "../scripts/04_merge_viral_contigs_within_samples.py"
 
 
 # plot virus counts by tool
