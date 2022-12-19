@@ -32,15 +32,18 @@ for record in SeqIO.parse(str(snakemake.input.checkv_proviruses), "fasta"):
             genomad_provirus = record.id.split('|')[1]
             genomad_start = genomad_provirus.split('_')[1]
             checkv_provirus = record.description.split(' ')[1]
-            checkv_provirus_coords = record.description.split('/')[0]
+            checkv_provirus_coords = checkv_provirus.description.split('/')[0]
             checkv_start, checkv_stop = checkv_provirus_coords.split('_')
             checkv_start_total = int(checkv_start) + int(genomad_start)
             checkv_stop_total = int(checkv_stop) + int(genomad_start)
             record.id = record.id + "|checkv_provirus_" + str(checkv_start_total) + "_" + str(checkv_stop_total)
         else:
-            checkv_provirus = record.description.split('/')[0]
-            checkv_start, checkv_stop = checkv_provirus.split('_')
-            record.id = record.id + "|checkv_provirus_" + str(checkv_start) + "_" + str(checkv_stop)
+            checkv_provirus = record.description.split(' ')[1]
+            checkv_provirus_coords = checkv_provirus.description.split('/')[0]
+            checkv_start, checkv_stop = checkv_provirus_coords.split('_')
+            checkv_start_total = int(checkv_start) + int(genomad_start)
+            checkv_stop_total = int(checkv_stop) + int(genomad_start)
+            record.id = record.id + "|checkv_provirus_" + str(checkv_start_total) + "_" + str(checkv_stop_total)
 
         hq_virus_seqs.append(record)
 
