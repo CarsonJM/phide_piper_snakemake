@@ -41,8 +41,8 @@ for record in SeqIO.parse(str(snakemake.input.checkv_proviruses), "fasta"):
             checkv_provirus = record.description.split(' ')[1]
             checkv_provirus_coords = checkv_provirus.split('/')[0]
             checkv_start, checkv_stop = checkv_provirus_coords.split('-')
-            checkv_start_total = int(checkv_start) + int(genomad_start)
-            checkv_stop_total = int(checkv_stop) + int(genomad_start)
+            checkv_start_total = int(checkv_start)
+            checkv_stop_total = int(checkv_stop)
             record.id = record.id + "|checkv_provirus_" + str(checkv_start_total) + "_" + str(checkv_stop_total)
 
         hq_virus_seqs.append(record)
