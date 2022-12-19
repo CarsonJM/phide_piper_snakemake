@@ -28,8 +28,8 @@ for record in SeqIO.parse(str(snakemake.input.checkv_viruses), "fasta"):
 
 for record in SeqIO.parse(str(snakemake.input.checkv_proviruses), "fasta"):
     if record.id.rpartition('_')[0] in hq_viruses:
-        if '|' in record.id:
-            genomad_provirus = record.id.split('|')[1]
+        if '|provirus' in record.id:
+            genomad_provirus = record.id.split('|provirus')[1]
             genomad_start = genomad_provirus.split('_')[1]
             checkv_provirus = record.description.split(' ')[1]
             checkv_provirus_coords = checkv_provirus.split('/')[0]
