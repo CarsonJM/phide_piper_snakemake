@@ -163,14 +163,14 @@ virus_diversity:
   prodigal_gv_memory: "50000"
 
 ### Module 8: Virus Host ###
-include_host_module: False
+include_host_module: True
 virus_host:
   # I. iPHoP:
   iphop_split_num_seqs: 100
   # Roughly equates to precision
   iphop_min_score: 90
   iphop_arguments: ""
-  iphop_threads: 8
+  iphop_threads: 32
   iphop_runtime: "04:00:00"
   iphop_memory: "50000"
 
@@ -199,7 +199,7 @@ virus_lifestyle:
   bacphlip_memory: "50000"
 
 ### Module 11: Virus Function ###
-include_function_module: False
+include_function_module: True
 virus_function:
   # I. VirSorter2:
   virsorter2_arguments: "--provirus-off"
@@ -208,7 +208,7 @@ virus_function:
   virsorter2_memory: "50000"
   # II. DRAMv:
   dramv_arguments: ""
-  dramv_threads: 16
+  dramv_threads: 32
   dramv_runtime: "04:00:00"
   dramv_memory: "100000"
 

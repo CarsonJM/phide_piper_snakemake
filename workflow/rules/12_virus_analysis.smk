@@ -187,8 +187,10 @@ rule instrain_profile:
         stb=results + "12_VIRUS_ANALYSIS/02_instrain/stb_file.tsv",
     output:
         sorted_bam=results + "12_VIRUS_ANALYSIS/01_align_viruses/{sample}.sorted.bam",
-        instrain=results
+        genome=results
         + "12_VIRUS_ANALYSIS/02_instrain/{sample}/output/{sample}_genome_info.tsv",
+        gene=results
+        + "12_VIRUS_ANALYSIS/02_instrain/{sample}/output/{sample}_gene_info.tsv",
     params:
         out_dir=results + "12_VIRUS_ANALYSIS/02_instrain/{sample}",
         min_id=config["virus_analysis"]["min_id"],
@@ -273,6 +275,36 @@ rule instrain_compare:
         """
 
 
+# combine instrain reports across samples
+rule combine_instrain_across_samples:
+    message:
+        "Combining inStrain reports across samples"
+    input:
+        genome=expand(
+            results
+            + "12_VIRUS_ANALYSIS/02_instrain/{sample}/output/{sample}_genome_info.tsv",
+            sample=samples,
+        ),
+        gene=expand(
+            results
+            + "12_VIRUS_ANALYSIS/02_instrain/{sample}/output/{sample}_gene_info.tsv",
+            sample=samples,
+        ),
+    output:
+        genome=results + "12_VIRUS_ANALYSIS/genome_info_report.tsv",
+        gene=results + "12_VIRUS_ANALYSIS/gene_info_report.tsv",
+    benchmark:
+        "benchmark/12_VIRUS_ANALYSIS/combine_instrain_across_samples.tsv"
+    resources:
+        runtime="00:10:00",
+        mem_mb="10000",
+    shell:
+        """
+        cat {input.genome} > {output.genome}
+        cat {input.gene} > {output.gene}
+        """
+
+
 # -----------------------------------------------------
 # 03 CoverM
 # -----------------------------------------------------
@@ -287,9 +319,9 @@ rule coverm:
         ),
     output:
         results
-        + "12_VIRUS_ANALYSIS/03_coverm/"
+        + "12_VIRUS_ANALYSIS/"
         + config["virus_analysis"]["coverm_method"]
-        + ".tsv",
+        + "report.tsv",
     params:
         min_id=config["virus_analysis"]["min_id"],
         method=config["virus_analysis"]["coverm_method"],

@@ -66,4 +66,9 @@ if snakemake.params.include_lifestyle:
     lifestyle.rename(columns={'Virulent':'BACPHLIP_virulent_score', 'Temperate':'BACPHLIP_temperate_score', 'integrases':'genomad_integrases', 'Classification':'lifestyle_prediction'}, inplace=True)
     summary = summary.merge(lifestyle, on='viral_genome', how='left')
 
+if snakemake.params.include_lifestyle:
+    lifestyle = pd.read_csv(str(snakemake.input.lifestyle), sep='\t')
+    lifestyle.rename(columns={'Virulent':'BACPHLIP_virulent_score', 'Temperate':'BACPHLIP_temperate_score', 'integrases':'genomad_integrases', 'Classification':'lifestyle_prediction'}, inplace=True)
+    summary = summary.merge(lifestyle, on='viral_genome', how='left')
+
 summary.to_csv(str(snakemake.output), sep='\t', index=False)
