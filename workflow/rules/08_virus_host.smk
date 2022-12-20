@@ -222,9 +222,9 @@ rule combine_iphop_reports:
     input:
         combine_iphop_input,
     output:
-        results + "08_VIRUS_HOST/01_iphop/iphop_report.tsv",
+        results + "08_VIRUS_HOST/01_iphop/iphop_report.csv",
     benchmark:
-        "benchmark/08_VIRUS_HOST/combine_iphop_reports.tsv"
+        "benchmark/08_VIRUS_HOST/combine_iphop_reports.csv"
     resources:
         runtime="00:10:00",
         mem_mb="10000",
@@ -243,7 +243,7 @@ rule virus_host_analysis:
     message:
         "Visualizing iPHoP host taxonomy outputs"
     input:
-        results + "08_VIRUS_HOST/01_iphop/iphop_report.tsv",
+        results + "08_VIRUS_HOST/01_iphop/iphop_report.csv",
     output:
         svg=report(
             results + "08_VIRUS_HOST/virus_host_taxonomy_figure.svg",
