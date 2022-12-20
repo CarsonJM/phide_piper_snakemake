@@ -160,8 +160,8 @@ rule dereplicate_aniclust:
     benchmark:
         "benchmark/06_VIRUS_DEREPLICATION/dereplicate_aniclust.tsv"
     resources:
-        runtime="00:10:00",
-        mem_mb="10000",
+        runtime="04:00:00",
+        mem_mb="100000",
     script:
         "../scripts/06_aniclust.py"
 
