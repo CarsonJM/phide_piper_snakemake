@@ -4,7 +4,7 @@ import plotly.express as px
 # load iphop data table
 iphop = pd.read_csv(str(snakemake.input))
 # iphop = pd.read_csv('/home/carsonjm/results/phide_piper_test/08_VIRUS_HOST/01_iphop/Host_prediction_to_genus_m90.csv')
-iphop.rename(columns = {'Virus':'viral_genome'}, inplace=True)
+iphop.rename(columns = {'Virus':'viral_genome', 'Host genus':'iphop_genus'}, inplace=True)
 
 # merge phist and iphop
 iphop.to_csv(str(snakemake.output.report), sep='\t', index=False)
