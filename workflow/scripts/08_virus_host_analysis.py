@@ -15,7 +15,7 @@ iphop['iPHoP'] = iphop.apply(lambda x: str(x.iPHoP).split('p__')[1] if str(x.iPH
 iphop['iPHoP'] = iphop.apply(lambda x: str(x.iPHoP).split('_')[0] if str(x.iPHoP).count('_') > 0 else x.iPHoP, axis=1)
 
 
-iphop_melt = iphop.melt(id_vars=['viral_genome'], value_vars=['iPHoP', 'PHIST'])
+iphop_melt = iphop.melt(id_vars=['viral_genome'], value_vars=['iPHoP'])
 plot = iphop_melt.groupby(['value', 'variable'], as_index=False).count()
 plot['proportion'] = plot['viral_genome']*2/sum(plot['viral_genome'])
 ordered = plot.sort_values('value').drop_duplicates('value')
