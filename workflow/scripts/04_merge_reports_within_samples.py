@@ -8,6 +8,8 @@ if os.stat(str(snakemake.input.genomad_results)).st_size != 0:
     genomad_results = pd.read_csv(str(snakemake.input.genomad_results), sep='\t')
     if len(genomad_results['seq_name'].str.split('|', expand=True)) > 1:
         genomad_results['seq_source'] = genomad_results['seq_name'].str.split('|', expand=True)[0]
+    else:
+        genomad_results['seq_source'] = genomad_results['seq_name']
 
 # extract diamond virus sequences
 if os.stat(str(snakemake.input.external_results)).st_size != 0:
