@@ -106,7 +106,7 @@ def get_final_output(wildcards):
             results
             + "12_VIRUS_ANALYSIS/"
             + config["virus_analysis"]["coverm_method"]
-            + "report.tsv",
+            + "_report.tsv",
         )
 
     return final_output
@@ -172,7 +172,7 @@ def get_reports(wildcards):
             results
             + "12_VIRUS_ANALYSIS/"
             + config["virus_analysis"]["coverm_method"]
-            + ".tsv"
+            + "_report.tsv"
         )
 
     return reports
