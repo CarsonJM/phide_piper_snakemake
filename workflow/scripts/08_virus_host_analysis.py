@@ -30,4 +30,4 @@ fig = px.bar(plot, x='variable', y='proportion',  color='Phylum',
                  })
 
 fig.update_layout(title_text='Virus host taxonomic assignment')
-fig.write_image(str(snakemake.output))
+fig.write_image(str(snakemake.output.svg))
