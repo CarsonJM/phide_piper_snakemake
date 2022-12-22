@@ -3,5 +3,6 @@ channels:
   - bioconda
 
 dependencies:
+  - numpy=1.23.5
   - bacphlip=0.9.6=py_0
   - hmmer=3.3.2
