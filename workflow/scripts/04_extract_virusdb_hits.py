@@ -18,6 +18,7 @@ for record in SeqIO.parse(str(snakemake.input.virusdb), "fasta"):
         if record.id in set(virusdb_hits_ids):
             continue
         else:
+            record.id = "external|" + record.id
             virusdb_hits.append(record)
             virusdb_hits_ids.append(record.id)
         

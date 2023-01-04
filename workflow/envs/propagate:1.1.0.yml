@@ -1,0 +1,11 @@
+channels:
+  - conda-forge
+  - bioconda
+
+dependencies:
+  - python
+  - bowtie2
+  - samtools
+  - pysam
+  - numpy
+  - numba

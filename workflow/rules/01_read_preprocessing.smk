@@ -9,7 +9,7 @@ configfile: "config/config.yaml"
 
 
 samples_df = pd.read_csv(config["samples_df"], sep="\t")
-samples = samples_df["sample"]
+groups_samples = samples_df.loc[:, "group"] + "_" + samples_df.loc[:, "sample"]
 
 
 # load results path
@@ -39,21 +39,33 @@ localrules:
 # symlink input reads to new paths
 rule symlink_input_reads:
     message:
-        "Symlinking {wildcards.sample_replicate} input files to new location"
+        "Symlinking {wildcards.group_sample_replicate} input files to new location"
     input:
         R1=lambda wildcards: samples_df[
-            (+samples_df["sample"] + "_" + samples_df["replicate"])
-            == wildcards.sample_replicate
+            (
+                +samples_df["group"]
+                + "_"
+                + samples_df["sample"]
+                + "_"
+                + samples_df["replicate"]
+            )
+            == wildcards.group_sample_replicate
         ]["R1"].iloc[0],
         R2=lambda wildcards: samples_df[
-            (+samples_df["sample"] + "_" + samples_df["replicate"])
-            == wildcards.sample_replicate
+            (
+                +samples_df["group"]
+                + "_"
+                + samples_df["sample"]
+                + "_"
+                + samples_df["replicate"]
+            )
+            == wildcards.group_sample_replicate
         ]["R2"].iloc[0],
     output:
-        R1=results + "00_INPUT/{sample_replicate}.R1.fastq.gz",
-        R2=results + "00_INPUT/{sample_replicate}.R2.fastq.gz",
+        R1=results + "00_INPUT/{group_sample_replicate}.R1.fastq.gz",
+        R2=results + "00_INPUT/{group_sample_replicate}.R2.fastq.gz",
     benchmark:
-        "benchmark/01_READ_PREPROCESSING/symlink_reads_{sample_replicate}.tsv"
+        "benchmark/01_READ_PREPROCESSING/symlink_reads_{group_sample_replicate}.tsv"
     resources:
         runtime="00:10:00",
         mem_mb="10000",
@@ -69,30 +81,37 @@ rule symlink_input_reads:
 # 01 Merge Replicates
 # -----------------------------------------------------
 # identify replicate reads
-sample_replicate = samples_df[["sample", "replicate"]]
-sample_replicate_dictionary = sample_replicate.set_index("sample").to_dict()[
-    "replicate"
-]
+group_sample_replicate = samples_df.loc[:, ["sample", "replicate", "group"]]
+group_sample_replicate["group_sample"] = (
+    group_sample_replicate.loc[:, "group"]
+    + "_"
+    + group_sample_replicate.loc[:, "sample"]
+)
+group_sample_replicate_dictionary = group_sample_replicate.set_index(
+    "group_sample"
+).to_dict()["replicate"]
 
 
 # merge sample replicates into single file
 rule merge_input_replicates:
     message:
-        "Merging {wildcards.sample} replicates into one file"
+        "Merging {wildcards.group_sample} replicates into one file"
     input:
         R1=lambda wildcards: expand(
-            results + "00_INPUT/{{sample}}_{replicate}.R1.fastq.gz",
-            replicate=sample_replicate_dictionary[wildcards.sample],
+            results + "00_INPUT/{{group_sample}}_{replicate}.R1.fastq.gz",
+            replicate=group_sample_replicate_dictionary[wildcards.group_sample],
         ),
         R2=lambda wildcards: expand(
-            results + "00_INPUT/{{sample}}_{replicate}.R2.fastq.gz",
-            replicate=sample_replicate_dictionary[wildcards.sample],
+            results + "00_INPUT/{{group_sample}}_{replicate}.R2.fastq.gz",
+            replicate=group_sample_replicate_dictionary[wildcards.group_sample],
         ),
     output:
-        R1=results + "01_READ_PREPROCESSING/01_merge_replicates/{sample}.R1.fastq.gz",
-        R2=results + "01_READ_PREPROCESSING/01_merge_replicates/{sample}.R2.fastq.gz",
+        R1=results
+        + "01_READ_PREPROCESSING/01_merge_replicates/{group_sample}.R1.fastq.gz",
+        R2=results
+        + "01_READ_PREPROCESSING/01_merge_replicates/{group_sample}.R2.fastq.gz",
     benchmark:
-        "benchmark/01_READ_PREPROCESSING/merge_replicates_{sample}.tsv"
+        "benchmark/01_READ_PREPROCESSING/merge_replicates_{group_sample}.tsv"
     resources:
         runtime="00:10:00",
         mem_mb="10000",
@@ -110,23 +129,25 @@ rule merge_input_replicates:
 # trim and deduplicate reads with fastp
 rule fastp:
     message:
-        "Trimming and deduplicating {wildcards.sample} with fastp"
+        "Trimming and deduplicating {wildcards.group_sample} with fastp"
     input:
-        R1=results + "01_READ_PREPROCESSING/01_merge_replicates/{sample}.R1.fastq.gz",
-        R2=results + "01_READ_PREPROCESSING/01_merge_replicates/{sample}.R2.fastq.gz",
+        R1=results
+        + "01_READ_PREPROCESSING/01_merge_replicates/{group_sample}.R1.fastq.gz",
+        R2=results
+        + "01_READ_PREPROCESSING/01_merge_replicates/{group_sample}.R2.fastq.gz",
     output:
-        R1=results + "01_READ_PREPROCESSING/02_fastp/{sample}.R1.fastq.gz",
-        R2=results + "01_READ_PREPROCESSING/02_fastp/{sample}.R2.fastq.gz",
-        report=results + "01_READ_PREPROCESSING/02_fastp/{sample}_fastp.json",
+        R1=results + "01_READ_PREPROCESSING/02_fastp/{group_sample}.R1.fastq.gz",
+        R2=results + "01_READ_PREPROCESSING/02_fastp/{group_sample}.R2.fastq.gz",
+        report=results + "01_READ_PREPROCESSING/02_fastp/{group_sample}_fastp.json",
     params:
         extra_args=config["read_preprocessing"]["fastp_arguments"],
-        html=results + "01_READ_PREPROCESSING/02_fastp/{sample}_fastp.html",
+        html=results + "01_READ_PREPROCESSING/02_fastp/{group_sample}_fastp.html",
     # conda:
     #     "../envs/fastp:0.23.2--h79da9fb_0.yml"
     container:
         "docker://quay.io/biocontainers/fastp:0.23.2--h79da9fb_0"
     benchmark:
-        "benchmark/01_READ_PREPROCESSING/fastp_{sample}.tsv"
+        "benchmark/01_READ_PREPROCESSING/fastp_{group_sample}.tsv"
     resources:
         runtime=config["read_preprocessing"]["fastp_runtime"],
         mem_mb=config["read_preprocessing"]["fastp_memory"],
@@ -151,8 +172,8 @@ rule fastp_multiqc:
         "Generating a MULTIQC report using fastp results"
     input:
         expand(
-            results + "01_READ_PREPROCESSING/02_fastp/{sample}_fastp.json",
-            sample=samples,
+            results + "01_READ_PREPROCESSING/02_fastp/{group_sample}_fastp.json",
+            group_sample=groups_samples,
         ),
     output:
         report(
@@ -215,7 +236,7 @@ rule download_kneaddata_database:
 # Remove human reads with kneaddata
 rule kneaddata:
     message:
-        "Running KneadData on {wildcards.sample} to remove human reads"
+        "Running KneadData on {wildcards.group_sample} to remove human reads"
     input:
         resources + "kneaddata/hg37dec_v0.1.1.bt2",
         resources + "kneaddata/hg37dec_v0.1.2.bt2",
@@ -223,25 +244,27 @@ rule kneaddata:
         resources + "kneaddata/hg37dec_v0.1.4.bt2",
         resources + "kneaddata/hg37dec_v0.1.rev.1.bt2",
         resources + "kneaddata/hg37dec_v0.1.rev.2.bt2",
-        R1=results + "01_READ_PREPROCESSING/02_fastp/{sample}.R1.fastq.gz",
-        R2=results + "01_READ_PREPROCESSING/02_fastp/{sample}.R2.fastq.gz",
+        R1=results + "01_READ_PREPROCESSING/02_fastp/{group_sample}.R1.fastq.gz",
+        R2=results + "01_READ_PREPROCESSING/02_fastp/{group_sample}.R2.fastq.gz",
     output:
-        log=results + "01_READ_PREPROCESSING/03_kneaddata/{sample}.log",
-        R1=results + "01_READ_PREPROCESSING/03_kneaddata/{sample}_paired_1.fastq.gz",
-        R2=results + "01_READ_PREPROCESSING/03_kneaddata/{sample}_paired_2.fastq.gz",
+        log=results + "01_READ_PREPROCESSING/03_kneaddata/{group_sample}.log",
+        R1=results
+        + "01_READ_PREPROCESSING/03_kneaddata/{group_sample}_paired_1.fastq.gz",
+        R2=results
+        + "01_READ_PREPROCESSING/03_kneaddata/{group_sample}_paired_2.fastq.gz",
     params:
         out_dir=results + "01_READ_PREPROCESSING/03_kneaddata/",
         human_db=resources + "kneaddata/",
         extra_args=config["read_preprocessing"]["kneaddata_arguments"],
-        prefix="{sample}",
-        R1=results + "01_READ_PREPROCESSING/03_kneaddata/{sample}_paired_1.fastq",
-        R2=results + "01_READ_PREPROCESSING/03_kneaddata/{sample}_paired_2.fastq",
+        prefix="{group_sample}",
+        R1=results + "01_READ_PREPROCESSING/03_kneaddata/{group_sample}_paired_1.fastq",
+        R2=results + "01_READ_PREPROCESSING/03_kneaddata/{group_sample}_paired_2.fastq",
     # conda:
     #     "../envs/kneaddata:0.10.0--pyhdfd78af_0.yml"
     container:
         "docker://quay.io/biocontainers/kneaddata:0.10.0--pyhdfd78af_0"
     benchmark:
-        "benchmark/01_READ_PREPROCESSING/kneaddata_{sample}.tsv"
+        "benchmark/01_READ_PREPROCESSING/kneaddata_{group_sample}.tsv"
     resources:
         runtime=config["read_preprocessing"]["kneaddata_runtime"],
         mem_mb=config["read_preprocessing"]["kneaddata_memory"],
@@ -272,7 +295,8 @@ rule kneaddata_read_counts:
         "Generating read counts before and after human removal"
     input:
         expand(
-            results + "01_READ_PREPROCESSING/03_kneaddata/{sample}.log", sample=samples
+            results + "01_READ_PREPROCESSING/03_kneaddata/{group_sample}.log",
+            group_sample=groups_samples,
         ),
     output:
         results + "01_READ_PREPROCESSING/kneaddata_read_counts.tsv",

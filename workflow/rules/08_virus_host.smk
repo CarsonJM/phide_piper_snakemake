@@ -60,7 +60,8 @@ if (
     or config["input_data"] == "vls"
 ):
     viruses = (
-        results + "07_VIRUS_DIVERSITY/01_votu_clustering/votu_representatives.fasta"
+        results
+        + "06_VIRUS_DEREPLICATION/02_dereplicate_viruses/dereplicate_reps_untrimmed.fasta",
     )
 elif config["input_data"] == "viruses":
     viruses = results + "00_INPUT/{sample}_viruses.fasta"
@@ -218,7 +219,7 @@ def combine_iphop_input(wildcards):
 # combine checkv reports across samples
 rule combine_iphop_reports:
     message:
-        "Combining iPHoP reports across samples"
+        "Combining iPHoP reports splits"
     input:
         combine_iphop_input,
     output:
@@ -243,7 +244,9 @@ rule virus_host_analysis:
     message:
         "Visualizing iPHoP host taxonomy outputs"
     input:
-        results + "08_VIRUS_HOST/01_iphop/iphop_report.csv",
+        derep_reps=results
+        + "06_VIRUS_DEREPLICATION/02_dereplicate_viruses/dereplicate_clusters.tsv",
+        iphop=results + "08_VIRUS_HOST/01_iphop/iphop_report.csv",
     output:
         svg=report(
             results + "08_VIRUS_HOST/virus_host_taxonomy_figure.svg",

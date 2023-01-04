@@ -9,7 +9,7 @@ configfile: "config/config.yaml"
 
 
 samples_df = pd.read_csv(config["samples_df"], sep="\t")
-samples = samples_df["sample"]
+groups_samples = samples_df.loc[:, "group"] + "_" + samples_df.loc[:, "sample"]
 
 
 # load results path
@@ -38,15 +38,23 @@ localrules:
 # combine viruses across samples
 rule combine_viruses:
     message:
-        "Combining viruses, untrimmed viruses, and proteins across samples"
+        "Combining viruses and untrimmed viruses across samples"
     input:
-        expand(
+        untrimmed=expand(
             results
-            + "05_VIRUS_QUALITY/02_quality_filter/{sample}/quality_filtered_viruses.fna",
-            sample=samples,
+            + "04_VIRUS_IDENTIFICATION/01_external_hits/{group_sample}/virusdb_hits_w_assembly.fna",
+            group_sample=groups_samples,
+        ),
+        viruses=expand(
+            results
+            + "05_VIRUS_QUALITY/02_quality_filter/{group_sample}/quality_filtered_viruses.fna",
+            group_sample=groups_samples,
         ),
     output:
-        results + "06_VIRUS_DEREPLICATION/01_combine_viruses/combined_viruses.fasta",
+        untrimmed=results
+        + "06_VIRUS_DEREPLICATION/01_combine_viruses/combined_untrimmed_contigs.fasta",
+        viruses=results
+        + "06_VIRUS_DEREPLICATION/01_combine_viruses/combined_viruses.fasta",
     benchmark:
         "benchmark/06_VIRUS_DEREPLICATION/combine_viruses.tsv"
     resources:
@@ -54,9 +62,40 @@ rule combine_viruses:
         mem_mb="10000",
     shell:
         """
-        # combine viruses
-        cat {input} > {output}
+        cat {input.untrimmed} > {output.untrimmed}
+        cat {input.viruses} > {output.viruses}
         """
+
+
+# combine viruses across samples
+rule filter_combined_viruses:
+    message:
+        "Filter combined viruses to remove duplicates, and filter untrimmed contigs to retain only those that are viral"
+    input:
+        quality_report=results + "05_VIRUS_QUALITY/virus_quality_report.tsv",
+        untrimmed=results
+        + "06_VIRUS_DEREPLICATION/01_combine_viruses/combined_untrimmed_contigs.fasta",
+        viruses=results
+        + "06_VIRUS_DEREPLICATION/01_combine_viruses/combined_viruses.fasta",
+    output:
+        untrimmed=results
+        + "06_VIRUS_DEREPLICATION/01_combine_viruses/filtered_untrimmed_contigs.fasta",
+        viruses=results
+        + "06_VIRUS_DEREPLICATION/01_combine_viruses/filtered_viruses.fasta",
+    params:
+        min_completeness=config["virus_quality"]["min_completeness"],
+        min_viral_genes=config["virus_quality"]["min_viral_genes"],
+        max_bacterial_genes=config["virus_quality"]["max_bacterial_genes"],
+        remove_proviruses=config["virus_quality"]["remove_proviruses"],
+    conda:
+        "../envs/jupyter.yml"
+    benchmark:
+        "benchmark/06_VIRUS_DEREPLICATION/filter_combined_viruses.tsv"
+    resources:
+        runtime="00:10:00",
+        mem_mb="10000",
+    script:
+        "../scripts/06_filter_combined_viruses.py"
 
 
 # -----------------------------------------------------
@@ -64,13 +103,14 @@ rule combine_viruses:
 # -----------------------------------------------------
 rule make_dereplicate_blastdb:
     input:
-        results + "06_VIRUS_DEREPLICATION/01_combine_viruses/combined_viruses.fasta",
+        results
+        + "06_VIRUS_DEREPLICATION/01_combine_viruses/filtered_untrimmed_contigs.fasta",
     output:
         results
-        + "06_VIRUS_DEREPLICATION/02_dereplicate_viruses/combined_viruses_blastdb.ndb",
+        + "06_VIRUS_DEREPLICATION/02_dereplicate_viruses/filtered_untrimmed_contigs_blastdb.ndb",
     params:
         db=results
-        + "06_VIRUS_DEREPLICATION/02_dereplicate_viruses/combined_viruses_blastdb",
+        + "06_VIRUS_DEREPLICATION/02_dereplicate_viruses/filtered_untrimmed_contigs_blastdb",
     # conda:
     #     "../envs/blast:2.12.0--h3289130_3.yml"
     container:
@@ -90,15 +130,15 @@ rule make_dereplicate_blastdb:
 rule dereplicate_blast:
     input:
         fasta=results
-        + "06_VIRUS_DEREPLICATION/01_combine_viruses/combined_viruses.fasta",
+        + "06_VIRUS_DEREPLICATION/01_combine_viruses/filtered_untrimmed_contigs.fasta",
         blastdb=results
-        + "06_VIRUS_DEREPLICATION/02_dereplicate_viruses/combined_viruses_blastdb.ndb",
+        + "06_VIRUS_DEREPLICATION/02_dereplicate_viruses/filtered_untrimmed_contigs_blastdb.ndb",
     output:
         results + "06_VIRUS_DEREPLICATION/02_dereplicate_viruses/dereplicate_blast.tsv",
     params:
         min_blast_ident=config["virus_dereplication"]["blast_min_id"],
         db=results
-        + "06_VIRUS_DEREPLICATION/02_dereplicate_viruses/combined_viruses_blastdb",
+        + "06_VIRUS_DEREPLICATION/02_dereplicate_viruses/filtered_untrimmed_contigs_blastdb",
     # conda:
     #     "../envs/blast:2.12.0--h3289130_3.yml"
     container:
@@ -143,7 +183,7 @@ rule dereplicate_anicalc:
 rule dereplicate_aniclust:
     input:
         fasta=results
-        + "06_VIRUS_DEREPLICATION/01_combine_viruses/combined_viruses.fasta",
+        + "06_VIRUS_DEREPLICATION/01_combine_viruses/filtered_untrimmed_contigs.fasta",
         ani=results
         + "06_VIRUS_DEREPLICATION/02_dereplicate_viruses/dereplicate_ani.tsv",
     output:
@@ -168,15 +208,19 @@ rule dereplicate_aniclust:
 
 rule get_replicate_representatives:
     input:
-        fasta=results
-        + "06_VIRUS_DEREPLICATION/01_combine_viruses/combined_viruses.fasta",
+        viruses=results
+        + "06_VIRUS_DEREPLICATION/01_combine_viruses/filtered_viruses.fasta",
+        untrimmed=results
+        + "06_VIRUS_DEREPLICATION/01_combine_viruses/filtered_untrimmed_contigs.fasta",
         clusters=results
         + "06_VIRUS_DEREPLICATION/02_dereplicate_viruses/dereplicate_clusters.tsv",
     output:
+        reps_viruses=results
+        + "06_VIRUS_DEREPLICATION/02_dereplicate_viruses/dereplicate_reps_viruses.fasta",
         representatives_list=results
         + "06_VIRUS_DEREPLICATION/02_dereplicate_viruses/dereplicate_cluster_reps.txt",
-        representatives_fasta=results
-        + "06_VIRUS_DEREPLICATION/02_dereplicate_viruses/dereplicate_reps.fasta",
+        reps_untrimmed=results
+        + "06_VIRUS_DEREPLICATION/02_dereplicate_viruses/dereplicate_reps_untrimmed.fasta",
     # conda:
     #     "../envs/seqkit:2.1.0--h9ee0642_0"
     container:
@@ -189,7 +233,8 @@ rule get_replicate_representatives:
     shell:
         """
         awk '{{print $1}}' {input.clusters} > {output.representatives_list} && \
-        seqkit grep -f {output.representatives_list} {input.fasta} > {output.representatives_fasta}
+        seqkit grep -f {output.representatives_list} {input.untrimmed} > {output.reps_untrimmed} && \
+        seqkit grep -f {output.representatives_list} {input.viruses} > {output.reps_viruses}
         """
 
 
@@ -197,7 +242,7 @@ rule get_replicate_representatives:
 # Analyze clustering
 # -----------------------------------------------------
 # plot virus dereplication results
-rule virus_dereplication_anlysis:
+rule virus_dereplication_analysis:
     message:
         "Visualizing the virus dereplication results"
     input:

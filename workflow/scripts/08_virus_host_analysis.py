@@ -1,10 +1,15 @@
 import pandas as pd
 import plotly.express as px
 
+# read dereplicate rep data
+derep_reps = pd.read_csv(str(snakemake.input.derep_reps), sep='\t', names=['viral_genome', 'nodes'])
+
 # load iphop data table
-iphop = pd.read_csv(str(snakemake.input))
+iphop = pd.read_csv(str(snakemake.input.iphop))
 # iphop = pd.read_csv('/home/carsonjm/results/phide_piper_test/08_VIRUS_HOST/01_iphop/Host_prediction_to_genus_m90.csv')
 iphop.rename(columns = {'Virus':'viral_genome', 'Host genus':'iphop_genus'}, inplace=True)
+iphop = derep_reps.merge(iphop, on="viral_genome", how="outer")
+iphop = iphop[['viral_genome', 'AAI to closest RaFAH reference', 'iphop_genus', 'Confidence score', 'List of methods']]
 
 # merge phist and iphop
 iphop.to_csv(str(snakemake.output.report), sep='\t', index=False)

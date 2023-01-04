@@ -9,7 +9,7 @@ configfile: "config/config.yaml"
 
 
 samples_df = pd.read_csv(config["samples_df"], sep="\t")
-samples = samples_df["sample"]
+groups_samples = samples_df.loc[:, "group"] + "_" + samples_df.loc[:, "sample"]
 
 
 # load results path
@@ -30,7 +30,6 @@ report: "../report/workflow.rst"
 localrules:
     combine_spades_assemblies,
     combine_quast_across_samples,
-    build_mgv,
 
 
 # -----------------------------------------------------
@@ -39,21 +38,23 @@ localrules:
 # Assemble reads using metaspades
 rule metaspades:
     message:
-        "Assembling {wildcards.sample} using metaSPAdes"
+        "Assembling {wildcards.group_sample} using metaSPAdes"
     input:
-        R1=results + "01_READ_PREPROCESSING/03_kneaddata/{sample}_paired_1.fastq.gz",
-        R2=results + "01_READ_PREPROCESSING/03_kneaddata/{sample}_paired_2.fastq.gz",
+        R1=results
+        + "01_READ_PREPROCESSING/03_kneaddata/{group_sample}_paired_1.fastq.gz",
+        R2=results
+        + "01_READ_PREPROCESSING/03_kneaddata/{group_sample}_paired_2.fastq.gz",
     output:
-        results + "03_READ_ASSEMBLY/01_spades/{sample}_meta/contigs.fasta",
+        results + "03_READ_ASSEMBLY/01_spades/{group_sample}_meta/contigs.fasta",
     params:
-        output_dir=results + "03_READ_ASSEMBLY/01_spades/{sample}_meta/",
+        output_dir=results + "03_READ_ASSEMBLY/01_spades/{group_sample}_meta/",
         extra_args=config["read_assembly"]["spades_arguments"],
     # conda:
     #     "../envs/spades:3.15.4--h95f258a_0.yml"
     container:
         "docker://quay.io/biocontainers/spades:3.15.4--h95f258a_0"
     benchmark:
-        "benchmark/03_READ_ASSEMBLY/metaspades_{sample}.tsv"
+        "benchmark/03_READ_ASSEMBLY/metaspades_{group_sample}.tsv"
     resources:
         runtime=config["read_assembly"]["spades_runtime"],
         mem_mb=config["read_assembly"]["spades_memory"],
@@ -74,21 +75,23 @@ rule metaspades:
 # Assemble reads using metaviralspades
 rule metaviralspades:
     message:
-        "Assembling {wildcards.sample} using metaviralSPAdes"
+        "Assembling {wildcards.group_sample} using metaviralSPAdes"
     input:
-        R1=results + "01_READ_PREPROCESSING/03_kneaddata/{sample}_paired_1.fastq.gz",
-        R2=results + "01_READ_PREPROCESSING/03_kneaddata/{sample}_paired_2.fastq.gz",
+        R1=results
+        + "01_READ_PREPROCESSING/03_kneaddata/{group_sample}_paired_1.fastq.gz",
+        R2=results
+        + "01_READ_PREPROCESSING/03_kneaddata/{group_sample}_paired_2.fastq.gz",
     output:
-        results + "03_READ_ASSEMBLY/01_spades/{sample}_metaviral/contigs.fasta",
+        results + "03_READ_ASSEMBLY/01_spades/{group_sample}_metaviral/contigs.fasta",
     params:
-        output_dir=results + "03_READ_ASSEMBLY/01_spades/{sample}_metaviral/",
+        output_dir=results + "03_READ_ASSEMBLY/01_spades/{group_sample}_metaviral/",
         extra_args=config["read_assembly"]["spades_arguments"],
     # conda:
     #     "../envs/spades:3.15.4--h95f258a_0.yml"
     container:
         "docker://quay.io/biocontainers/spades:3.15.4--h95f258a_0"
     benchmark:
-        "benchmark/03_READ_ASSEMBLY/metaviralspades_{sample}.tsv"
+        "benchmark/03_READ_ASSEMBLY/metaviralspades_{group_sample}.tsv"
     resources:
         runtime=config["read_assembly"]["spades_runtime"],
         mem_mb=config["read_assembly"]["spades_memory"],
@@ -111,21 +114,23 @@ rule metaviralspades:
 # Assemble reads using rnaviralspades
 rule rnaviralspades:
     message:
-        "Assembling {wildcards.sample} using rnaviralSPAdes"
+        "Assembling {wildcards.group_sample} using rnaviralSPAdes"
     input:
-        R1=results + "01_READ_PREPROCESSING/03_kneaddata/{sample}_paired_1.fastq.gz",
-        R2=results + "01_READ_PREPROCESSING/03_kneaddata/{sample}_paired_2.fastq.gz",
+        R1=results
+        + "01_READ_PREPROCESSING/03_kneaddata/{group_sample}_paired_1.fastq.gz",
+        R2=results
+        + "01_READ_PREPROCESSING/03_kneaddata/{group_sample}_paired_2.fastq.gz",
     output:
-        results + "03_READ_ASSEMBLY/01_spades/{sample}_rnaviral/contigs.fasta",
+        results + "03_READ_ASSEMBLY/01_spades/{group_sample}_rnaviral/contigs.fasta",
     params:
-        output_dir=results + "03_READ_ASSEMBLY/01_spades/{sample}_rnaviral/",
+        output_dir=results + "03_READ_ASSEMBLY/01_spades/{group_sample}_rnaviral/",
         extra_args=config["read_assembly"]["spades_arguments"],
     # conda:
     #     "../envs/spades:3.15.4--h95f258a_0.yml"
     container:
         "docker://quay.io/biocontainers/spades:3.15.4--h95f258a_0"
     benchmark:
-        "benchmark/03_READ_ASSEMBLY/rnaviralspades_{sample}.tsv"
+        "benchmark/03_READ_ASSEMBLY/rnaviralspades_{group_sample}.tsv"
     resources:
         runtime=config["read_assembly"]["spades_runtime"],
         mem_mb=config["read_assembly"]["spades_memory"],
@@ -149,28 +154,28 @@ rule rnaviralspades:
 assemblies = []
 if "meta" in config["read_assembly"]["assembly_modes"]:
     assemblies.append(
-        results + "03_READ_ASSEMBLY/01_spades/{sample}_meta/contigs.fasta"
+        results + "03_READ_ASSEMBLY/01_spades/{group_sample}_meta/contigs.fasta"
     )
 if "metaviral" in config["read_assembly"]["assembly_modes"]:
     assemblies.append(
-        results + "03_READ_ASSEMBLY/01_spades/{sample}_metaviral/contigs.fasta"
+        results + "03_READ_ASSEMBLY/01_spades/{group_sample}_metaviral/contigs.fasta"
     )
 if "rnaviral" in config["read_assembly"]["assembly_modes"]:
     assemblies.append(
-        results + "03_READ_ASSEMBLY/01_spades/{sample}_rnaviral/contigs.fasta"
+        results + "03_READ_ASSEMBLY/01_spades/{group_sample}_rnaviral/contigs.fasta"
     )
 
 
 # combine all spades assembly types
 rule combine_spades_assemblies:
     message:
-        "Combining {wildcards.sample} assemblies from different assemblers"
+        "Combining {wildcards.group_sample} assemblies from different assemblers"
     input:
         assemblies,
     output:
-        results + "03_READ_ASSEMBLY/01_spades/{sample}_contigs.fasta",
+        results + "03_READ_ASSEMBLY/01_spades/{group_sample}_contigs.fasta",
     benchmark:
-        "benchmark/03_READ_ASSEMBLY/combine_spades_assemblies_{sample}.tsv"
+        "benchmark/03_READ_ASSEMBLY/combine_spades_assemblies_{group_sample}.tsv"
     resources:
         runtime="00:10:00",
         mem_mb="10000",
@@ -187,17 +192,18 @@ rule combine_spades_assemblies:
 # filter contigs based on contig length
 rule contig_length_filter:
     message:
-        "Filtering {wildcards.sample} assemblies to only those longer than {params.min_length}"
+        "Filtering {wildcards.group_sample} assemblies to only those longer than {params.min_length}"
     input:
-        results + "03_READ_ASSEMBLY/01_spades/{sample}_contigs.fasta",
+        results + "03_READ_ASSEMBLY/01_spades/{group_sample}_contigs.fasta",
     output:
-        results + "03_READ_ASSEMBLY/02_contig_filters/{sample}/{sample}_contigs.fasta",
+        results
+        + "03_READ_ASSEMBLY/02_contig_filters/{group_sample}/{group_sample}_contigs.fasta",
     params:
         min_length=config["read_assembly"]["min_contig_length"],
     conda:
         "../envs/jupyter.yml"
     benchmark:
-        "benchmark/03_READ_ASSEMBLY/contig_length_filter_{sample}.tsv"
+        "benchmark/03_READ_ASSEMBLY/contig_length_filter_{group_sample}.tsv"
     resources:
         runtime="00:10:00",
         mem_mb="10000",
@@ -211,22 +217,23 @@ rule contig_length_filter:
 # run quast to determine the quality of assemblies
 rule quast:
     message:
-        "Running QUAST on {wildcards.sample} to determine assembly quality"
+        "Running QUAST on {wildcards.group_sample} to determine assembly quality"
     input:
-        results + "03_READ_ASSEMBLY/02_contig_filters/{sample}/{sample}_contigs.fasta",
+        results
+        + "03_READ_ASSEMBLY/02_contig_filters/{group_sample}/{group_sample}_contigs.fasta",
     output:
-        results + "03_READ_ASSEMBLY/03_quast/{sample}/transposed_report.tsv",
+        results + "03_READ_ASSEMBLY/03_quast/{group_sample}/transposed_report.tsv",
     params:
-        output_dir=results + "03_READ_ASSEMBLY/03_quast/{sample}",
+        output_dir=results + "03_READ_ASSEMBLY/03_quast/{group_sample}",
         min_len=config["read_assembly"]["min_contig_length"],
-        labels="{sample}",
+        labels="{group_sample}",
         extra_args=config["read_assembly"]["quast_arguments"],
     # conda:
     #     "../envs/quast:5.0.2--py27pl5321h8eb80aa_6.yml"
     container:
         "docker://quay.io/biocontainers/quast:5.0.2--py27pl5321h8eb80aa_6"
     benchmark:
-        "benchmark/03_READ_ASSEMBLY/quast_{sample}.tsv"
+        "benchmark/03_READ_ASSEMBLY/quast_{group_sample}.tsv"
     resources:
         runtime="00:10:00",
         mem_mb="10000",
@@ -250,8 +257,8 @@ rule quast_multiqc:
         "Generating MULTIQC report for QUAST analyses"
     input:
         expand(
-            results + "03_READ_ASSEMBLY/03_quast/{sample}/transposed_report.tsv",
-            sample=samples,
+            results + "03_READ_ASSEMBLY/03_quast/{group_sample}/transposed_report.tsv",
+            group_sample=groups_samples,
         ),
     output:
         report(
@@ -283,13 +290,13 @@ rule quast_multiqc:
 
 
 # combine quast reports
-rule combine_quast:
+rule combine_quast_across_samples:
     message:
         "Combining QUAST reports"
     input:
         expand(
-            results + "03_READ_ASSEMBLY/03_quast/{sample}/transposed_report.tsv",
-            sample=samples,
+            results + "03_READ_ASSEMBLY/03_quast/{group_sample}/transposed_report.tsv",
+            group_sample=groups_samples,
         ),
     output:
         results + "03_READ_ASSEMBLY/assembly_report.tsv",

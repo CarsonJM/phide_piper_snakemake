@@ -30,6 +30,19 @@ report: "report/workflow.rst"
 # -----------------------------------------------------
 # 01 DRAMv
 # -----------------------------------------------------
+if (
+    config["input_data"] == "reads"
+    or config["input_data"] == "contigs"
+    or config["input_data"] == "vls"
+):
+    viruses = (
+        results
+        + "06_VIRUS_DEREPLICATION/02_dereplicate_viruses/dereplicate_reps_viruses.fasta",
+    )
+elif config["input_data"] == "viruses":
+    viruses = results + "00_INPUT/{sample}_viruses.fasta"
+
+
 # build dram
 rule build_dramv:
     message:

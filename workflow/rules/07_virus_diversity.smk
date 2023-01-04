@@ -35,7 +35,8 @@ localrules:
 # -----------------------------------------------------
 rule make_votu_blastdb:
     input: 
-        results + "06_VIRUS_DEREPLICATION/02_dereplicate_viruses/dereplicate_reps.fasta",
+        results
+        + "06_VIRUS_DEREPLICATION/02_dereplicate_viruses/dereplicate_reps_viruses.fasta",
     output: 
         results + "07_VIRUS_DIVERSITY/01_votu_clustering/dereplicate_reps_blastdb.ndb",
     params:
@@ -57,7 +58,8 @@ rule make_votu_blastdb:
 
 rule votu_blast:
     input:
-        fasta=results + "06_VIRUS_DEREPLICATION/02_dereplicate_viruses/dereplicate_reps.fasta",
+        fasta=results
+        + "06_VIRUS_DEREPLICATION/02_dereplicate_viruses/dereplicate_reps_viruses.fasta",
         blastdb=results + "07_VIRUS_DIVERSITY/01_votu_clustering/dereplicate_reps_blastdb.ndb",
     output: 
         results + "07_VIRUS_DIVERSITY/01_votu_clustering/votu_blast.tsv",
@@ -105,7 +107,8 @@ rule votu_anicalc:
 
 rule votu_aniclust:
     input:
-        fasta=results + "06_VIRUS_DEREPLICATION/02_dereplicate_viruses/dereplicate_reps.fasta",
+        fasta=results
+        + "06_VIRUS_DEREPLICATION/02_dereplicate_viruses/dereplicate_reps_viruses.fasta",
         ani=results + "07_VIRUS_DIVERSITY/01_votu_clustering/votu_ani.tsv",
     output: 
         results + "07_VIRUS_DIVERSITY/01_votu_clustering/votu_clusters.tsv",
@@ -128,7 +131,8 @@ rule votu_aniclust:
 
 rule get_votu_representatives:
     input:
-        fasta=results + "06_VIRUS_DEREPLICATION/02_dereplicate_viruses/dereplicate_reps.fasta",
+        fasta=results
+        + "06_VIRUS_DEREPLICATION/02_dereplicate_viruses/dereplicate_reps_viruses.fasta",
         clusters=results + "07_VIRUS_DIVERSITY/01_votu_clustering/votu_clusters.tsv",
     output:
         representatives_list=results + "07_VIRUS_DIVERSITY/01_votu_clustering/votu_cluster_reps.txt",
@@ -147,7 +151,6 @@ rule get_votu_representatives:
         awk '{{print $1}}' {input.clusters} > {output.representatives_list} && \
         seqkit grep -f {output.representatives_list} {input.fasta} > {output.representatives_fasta}
         """
-
 
 # prodigal-gv
 rule prodigal_gv:

@@ -32,6 +32,19 @@ localrules:
 # -----------------------------------------------------
 # 01 BACPHLIP
 # -----------------------------------------------------
+if (
+    config["input_data"] == "reads"
+    or config["input_data"] == "contigs"
+    or config["input_data"] == "vls"
+):
+    viruses = (
+        results
+        + "06_VIRUS_DEREPLICATION/02_dereplicate_viruses/dereplicate_reps_viruses.fasta",
+    )
+elif config["input_data"] == "viruses":
+    viruses = results + "00_INPUT/{sample}_viruses.fasta"
+
+
 # build bacphlip
 rule build_bacphlip:
     message:
@@ -115,9 +128,9 @@ rule virus_lifestyle_analysis:
     message:
         "Visualizing virus lifestyle outputs as determined using BACPHLIP"
     input:
+        derep_reps=results
+        + "06_VIRUS_DEREPLICATION/02_dereplicate_viruses/dereplicate_clusters.tsv",
         bacphlip=results + "10_VIRUS_LIFESTYLE/01_bacphlip/hq_viruses.fna.bacphlip",
-        genomad=results
-        + "09_VIRUS_TAXONOMY/01_genomad/votu_representatives_find_proviruses/votu_representatives_provirus.tsv",
     output:
         svg=report(
             results + "10_VIRUS_LIFESTYLE/virus_lifestyle_figure.svg",

@@ -31,18 +31,29 @@ localrules:
 # -----------------------------------------------------
 # 01 geNomad
 # -----------------------------------------------------
+if (
+    config["input_data"] == "reads"
+    or config["input_data"] == "contigs"
+    or config["input_data"] == "vls"
+):
+    viruses = (
+        results
+        + "06_VIRUS_DEREPLICATION/02_dereplicate_viruses/dereplicate_reps_viruses.fasta",
+    )
+elif config["input_data"] == "viruses":
+    viruses = results + "00_INPUT/{sample}_viruses.fasta"
+
+
 # run genomad to identify virus taxonomy
 rule genomad_taxonomy:
     message:
         "Running geNomad to predict virus taxonomy"
     input:
         genomad=resources + "genomad/genomad_db/virus_hallmark_annotation.txt",
-        contigs=results + "07_VIRUS_DIVERSITY/01_votu_clustering/votu_representatives.fasta",
+        contigs=viruses
     output:
-        taxonomy=results
-        + "09_VIRUS_TAXONOMY/01_genomad/votu_representatives_annotate/votu_representatives_taxonomy.tsv",
-        lifestyle=results
-        + "09_VIRUS_TAXONOMY/01_genomad/votu_representatives_find_proviruses/votu_representatives_provirus.tsv",
+        results
+        + "09_VIRUS_TAXONOMY/01_genomad/dereplicate_reps_viruses_annotate/dereplicate_reps_viruses_taxonomy.tsv",
     params:
         out_dir=results + "09_VIRUS_TAXONOMY/01_genomad/",
         genomad_dir=resources + "genomad/genomad_db",
@@ -77,7 +88,8 @@ rule virus_taxonomy_analysis:
     message:
         "Visualizing virus taxonomy results from geNomad"
     input:
-        genomad=results + "09_VIRUS_TAXONOMY/01_genomad/votu_representatives_annotate/votu_representatives_taxonomy.tsv",
+        genomad=results
+        + "09_VIRUS_TAXONOMY/01_genomad/dereplicate_reps_viruses_annotate/dereplicate_reps_viruses_taxonomy.tsv",
     output:
         svg=report(
             results + "09_VIRUS_TAXONOMY/virus_taxonomy_figure.svg",

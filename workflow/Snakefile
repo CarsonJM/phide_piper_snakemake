@@ -9,8 +9,11 @@ configfile: "config/config.yaml"
 
 
 samples_df = pd.read_csv(config["samples_df"], sep="\t")
-samples = samples_df["sample"]
-
+groups = list(set(samples_df["group"]))
+samples_df["group_sample"] = samples_df["group"] + "_" + samples_df["sample"]
+group_to_group_sample_dictionary = (
+    samples_df.groupby(["group"])["group_sample"].apply(list).to_dict()
+)
 
 # load results path
 results = config["results"]
@@ -38,7 +41,9 @@ include: "rules/08_virus_host.smk"
 include: "rules/09_virus_taxonomy.smk"
 include: "rules/10_virus_lifestyle.smk"
 include: "rules/11_virus_function.smk"
-include: "rules/12_virus_analysis.smk"
+include: "rules/12_virus_abundance.smk"
+include: "rules/13_host_abundance.smk"
+include: "rules/14_provirus_activity.smk"
 
 
 # -------------------------------------
@@ -96,17 +101,26 @@ def get_final_output(wildcards):
         )
 
     if config["include_analysis_module"]:
-        final_output.append(results + "12_VIRUS_ANALYSIS/bowtie2_multiqc.html")
+        final_output.append(results + "12_VIRUS_ABUNDANCE/bowtie2_multiqc.html")
         final_output.append(
             results
-            + "12_VIRUS_ANALYSIS/02_instrain/compare/output/compare_genomeWide_compare.tsv"
+            + "12_VIRUS_ABUNDANCE/02_instrain_profile/combined_genome_info_w_abundance.tsv"
         )
-        final_output.append(results + "12_VIRUS_ANALYSIS/genome_info_report.tsv")
-        final_output.append(
+        final_output += expand(
             results
-            + "12_VIRUS_ANALYSIS/"
-            + config["virus_analysis"]["coverm_method"]
-            + "_report.tsv",
+            + "12_VIRUS_ABUNDANCE/03_instrain_compare/{group}/output/{group}_genomeWide_compare.tsv",
+            group=groups,
+        )
+
+    if config["include_host_abundance_module"]:
+        final_output.append(
+            results + "13_HOST_ABUNDANCE/metaphlan_merged_profiles_gtdb.tsv",
+        )
+
+    if config["include_activity_module"]:
+        final_output += expand(
+            results + "14_PROVIRUS_ACTIVITY/01_propagate/{group}_combined_output.tsv",
+            group=groups,
         )
 
     return final_output
@@ -119,35 +133,32 @@ rule all:
 
 
 def get_reports(wildcards):
-
     reports = {}
-
     if config["include_enrichment_module"]:
         reports["enrichment"] = (
             results + "02_VIRUS_ENRICHMENT/virus_enrichment_report.tsv"
         )
-
     if config["input_data"] == "reads":
+        reports["read_count"] = (
+            results + "01_READ_PREPROCESSING/kneaddata_read_counts.tsv"
+        )
         reports["assembly"] = results + "03_READ_ASSEMBLY/assembly_report.tsv"
-
     if config["input_data"] == "reads" or config["input_data"] == "contigs":
         reports["identification"] = (
             results + "04_VIRUS_IDENTIFICATION/virus_identification_report.tsv"
         )
-
     if (
         config["input_data"] == "reads"
         or config["input_data"] == "contigs"
         or config["input_data"] == "vls"
     ):
         reports["quality"] = results + "05_VIRUS_QUALITY/virus_quality_report.tsv"
-
     reports["dereplication"] = (
         results + "06_VIRUS_DEREPLICATION/virus_dereplication_report.tsv"
     )
-
-    reports["diversity"] = results + "07_VIRUS_DIVERSITY/votu_diversity_report.tsv"
-
+    reports["diversity"] = (
+        results + "07_VIRUS_DIVERSITY/01_votu_clustering/votu_clusters.tsv"
+    )
     if config["include_host_module"]:
         reports["host"] = results + "08_VIRUS_HOST/virus_host_taxonomy_report.tsv"
 
@@ -163,18 +174,9 @@ def get_reports(wildcards):
         )
 
     if config["include_analysis_module"]:
-        reports["evolution"] = (
-            results
-            + "12_VIRUS_ANALYSIS/02_instrain/compare/output/compare_genomeWide_compare.tsv"
+        reports["analysis"] = (
+            results + "12_VIRUS_ABUNDANCE/02_instrain_profile/combined_genome_info.tsv",
         )
-
-        reports["abundance"] = (
-            results
-            + "12_VIRUS_ANALYSIS/"
-            + config["virus_analysis"]["coverm_method"]
-            + "_report.tsv"
-        )
-
     return reports
 
 

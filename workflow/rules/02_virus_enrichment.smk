@@ -9,7 +9,7 @@ configfile: "config/config.yaml"
 
 
 samples_df = pd.read_csv(config["samples_df"], sep="\t")
-samples = samples_df["sample"]
+groups_samples = samples_df.loc[:, "group"] + "_" + samples_df.loc[:, "sample"]
 
 
 # load results path
@@ -83,23 +83,25 @@ rule build_viromeqc:
 # determine virus enrichment with viromeqc
 rule viromeqc:
     message:
-        "Running ViromeQC on {wildcards.sample} to determine virus enrichment"
+        "Running ViromeQC on {wildcards.group_sample} to determine virus enrichment"
     input:
         amphora=resources + "viromeqc/index/amphora_bacteria.dmnd",
         lsu=resources + "viromeqc/index/SILVA_132_LSURef_tax_silva.clean.1.bt2",
         ssu=resources + "viromeqc/index/SILVA_132_SSURef_Nr99_tax_silva.clean.1.bt2",
-        R1=results + "01_READ_PREPROCESSING/03_kneaddata/{sample}_paired_1.fastq.gz",
-        R2=results + "01_READ_PREPROCESSING/03_kneaddata/{sample}_paired_2.fastq.gz",
+        R1=results
+        + "01_READ_PREPROCESSING/03_kneaddata/{group_sample}_paired_1.fastq.gz",
+        R2=results
+        + "01_READ_PREPROCESSING/03_kneaddata/{group_sample}_paired_2.fastq.gz",
     output:
-        results + "02_VIRUS_ENRICHMENT/01_viromeqc/{sample}_vqc.tsv",
+        results + "02_VIRUS_ENRICHMENT/01_viromeqc/{group_sample}_vqc.tsv",
     params:
         viromeqc_script=resources + "viromeqc/viromeQC.py",
-        temp=resources + "viromeqc/tmp/{sample}",
+        temp=resources + "viromeqc/tmp/{group_sample}",
         extra_arguments=config["virus_enrichment"]["viromeqc_arguments"],
     conda:
         "../envs/viromeqc.yml"
     benchmark:
-        "benchmark/02_VIRUS_ENRICHMENT/viromeqc_{sample}.tsv"
+        "benchmark/02_VIRUS_ENRICHMENT/viromeqc_{group_sample}.tsv"
     resources:
         runtime=config["virus_enrichment"]["viromeqc_runtime"],
         mem_mb=config["virus_enrichment"]["viromeqc_memory"],
@@ -119,7 +121,7 @@ rule viromeqc:
         {params.extra_arguments}
 
         # add sample column to each vqc output
-        s={wildcards.sample}
+        s={wildcards.group_sample}
         sed -i "s/$/\t$s/" {output}
         sample="sample"
         sed -i "1s/$s/$sample/" {output}
@@ -135,8 +137,8 @@ rule combine_viromeqc_across_samples:
         "Combining ViromeQC results across samples"
     input:
         expand(
-            results + "02_VIRUS_ENRICHMENT/01_viromeqc/{sample}_vqc.tsv",
-            sample=samples,
+            results + "02_VIRUS_ENRICHMENT/01_viromeqc/{group_sample}_vqc.tsv",
+            group_sample=groups_samples,
         ),
     output:
         results + "02_VIRUS_ENRICHMENT/virus_enrichment_report.tsv",

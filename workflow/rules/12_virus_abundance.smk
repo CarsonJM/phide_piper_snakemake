@@ -9,8 +9,7 @@ configfile: "config/config.yaml"
 
 
 samples_df = pd.read_csv(config["samples_df"], sep="\t")
-samples = samples_df["sample"]
-
+group_sample_dictionary = samples_df.groupby(["group"])["sample"].apply(list).to_dict()
 
 # load results path
 results = config["results"]
@@ -29,25 +28,38 @@ report: "../report/workflow.rst"
 # -----------------------------------------------------
 localrules:
     symlink_preprocessed_reads,
-    read_counts,
-    combine_read_counts_across_samples,
-    combine_breadth_and_depth_across_samples,
+    combine_instrain_profiles,
+    identify_integrated_prophages,
+    build_propagate,
 
 
 # -----------------------------------------------------
 # 00 Determine inputs for module
 # -----------------------------------------------------
+if (
+    config["input_data"] == "reads"
+    or config["input_data"] == "contigs"
+    or config["input_data"] == "vls"
+):
+    viruses = (
+        results
+        + "06_VIRUS_DEREPLICATION/02_dereplicate_viruses/dereplicate_reps_viruses.fasta",
+    )
+elif config["input_data"] == "viruses":
+    viruses = results + "00_INPUT/{group_sample}_viruses.fasta"
+
+
 # read symlink in 04_virus_identification.smk
 if config["input_data"] == "reads":
-    R1 = results + "01_READ_PREPROCESSING/03_kneaddata/{sample}_paired_1.fastq.gz"
-    R2 = results + "01_READ_PREPROCESSING/03_kneaddata/{sample}_paired_2.fastq.gz"
+    R1 = results + "01_READ_PREPROCESSING/03_kneaddata/{group_sample}_paired_1.fastq.gz"
+    R2 = results + "01_READ_PREPROCESSING/03_kneaddata/{group_sample}_paired_2.fastq.gz"
 elif (
     config["input_data"] == "contigs"
     or config["input_data"] == "viruses"
     or config["input_data"] == "processed_viruses"
 ):
-    R1 = results + "00_INPUT/{sample}_proprocessed_1.fastq.gz"
-    R2 = results + "00_INPUT/{sample}_preprocessed_2.fastq.gz"
+    R1 = results + "00_INPUT/{group_sample}_proprocessed_1.fastq.gz"
+    R2 = results + "00_INPUT/{group_sample}_preprocessed_2.fastq.gz"
 
 
 # -----------------------------------------------------
@@ -60,15 +72,15 @@ rule build_viruses_bowtie2db:
     input:
         results + "07_VIRUS_DIVERSITY/01_votu_clustering/votu_representatives.fasta",
     output:
-        results + "12_VIRUS_ANALYSIS/01_align_viruses/virus_catalog.1.bt2",
+        results + "12_VIRUS_ABUNDANCE/01_align_viruses/virus_catalog.1.bt2",
     params:
-        db=results + "12_VIRUS_ANALYSIS/01_align_viruses/virus_catalog",
+        db=results + "12_VIRUS_ABUNDANCE/01_align_viruses/virus_catalog",
     # conda:
     #     "../envs/kneaddata:0.10.0--pyhdfd78af_0.yml"
     container:
         "docker://quay.io/biocontainers/kneaddata:0.10.0--pyhdfd78af_0"
     benchmark:
-        "benchmark/12_VIRUS_ANALYSIS/build_viruses_bowtie2db.tsv"
+        "benchmark/12_VIRUS_ABUNDANCE/build_viruses_bowtie2db.tsv"
     resources:
         runtime=config["virus_analysis"]["bowtie2_runtime"],
         mem_mb=config["virus_analysis"]["bowtie2_memory"],
@@ -87,18 +99,18 @@ rule align_reads_to_viruses:
     input:
         R1=R1,
         R2=R2,
-        db=results + "12_VIRUS_ANALYSIS/01_align_viruses/virus_catalog.1.bt2",
+        db=results + "12_VIRUS_ABUNDANCE/01_align_viruses/virus_catalog.1.bt2",
     output:
-        sam=results + "12_VIRUS_ANALYSIS/01_align_viruses/{sample}.sam",
-        log=results + "12_VIRUS_ANALYSIS/01_align_viruses/{sample}.log",
+        sam=results + "12_VIRUS_ABUNDANCE/01_align_viruses/{group_sample}.sam",
+        log=results + "12_VIRUS_ABUNDANCE/01_align_viruses/{group_sample}.log",
     params:
-        db=results + "12_VIRUS_ANALYSIS/01_align_viruses/virus_catalog",
+        db=results + "12_VIRUS_ABUNDANCE/01_align_viruses/virus_catalog",
     # conda:
     #     "../envs/kneaddata:0.10.0--pyhdfd78af_0.yml"
     container:
         "docker://quay.io/biocontainers/kneaddata:0.10.0--pyhdfd78af_0"
     benchmark:
-        "benchmark/12_VIRUS_ANALYSIS/align_reads_to_viruses_{sample}.tsv"
+        "benchmark/12_VIRUS_ABUNDANCE/align_reads_to_viruses_{group_sample}.tsv"
     resources:
         runtime=config["virus_analysis"]["bowtie2_runtime"],
         mem_mb=config["virus_analysis"]["bowtie2_memory"],
@@ -121,24 +133,24 @@ rule bowtie2_multiqc:
         "Running MULTIQC to visualize bowtie2 alignment rates"
     input:
         expand(
-            results + "12_VIRUS_ANALYSIS/01_align_viruses/{sample}.log",
-            sample=samples,
+            results + "12_VIRUS_ABUNDANCE/01_align_viruses/{group_sample}.log",
+            group_sample=groups_samples,
         ),
     output:
         report(
-            results + "12_VIRUS_ANALYSIS/bowtie2_multiqc.html",
+            results + "12_VIRUS_ABUNDANCE/bowtie2_multiqc.html",
             category="Step 12: Virus analysis",
         ),
     params:
-        bt2_input=results + "12_VIRUS_ANALYSIS/01_align_viruses/*.log",
-        bt2_dir=results + "12_VIRUS_ANALYSIS/01_align_viruses/",
-        bt2_out=results + "12_VIRUS_ANALYSIS/01_align_viruses/multiqc_report.html",
+        bt2_input=results + "12_VIRUS_ABUNDANCE/01_align_viruses/*.log",
+        bt2_dir=results + "12_VIRUS_ABUNDANCE/01_align_viruses/",
+        bt2_out=results + "12_VIRUS_ABUNDANCE/01_align_viruses/multiqc_report.html",
     # conda:
     #     "../envs/multiqc:1.12--pyhdfd78af_0.yml"
     container:
         "docker://quay.io/biocontainers/multiqc:1.12--pyhdfd78af_0"
     benchmark:
-        "benchmark/12_VIRUS_ANALYSIS/bowtie2_multiqc.tsv"
+        "benchmark/12_VIRUS_ABUNDANCE/bowtie2_multiqc.tsv"
     resources:
         runtime="00:10:00",
         mem_mb="10000",
@@ -162,11 +174,11 @@ rule make_stb_file:
     input:
         results + "07_VIRUS_DIVERSITY/01_votu_clustering/votu_representatives.fasta",
     output:
-        results + "12_VIRUS_ANALYSIS/02_instrain/stb_file.tsv",
+        results + "12_VIRUS_ABUNDANCE/02_instrain_profile/stb_file.tsv",
     conda:
         "../envs/jupyter.yml"
     benchmark:
-        "benchmark/12_VIRUS_ANALYSIS/make_stb_file.tsv"
+        "benchmark/12_VIRUS_ABUNDANCE/make_stb_file.tsv"
     resources:
         runtime="00:10:00",
         mem_mb="10000",
@@ -179,20 +191,21 @@ rule instrain_profile:
     message:
         "Running inStrain to preprocess alignments and calculate diversity metrics"
     input:
-        sam=results + "12_VIRUS_ANALYSIS/01_align_viruses/{sample}.sam",
+        sam=results + "12_VIRUS_ABUNDANCE/01_align_viruses/{group_sample}.sam",
         fasta=results
         + "07_VIRUS_DIVERSITY/01_votu_clustering/votu_representatives.fasta",
         genes=results
         + "07_VIRUS_DIVERSITY/02_proteins/votu_representatives_proteins.fna",
-        stb=results + "12_VIRUS_ANALYSIS/02_instrain/stb_file.tsv",
+        stb=results + "12_VIRUS_ABUNDANCE/02_instrain_profile/stb_file.tsv",
     output:
-        sorted_bam=results + "12_VIRUS_ANALYSIS/01_align_viruses/{sample}.sorted.bam",
+        sorted_bam=results
+        + "12_VIRUS_ABUNDANCE/01_align_viruses/{group_sample}.sorted.bam",
         genome=results
-        + "12_VIRUS_ANALYSIS/02_instrain/{sample}/output/{sample}_genome_info.tsv",
+        + "12_VIRUS_ABUNDANCE/02_instrain_profile/{group_sample}/output/{group_sample}_genome_info.tsv",
         gene=results
-        + "12_VIRUS_ANALYSIS/02_instrain/{sample}/output/{sample}_gene_info.tsv",
+        + "12_VIRUS_ABUNDANCE/02_instrain_profile/{group_sample}/output/{group_sample}_gene_info.tsv",
     params:
-        out_dir=results + "12_VIRUS_ANALYSIS/02_instrain/{sample}",
+        out_dir=results + "12_VIRUS_ABUNDANCE/02_instrain_profile/{group_sample}",
         min_id=config["virus_analysis"]["min_id"],
         min_breadth=config["virus_analysis"]["min_breadth"],
         min_depth=config["virus_analysis"]["min_depth"],
@@ -200,7 +213,7 @@ rule instrain_profile:
     container:
         "docker://quay.io/biocontainers/instrain:1.5.7--pyhdfd78af_0"
     benchmark:
-        "benchmark/12_VIRUS_ANALYSIS/instrain_profile_{sample}.tsv"
+        "benchmark/12_VIRUS_ABUNDANCE/instrain_profile_{group_sample}.tsv"
     resources:
         runtime=config["virus_analysis"]["instrain_runtime"],
         mem_mb=config["virus_analysis"]["instrain_memory"],
@@ -217,36 +230,92 @@ rule instrain_profile:
         --min_cov {params.min_depth} \
         --gene_file {input.genes} \
         --stb {input.stb} \
-        --skip_plot_generation \
         {params.extra_args}
+
+        # add sample column to each instrain output
+        s={wildcards.group_sample}
+        sed -i "s/$/\t$s/" {output.genome}
+        sample="sample"
+        sed -i "1s/$s/$sample/" {output.genome}
         """
+
+
+# combine instrain reports across samples
+rule compute_virus_abundances:
+    message:
+        "Computing virus abundances using inStrain outputs"
+    input:
+        results
+        + "12_VIRUS_ABUNDANCE/02_instrain_profile/{group_sample}/output/{group_sample}_genome_info.tsv",
+    output:
+        results
+        + "12_VIRUS_ABUNDANCE/02_instrain_profile/{group_sample}/output/{group_sample}_genome_info_w_abundance.tsv",
+    params:
+        min_breadth=config["virus_analysis"]["min_breadth"],
+        recover_low_abundance=config["virus_analysis"]["recover_low_abundance"],
+    benchmark:
+        "benchmark/12_VIRUS_ABUNDANCE/compute_virus_abundances_{group_sample}.tsv"
+    resources:
+        runtime="00:10:00",
+        mem_mb="10000",
+    conda:
+        "../envs/jupyter.yml"
+    script:
+        "../scripts/12_compute_virus_abundance.py"
+
+
+# combine instrain reports across samples
+rule combine_instrain_profiles:
+    message:
+        "Combining inStrain reports across samples"
+    input:
+        expand(
+            results
+            + "12_VIRUS_ABUNDANCE/02_instrain_profile/{group_sample}/output/{group_sample}_genome_info_w_abundance.tsv",
+            group_sample=groups_samples,
+        ),
+    output:
+        results
+        + "12_VIRUS_ABUNDANCE/02_instrain_profile/combined_genome_info_w_abundance.tsv",
+    benchmark:
+        "benchmark/12_VIRUS_ABUNDANCE/combine_instrain_profiles.tsv"
+    resources:
+        runtime="00:10:00",
+        mem_mb="10000",
+    conda:
+        "../envs/jupyter.yml"
+    script:
+        "../scripts/12_combine_instrain_profiles.py"
+
+
+# identify replicate reads
+group_sample_dictionary = samples_df.groupby(["group"])["sample"].apply(list).to_dict()
 
 
 # Run instrain to preprocess and analyze alignments
 rule instrain_compare:
     message:
-        "Running inStrain to preprocess alignments and calculate diversity metrics"
+        "Running inStrain to compare samples within {wildcards.group}"
     input:
-        profiles=expand(
+        profiles=lambda wildcards: expand(
             results
-            + "12_VIRUS_ANALYSIS/02_instrain/{sample}/output/{sample}_genome_info.tsv",
-            sample=samples,
+            + "12_VIRUS_ABUNDANCE/02_instrain_profile/{{group}}_{sample}/output/{{group}}_{sample}_genome_info.tsv",
+            sample=group_sample_dictionary[wildcards.group],
         ),
-        sam=expand(
-            results + "12_VIRUS_ANALYSIS/01_align_viruses/{sample}.sam",
-            sample=samples,
+        sam=lambda wildcards: expand(
+            results + "12_VIRUS_ABUNDANCE/01_align_viruses/{{group}}_{sample}.sam",
+            sample=group_sample_dictionary[wildcards.group],
         ),
-        stb=results + "12_VIRUS_ANALYSIS/02_instrain/stb_file.tsv",
+        stb=results + "12_VIRUS_ABUNDANCE/02_instrain_profile/stb_file.tsv",
     output:
         results
-        + "12_VIRUS_ANALYSIS/02_instrain/compare/output/compare_genomeWide_compare.tsv",
+        + "12_VIRUS_ABUNDANCE/03_instrain_compare/{group}/output/{group}_genomeWide_compare.tsv",
     params:
-        bams_dir=results + "12_VIRUS_ANALYSIS/01_align_viruses/",
-        profiles=expand(
-            results + "12_VIRUS_ANALYSIS/02_instrain/{sample}/",
-            sample=samples,
-        ),
-        out_dir=results + "12_VIRUS_ANALYSIS/02_instrain/compare",
+        bams_dir=results + "12_VIRUS_ABUNDANCE/01_align_viruses/",
+        profiles=lambda wildcards, input: [
+            file.rpartition("/")[0].rpartition("/")[0] + "/" for file in input.profiles
+        ],
+        out_dir=results + "12_VIRUS_ABUNDANCE/03_instrain_compare/{group}",
         min_id=config["virus_analysis"]["min_id"],
         min_breadth=config["virus_analysis"]["min_breadth"],
         min_depth=config["virus_analysis"]["min_depth"],
@@ -254,7 +323,7 @@ rule instrain_compare:
     container:
         "docker://quay.io/biocontainers/instrain:1.5.7--pyhdfd78af_0"
     benchmark:
-        "benchmark/12_VIRUS_ANALYSIS/instrain_compare.tsv"
+        "benchmark/12_VIRUS_ABUNDANCE/instrain_compare_{group}.tsv"
     resources:
         runtime=config["virus_analysis"]["instrain_runtime"],
         mem_mb=config["virus_analysis"]["instrain_memory"],
@@ -270,78 +339,5 @@ rule instrain_compare:
         --breadth {params.min_breadth} \
         --ani_threshold {params.min_id} \
         --coverage_treshold {params.min_breadth} \
-        --skip_plot_generation \
-        {params.extra_args}
-        """
-
-
-# combine instrain reports across samples
-rule combine_instrain_across_samples:
-    message:
-        "Combining inStrain reports across samples"
-    input:
-        genome=expand(
-            results
-            + "12_VIRUS_ANALYSIS/02_instrain/{sample}/output/{sample}_genome_info.tsv",
-            sample=samples,
-        ),
-        gene=expand(
-            results
-            + "12_VIRUS_ANALYSIS/02_instrain/{sample}/output/{sample}_gene_info.tsv",
-            sample=samples,
-        ),
-    output:
-        genome=results + "12_VIRUS_ANALYSIS/genome_info_report.tsv",
-        gene=results + "12_VIRUS_ANALYSIS/gene_info_report.tsv",
-    benchmark:
-        "benchmark/12_VIRUS_ANALYSIS/combine_instrain_across_samples.tsv"
-    resources:
-        runtime="00:10:00",
-        mem_mb="10000",
-    shell:
-        """
-        cat {input.genome} > {output.genome}
-        cat {input.gene} > {output.gene}
-        """
-
-
-# -----------------------------------------------------
-# 03 CoverM
-# -----------------------------------------------------
-# Run instrain to preprocess and analyze alignments
-rule coverm:
-    message:
-        "Running inStrain to preprocess alignments and calculate diversity metrics"
-    input:
-        expand(
-            results + "12_VIRUS_ANALYSIS/01_align_viruses/{sample}.sorted.bam",
-            sample=samples,
-        ),
-    output:
-        results
-        + "12_VIRUS_ANALYSIS/"
-        + config["virus_analysis"]["coverm_method"]
-        + "_report.tsv",
-    params:
-        min_id=config["virus_analysis"]["min_id"],
-        method=config["virus_analysis"]["coverm_method"],
-        extra_args=config["virus_analysis"]["coverm_arguments"],
-    container:
-        "docker://quay.io/biocontainers/coverm:0.6.1--h8b24846_3"
-    benchmark:
-        "benchmark/12_VIRUS_ANALYSIS/coverm.tsv"
-    resources:
-        runtime=config["virus_analysis"]["coverm_runtime"],
-        mem_mb=config["virus_analysis"]["coverm_memory"],
-    threads: config["virus_analysis"]["coverm_threads"]
-    shell:
-        """
-        # run coverm
-        coverm contig \
-        --bam-files {input} \
-        --min-read-percent-identity {params.min_id} \
-        --methods {params.method} \
-        --output-file {output} \
-        --threads {threads} \
         {params.extra_args}
         """
