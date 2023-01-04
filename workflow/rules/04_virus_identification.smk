@@ -10,7 +10,7 @@ configfile: "config/config.yaml"
 
 samples_df = pd.read_csv(config["samples_df"], sep="\t")
 groups_samples = samples_df.loc[:, "group"] + "_" + samples_df.loc[:, "sample"]
-
+samples_df["group_sample"] = samples_df["group"] + "_" + samples_df["sample"]
 
 # load results path
 results = config["results"]
@@ -42,9 +42,9 @@ localrules:
 # symlink contigs if contigs are input
 rule symlink_contigs:
     input:
-        lambda wildcards: samples_df[(samples_df["sample"]) == wildcards.sample][
-            "contigs"
-        ].iloc[0],
+        lambda wildcards: samples_df[
+            (samples_df["group_sample"]) == wildcards.group_sample
+        ]["contigs"].iloc[0],
     output:
         results + "00_INPUT/{group_sample}_contigs_symlink.fasta",
     benchmark:
