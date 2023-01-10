@@ -4,4 +4,5 @@ channels:
   - defaults
 
 dependencies:
-  - virsorter=2.2.3=pyhdfd78af_1
+  - numpy=1.19
+  - virsorter=2.2.3

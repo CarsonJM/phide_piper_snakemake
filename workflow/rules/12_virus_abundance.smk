@@ -58,8 +58,8 @@ elif (
     or config["input_data"] == "viruses"
     or config["input_data"] == "processed_viruses"
 ):
-    R1 = results + "00_INPUT/{group_sample}_proprocessed_1.fastq.gz"
-    R2 = results + "00_INPUT/{group_sample}_preprocessed_2.fastq.gz"
+    R1 = results + "00_INPUT/01_merge_repicates/{group_sample}.preprocessed_R1.fastq.gz"
+    R2 = results + "00_INPUT/01_merge_repicates/{group_sample}.preprocessed_R2.fastq.gz"
 
 
 # -----------------------------------------------------

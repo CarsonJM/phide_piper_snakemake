@@ -206,17 +206,13 @@ rule dereplicate_aniclust:
         "../scripts/06_aniclust.py"
 
 
-rule get_replicate_representatives:
+rule get_untrimmed_replicate_representatives:
     input:
-        viruses=results
-        + "06_VIRUS_DEREPLICATION/01_combine_viruses/filtered_viruses.fasta",
         untrimmed=results
         + "06_VIRUS_DEREPLICATION/01_combine_viruses/filtered_untrimmed_contigs.fasta",
         clusters=results
         + "06_VIRUS_DEREPLICATION/02_dereplicate_viruses/dereplicate_clusters.tsv",
     output:
-        reps_viruses=results
-        + "06_VIRUS_DEREPLICATION/02_dereplicate_viruses/dereplicate_reps_viruses.fasta",
         representatives_list=results
         + "06_VIRUS_DEREPLICATION/02_dereplicate_viruses/dereplicate_cluster_reps.txt",
         reps_untrimmed=results
@@ -233,9 +229,28 @@ rule get_replicate_representatives:
     shell:
         """
         awk '{{print $1}}' {input.clusters} > {output.representatives_list} && \
-        seqkit grep -f {output.representatives_list} {input.untrimmed} > {output.reps_untrimmed} && \
-        seqkit grep -f {output.representatives_list} {input.viruses} > {output.reps_viruses}
+        seqkit grep -f {output.representatives_list} {input.untrimmed} > {output.reps_untrimmed}
         """
+
+
+rule get_replicate_representative_viruses:
+    input:
+        viruses=results
+        + "06_VIRUS_DEREPLICATION/01_combine_viruses/filtered_viruses.fasta",
+        clusters=results
+        + "06_VIRUS_DEREPLICATION/02_dereplicate_viruses/dereplicate_clusters.tsv",
+    output:
+        results
+        + "06_VIRUS_DEREPLICATION/02_dereplicate_viruses/dereplicate_reps_viruses.fasta",
+    conda:
+        "../envs/jupyter.yml"
+    benchmark:
+        "benchmark/06_VIRUS_DEREPLICATION/get_replicate_representative_viruses.tsv"
+    resources:
+        runtime="00:10:00",
+        mem_mb="10000",
+    script:
+        "../scripts/06_get_replicate_representative_viruses.py"
 
 
 # -----------------------------------------------------

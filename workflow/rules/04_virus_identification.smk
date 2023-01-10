@@ -43,7 +43,8 @@ localrules:
 rule symlink_contigs:
     input:
         lambda wildcards: samples_df[
-            (samples_df["group_sample"]) == wildcards.group_sample
+            (samples_df["group"] + "_" + samples_df["sample"])
+            == wildcards.group_sample
         ]["contigs"].iloc[0],
     output:
         results + "00_INPUT/{group_sample}_contigs_symlink.fasta",
@@ -91,16 +92,34 @@ elif config["input_data"] == "contigs":
 
 # symlink preprocessed reads for external hits/abundances
 rule symlink_preprocessed_reads:
+    message:
+        "Symlinking {wildcards.group_sample_replicate} input files to new location"
     input:
-        R1=lambda wildcards: samples_df[(+samples_df["sample"]) == wildcards.sample][
-            "R1"
-        ].iloc[0],
-        R2=lambda wildcards: samples_df[(+samples_df["sample"]) == wildcards.sample][
-            "R2"
-        ].iloc[0],
+        R1=lambda wildcards: samples_df[
+            (
+                +samples_df["group"]
+                + "_"
+                + samples_df["sample"]
+                + "_"
+                + samples_df["replicate"]
+            )
+            == wildcards.group_sample_replicate
+        ]["R1"].iloc[0],
+        R2=lambda wildcards: samples_df[
+            (
+                +samples_df["group"]
+                + "_"
+                + samples_df["sample"]
+                + "_"
+                + samples_df["replicate"]
+            )
+            == wildcards.group_sample_replicate
+        ]["R2"].iloc[0],
     output:
-        R1=results + "00_INPUT/{group_sample}_proprcessed_1.fastq.gz",
-        R2=results + "00_INPUT/{group_sample}_preprocessed_2.fastq.gz",
+        R1=results + "00_INPUT/{group_sample_replicate}.preprocessed_R1.fastq.gz",
+        R2=results + "00_INPUT/{group_sample_replicate}.preprocessed_R2.fastq.gz",
+    benchmark:
+        "benchmark/01_READ_PREPROCESSING/symlink_preprocessed_reads_{group_sample_replicate}.tsv"
     resources:
         runtime="00:10:00",
         mem_mb="10000",
@@ -112,14 +131,57 @@ rule symlink_preprocessed_reads:
         """
 
 
+# identify replicate reads
+group_sample_replicate = samples_df.loc[:, ["sample", "replicate", "group"]]
+group_sample_replicate["group_sample"] = (
+    group_sample_replicate.loc[:, "group"]
+    + "_"
+    + group_sample_replicate.loc[:, "sample"]
+)
+group_sample_replicate_dictionary = group_sample_replicate.set_index(
+    "group_sample"
+).to_dict()["replicate"]
+
+
+# merge sample replicates into single file
+rule merge_preprocesssed_replicates:
+    message:
+        "Merging {wildcards.group_sample} replicates into one file"
+    input:
+        R1=lambda wildcards: expand(
+            results + "00_INPUT/{{group_sample}}_{replicate}.preprocessed_R1.fastq.gz",
+            replicate=group_sample_replicate_dictionary[wildcards.group_sample],
+        ),
+        R2=lambda wildcards: expand(
+            results + "00_INPUT/{{group_sample}}_{replicate}.preprocessed_R2.fastq.gz",
+            replicate=group_sample_replicate_dictionary[wildcards.group_sample],
+        ),
+    output:
+        R1=results
+        + "00_INPUT/01_merge_repicates/{group_sample}.preprocessed_R1.fastq.gz",
+        R2=results
+        + "00_INPUT/01_merge_repicates/{group_sample}.preprocessed_R2.fastq.gz",
+    benchmark:
+        "benchmark/01_READ_PREPROCESSING/merge_preprocessed_replicates_{group_sample}.tsv"
+    resources:
+        runtime="00:10:00",
+        mem_mb="10000",
+    shell:
+        """
+        # symlink replicates into one combined file
+        ln -s {input.R1} {output.R1}
+        ln -s {input.R2} {output.R2}
+        """
+
+
 # if reads are input, use preprocessed reads from 01_read_preprocessing for external hits/abundances
 if config["input_data"] == "reads":
     R1 = results + "01_READ_PREPROCESSING/03_kneaddata/{group_sample}_paired_1.fastq.gz"
     R2 = results + "01_READ_PREPROCESSING/03_kneaddata/{group_sample}_paired_2.fastq.gz"
 # if contigs, vls, or viruses are input then symlink reads for external hits/abundances
 else:
-    R1 = results + "00_INPUT/{group_sample}_proprocessed_1.fastq.gz"
-    R2 = results + "00_INPUT/{group_sample}_preprocessed_2.fastq.gz"
+    R1 = results + "00_INPUT/01_merge_repicates/{group_sample}.preprocessed_R1.fastq.gz"
+    R2 = results + "00_INPUT/01_merge_repicates/{group_sample}.preprocessed_R2.fastq.gz"
 
 
 # -----------------------------------------------------

@@ -103,6 +103,30 @@ rule update_dram:
         """
 
 
+rule download_virsorter2:
+    message:
+        "Downloading VirSorter2 database"
+    output:
+        resources + "virsorter2/Done_all_setup",
+    params:
+        vs2_dir=resources + "virsorter2/",
+    conda:
+        "../envs/virsorter:2.2.3--pyhdfd78af_1.yml"
+    benchmark:
+        "benchmark/04_VIRUS_IDENTIFICATION/download_virsorter2.tsv"
+    resources:
+        runtime="00:30:00",
+        mem_mb="10000",
+    threads: config["virus_function"]["virsorter2_threads"]
+    shell:
+        """
+        # download virsorter2 database
+        # remove the whole directory specified by -d
+        rm -rf db
+        # run setup
+        virsorter setup -d {params.vs2_dir} -j {threads}
+        """
+
 # run virsorter2 to identifiy viral contigs
 rule virsorter2_dram:
     message:

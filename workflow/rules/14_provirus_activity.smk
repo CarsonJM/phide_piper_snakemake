@@ -56,8 +56,8 @@ elif (
     or config["input_data"] == "viruses"
     or config["input_data"] == "processed_viruses"
 ):
-    R1 = results + "00_INPUT/{group_sample}_proprocessed_1.fastq.gz"
-    R2 = results + "00_INPUT/{group_sample}_preprocessed_2.fastq.gz"
+    R1 = results + "00_INPUT/01_merge_repicates/{group_sample}.preprocessed_R1.fastq.gz"
+    R2 = results + "00_INPUT/01_merge_repicates/{group_sample}.preprocessed_R2.fastq.gz"
 
 
 # -----------------------------------------------------
@@ -79,7 +79,7 @@ rule build_propagate:
         """
         # clone propagate
         rm -rf {params.propagate_dir}
-        git clone https://github.com/AnantharamanLab/PropagAtE {params.propagate_dir}
+        git clone https://github.com/CarsonJM/PropagAtE_NaN.git {params.propagate_dir}
 
         # pip install propagate
         cd {params.propagate_dir}

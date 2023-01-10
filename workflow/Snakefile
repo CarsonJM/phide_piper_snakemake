@@ -128,7 +128,7 @@ def get_final_output(wildcards):
 
 rule all:
     input:
-        results + "phide_piper_report.tsv",
+        # results + "phide_piper_report.tsv",
         get_final_output,
 
 

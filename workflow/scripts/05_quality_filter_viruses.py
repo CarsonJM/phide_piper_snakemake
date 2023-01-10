@@ -18,7 +18,8 @@ if snakemake.params.remove_proviruses:
     checkv_filtered = checkv_filtered[(checkv_filtered["provirus"] != 'Yes')]
 
 # remove genomes > 1.5x longer than expected
-checkv_filtered = checkv_filtered[(checkv_filtered['warnings'].str.contains('contig >1.5x longer than expected genome length') == False) | (checkv_filtered['warnings'].isnull())]
+if len(checkv_filtered[checkv_filtered['warnings'].notnull()]) > 1:
+    checkv_filtered = checkv_filtered[(checkv_filtered['warnings'].str.contains('contig >1.5x longer than expected genome length') == False) | (checkv_filtered['warnings'].isnull())]
 
 hq_viruses = set(checkv_filtered["contig_id"])
 hq_virus_seqs = []
