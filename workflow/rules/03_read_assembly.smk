@@ -45,9 +45,9 @@ rule metaspades:
         R2=results
         + "01_READ_PREPROCESSING/03_kneaddata/{group_sample}_paired_2.fastq.gz",
     output:
-        results + "03_READ_ASSEMBLY/01_spades/{group_sample}_meta/contigs.fasta",
+        temp(results + "03_READ_ASSEMBLY/01_spades/meta/{group_sample}/contigs.fasta"),
     params:
-        output_dir=results + "03_READ_ASSEMBLY/01_spades/{group_sample}_meta/",
+        output_dir=results + "03_READ_ASSEMBLY/01_spades/meta/{group_sample}",
         extra_args=config["read_assembly"]["spades_arguments"],
     # conda:
     #     "../envs/spades:3.15.4--h95f258a_0.yml"
@@ -82,9 +82,12 @@ rule metaviralspades:
         R2=results
         + "01_READ_PREPROCESSING/03_kneaddata/{group_sample}_paired_2.fastq.gz",
     output:
-        results + "03_READ_ASSEMBLY/01_spades/{group_sample}_metaviral/contigs.fasta",
+        temp(
+            results
+            + "03_READ_ASSEMBLY/01_spades/metaviral/{group_sample}/contigs.fasta"
+        ),
     params:
-        output_dir=results + "03_READ_ASSEMBLY/01_spades/{group_sample}_metaviral/",
+        output_dir=results + "03_READ_ASSEMBLY/01_spades/metaviral/{group_sample}",
         extra_args=config["read_assembly"]["spades_arguments"],
     # conda:
     #     "../envs/spades:3.15.4--h95f258a_0.yml"
@@ -121,9 +124,12 @@ rule rnaviralspades:
         R2=results
         + "01_READ_PREPROCESSING/03_kneaddata/{group_sample}_paired_2.fastq.gz",
     output:
-        results + "03_READ_ASSEMBLY/01_spades/{group_sample}_rnaviral/contigs.fasta",
+        temp(
+            results
+            + "03_READ_ASSEMBLY/01_spades/rnaviral/{group_sample}/contigs.fasta"
+        ),
     params:
-        output_dir=results + "03_READ_ASSEMBLY/01_spades/{group_sample}_rnaviral/",
+        output_dir=results + "03_READ_ASSEMBLY/01_spades/rnaviral/{group_sample}",
         extra_args=config["read_assembly"]["spades_arguments"],
     # conda:
     #     "../envs/spades:3.15.4--h95f258a_0.yml"
@@ -154,15 +160,15 @@ rule rnaviralspades:
 assemblies = []
 if "meta" in config["read_assembly"]["assembly_modes"]:
     assemblies.append(
-        results + "03_READ_ASSEMBLY/01_spades/{group_sample}_meta/contigs.fasta"
+        results + "03_READ_ASSEMBLY/01_spades/meta/{group_sample}/contigs.fasta"
     )
 if "metaviral" in config["read_assembly"]["assembly_modes"]:
     assemblies.append(
-        results + "03_READ_ASSEMBLY/01_spades/{group_sample}_metaviral/contigs.fasta"
+        results + "03_READ_ASSEMBLY/01_spades/metaviral/{group_sample}/contigs.fasta"
     )
 if "rnaviral" in config["read_assembly"]["assembly_modes"]:
     assemblies.append(
-        results + "03_READ_ASSEMBLY/01_spades/{group_sample}_rnaviral/contigs.fasta"
+        results + "03_READ_ASSEMBLY/01_spades/rnaviral/{group_sample}/contigs.fasta"
     )
 
 
@@ -174,6 +180,8 @@ rule combine_spades_assemblies:
         assemblies,
     output:
         results + "03_READ_ASSEMBLY/01_spades/{group_sample}_contigs.fasta",
+    params:
+        assemblies=results + "03_READ_ASSEMBLY/01_spades/*/*",
     benchmark:
         "benchmark/03_READ_ASSEMBLY/combine_spades_assemblies_{group_sample}.tsv"
     resources:
@@ -183,6 +191,8 @@ rule combine_spades_assemblies:
         """
         # combine assemblies from different assemblers
         cat {input} > {output}
+
+        rm -rf {params.assemblies}
         """
 
 
@@ -222,7 +232,7 @@ rule quast:
         results
         + "03_READ_ASSEMBLY/02_contig_filters/{group_sample}/{group_sample}_contigs.fasta",
     output:
-        results + "03_READ_ASSEMBLY/03_quast/{group_sample}/transposed_report.tsv",
+        temp(results + "03_READ_ASSEMBLY/03_quast/{group_sample}/transposed_report.tsv"),
     params:
         output_dir=results + "03_READ_ASSEMBLY/03_quast/{group_sample}",
         min_len=config["read_assembly"]["min_contig_length"],
@@ -300,6 +310,8 @@ rule combine_quast_across_samples:
         ),
     output:
         results + "03_READ_ASSEMBLY/assembly_report.tsv",
+    params:
+        quast_dirs=results + "03_READ_ASSEMBLY/03_quast/",
     benchmark:
         "benchmark/03_READ_ASSEMBLY/combine_quast.tsv"
     resources:
@@ -309,4 +321,6 @@ rule combine_quast_across_samples:
         """
         # combine all outputs, only keeping header from one file
         awk 'FNR>1 || NR==1' {input} > {output}
+
+        rm -rf {params.quast_dirs}
         """

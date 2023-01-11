@@ -47,7 +47,7 @@ rule symlink_contigs:
             == wildcards.group_sample
         ]["contigs"].iloc[0],
     output:
-        results + "00_INPUT/{group_sample}_contigs_symlink.fasta",
+        temp(results + "00_INPUT/{group_sample}_contigs_symlink.fasta"),
     benchmark:
         "benchmark/04_VIRUS_IDENTIFICATION/symlink_contigs_{group_sample}.tsv"
     resources:
@@ -65,7 +65,7 @@ rule filter_symlinked_contigs:
     input:
         results + "00_INPUT/{group_sample}_contigs_symlink.fasta",
     output:
-        results + "00_INPUT/{group_sample}_contigs.fasta",
+        temp(results + "00_INPUT/{group_sample}_contigs.fasta"),
     params:
         min_length=config["read_assembly"]["min_contig_length"],
     conda:
@@ -116,8 +116,8 @@ rule symlink_preprocessed_reads:
             == wildcards.group_sample_replicate
         ]["R2"].iloc[0],
     output:
-        R1=results + "00_INPUT/{group_sample_replicate}.preprocessed_R1.fastq.gz",
-        R2=results + "00_INPUT/{group_sample_replicate}.preprocessed_R2.fastq.gz",
+        R1=temp(results + "00_INPUT/{group_sample_replicate}.preprocessed_R1.fastq.gz"),
+        R2=temp(results + "00_INPUT/{group_sample_replicate}.preprocessed_R2.fastq.gz"),
     benchmark:
         "benchmark/01_READ_PREPROCESSING/symlink_preprocessed_reads_{group_sample_replicate}.tsv"
     resources:
@@ -157,10 +157,14 @@ rule merge_preprocesssed_replicates:
             replicate=group_sample_replicate_dictionary[wildcards.group_sample],
         ),
     output:
-        R1=results
-        + "00_INPUT/01_merge_repicates/{group_sample}.preprocessed_R1.fastq.gz",
-        R2=results
-        + "00_INPUT/01_merge_repicates/{group_sample}.preprocessed_R2.fastq.gz",
+        R1=temp(
+            results
+            + "00_INPUT/01_merge_repicates/{group_sample}.preprocessed_R1.fastq.gz"
+        ),
+        R2=temp(
+            results
+            + "00_INPUT/01_merge_repicates/{group_sample}.preprocessed_R2.fastq.gz"
+        ),
     benchmark:
         "benchmark/01_READ_PREPROCESSING/merge_preprocessed_replicates_{group_sample}.tsv"
     resources:
@@ -230,8 +234,10 @@ rule screen_reads_against_virusdb:
         external_input=external_input,
         sketch=config["virus_db"] + ".msh",
     output:
-        results
-        + "04_VIRUS_IDENTIFICATION/01_external_hits/{group_sample}/virusdb_mash_screen.tab",
+        temp(
+            results
+            + "04_VIRUS_IDENTIFICATION/01_external_hits/{group_sample}/virusdb_mash_screen.tab"
+        ),
     params:
         combined=results
         + "04_VIRUS_IDENTIFICATION/01_external_hits/{group_sample}/combined_reads.fastq",
@@ -270,8 +276,10 @@ rule extract_external_hits:
         + "04_VIRUS_IDENTIFICATION/01_external_hits/{group_sample}/virusdb_mash_screen.tab",
         virusdb=config["virus_db"],
     output:
-        results
-        + "04_VIRUS_IDENTIFICATION/01_external_hits/{group_sample}/virusdb_hits.fna",
+        temp(
+            results
+            + "04_VIRUS_IDENTIFICATION/01_external_hits/{group_sample}/virusdb_hits.fna"
+        ),
     params:
         min_mash_score=config["virus_identification"]["min_mash_score"],
         min_mash_hashes=config["virus_identification"]["min_mash_hashes"],
@@ -296,8 +304,10 @@ rule combine_external_with_assembly:
         external_hits=results
         + "04_VIRUS_IDENTIFICATION/01_external_hits/{group_sample}/virusdb_hits.fna",
     output:
-        results
-        + "04_VIRUS_IDENTIFICATION/01_external_hits/{group_sample}/virusdb_hits_w_assembly.fna",
+        temp(
+            results
+            + "04_VIRUS_IDENTIFICATION/01_external_hits/{group_sample}/virusdb_hits_w_assembly.fna"
+        ),
     benchmark:
         "benchmark/04_VIRUS_IDENTIFICATION/combine_external_with_assembly_{group_sample}.tsv"
     resources:
@@ -346,10 +356,14 @@ rule genomad:
         contigs=results
         + "04_VIRUS_IDENTIFICATION/01_external_hits/{group_sample}/virusdb_hits_w_assembly.fna",
     output:
-        summary=results
-        + "04_VIRUS_IDENTIFICATION/02_genomad/{group_sample}/virusdb_hits_w_assembly_summary/virusdb_hits_w_assembly_virus_summary.tsv",
-        viruses=results
-        + "04_VIRUS_IDENTIFICATION/02_genomad/{group_sample}/virusdb_hits_w_assembly_summary/virusdb_hits_w_assembly_virus.fna",
+        report=temp(
+            results
+            + "04_VIRUS_IDENTIFICATION/02_genomad/{group_sample}/virusdb_hits_w_assembly_summary/virusdb_hits_w_assembly_virus_summary.tsv"
+        ),
+        sequences=temp(
+            results
+            + "04_VIRUS_IDENTIFICATION/02_genomad/{group_sample}/virusdb_hits_w_assembly_summary/virusdb_hits_w_assembly_virus.fna"
+        ),
     params:
         out_dir=results + "04_VIRUS_IDENTIFICATION/02_genomad/{group_sample}/",
         genomad_dir=resources + "genomad/genomad_db",
@@ -391,8 +405,10 @@ rule merge_reports_within_samples:
         external_results=results
         + "04_VIRUS_IDENTIFICATION/01_external_hits/{group_sample}/virusdb_mash_screen.tab",
     output:
-        results
-        + "04_VIRUS_IDENTIFICATION/03_combine_outputs/{group_sample}/combined_report.tsv",
+        temp(
+            results
+            + "04_VIRUS_IDENTIFICATION/03_combine_outputs/{group_sample}/combined_report.tsv"
+        ),
     params:
         min_mash_score=config["virus_identification"]["min_mash_score"],
         min_mash_hashes=config["virus_identification"]["min_mash_hashes"],
@@ -424,6 +440,9 @@ rule combine_reports_across_samples:
         ),
     output:
         results + "04_VIRUS_IDENTIFICATION/virus_identification_report.tsv",
+    params:
+        external_dirs=results + "04_VIRUS_IDENTIFICATION/01_external_hits/",
+        genomad_dirs=results + "04_VIRUS_IDENTIFICATION/02_genomad/",
     benchmark:
         "benchmark/04_VIRUS_IDENTIFICATION/combine_reports_across_samples.tsv"
     resources:
@@ -433,6 +452,10 @@ rule combine_reports_across_samples:
         """
         # combine all outputs, only keeping header from one file
         awk 'FNR>1 || NR==1' {input} > {output}
+
+        # remove 
+        rm -rf {params.external_dirs}
+        rm -rf {params.genomad_dirs}
         """
 
 

@@ -93,7 +93,7 @@ rule viromeqc:
         R2=results
         + "01_READ_PREPROCESSING/03_kneaddata/{group_sample}_paired_2.fastq.gz",
     output:
-        results + "02_VIRUS_ENRICHMENT/01_viromeqc/{group_sample}_vqc.tsv",
+        temp(results + "02_VIRUS_ENRICHMENT/01_viromeqc/{group_sample}_vqc.tsv"),
     params:
         viromeqc_script=resources + "viromeqc/viromeQC.py",
         temp=resources + "viromeqc/tmp/{group_sample}",

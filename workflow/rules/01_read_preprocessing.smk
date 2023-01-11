@@ -62,8 +62,8 @@ rule symlink_input_reads:
             == wildcards.group_sample_replicate
         ]["R2"].iloc[0],
     output:
-        R1=results + "00_INPUT/{group_sample_replicate}.R1.fastq.gz",
-        R2=results + "00_INPUT/{group_sample_replicate}.R2.fastq.gz",
+        R1=temp(results + "00_INPUT/{group_sample_replicate}.R1.fastq.gz"),
+        R2=temp(results + "00_INPUT/{group_sample_replicate}.R2.fastq.gz"),
     benchmark:
         "benchmark/01_READ_PREPROCESSING/symlink_reads_{group_sample_replicate}.tsv"
     resources:
@@ -106,10 +106,14 @@ rule merge_input_replicates:
             replicate=group_sample_replicate_dictionary[wildcards.group_sample],
         ),
     output:
-        R1=results
-        + "01_READ_PREPROCESSING/01_merge_replicates/{group_sample}.R1.fastq.gz",
-        R2=results
-        + "01_READ_PREPROCESSING/01_merge_replicates/{group_sample}.R2.fastq.gz",
+        R1=temp(
+            results
+            + "01_READ_PREPROCESSING/01_merge_replicates/{group_sample}.R1.fastq.gz"
+        ),
+        R2=temp(
+            results
+            + "01_READ_PREPROCESSING/01_merge_replicates/{group_sample}.R2.fastq.gz"
+        ),
     benchmark:
         "benchmark/01_READ_PREPROCESSING/merge_replicates_{group_sample}.tsv"
     resources:
@@ -136,9 +140,12 @@ rule fastp:
         R2=results
         + "01_READ_PREPROCESSING/01_merge_replicates/{group_sample}.R2.fastq.gz",
     output:
-        R1=results + "01_READ_PREPROCESSING/02_fastp/{group_sample}.R1.fastq.gz",
-        R2=results + "01_READ_PREPROCESSING/02_fastp/{group_sample}.R2.fastq.gz",
-        report=results + "01_READ_PREPROCESSING/02_fastp/{group_sample}_fastp.json",
+        R1=temp(results + "01_READ_PREPROCESSING/02_fastp/{group_sample}.R1.fastq.gz"),
+        R2=temp(results + "01_READ_PREPROCESSING/02_fastp/{group_sample}.R2.fastq.gz"),
+        report=temp(
+            results + "01_READ_PREPROCESSING/02_fastp/{group_sample}_fastp.json"
+        ),
+        html=temp(results + "01_READ_PREPROCESSING/02_fastp/{group_sample}_fastp.html"),
     params:
         extra_args=config["read_preprocessing"]["fastp_arguments"],
         html=results + "01_READ_PREPROCESSING/02_fastp/{group_sample}_fastp.html",
@@ -171,8 +178,12 @@ rule fastp_multiqc:
     message:
         "Generating a MULTIQC report using fastp results"
     input:
-        expand(
+        json=expand(
             results + "01_READ_PREPROCESSING/02_fastp/{group_sample}_fastp.json",
+            group_sample=groups_samples,
+        ),
+        html=expand(
+            results + "01_READ_PREPROCESSING/02_fastp/{group_sample}_fastp.html",
             group_sample=groups_samples,
         ),
     output:
@@ -259,6 +270,18 @@ rule kneaddata:
         prefix="{group_sample}",
         R1=results + "01_READ_PREPROCESSING/03_kneaddata/{group_sample}_paired_1.fastq",
         R2=results + "01_READ_PREPROCESSING/03_kneaddata/{group_sample}_paired_2.fastq",
+        hg37_paired1=results
+        + "01_READ_PREPROCESSING/03_kneaddata/{group_sample}_hg37dec_v0.1_bowtie2_paired_contam_1.fastq",
+        hg37_paired2=results
+        + "01_READ_PREPROCESSING/03_kneaddata/{group_sample}_hg37dec_v0.1_bowtie2_paired_contam_2.fastq",
+        hg37_unmatched1=results
+        + "01_READ_PREPROCESSING/03_kneaddata/{group_sample}_hg37dec_v0.1_bowtie2_unmatched_contam_1.fastq",
+        hg37_unmatched2=results
+        + "01_READ_PREPROCESSING/03_kneaddata/{group_sample}_hg37dec_v0.1_bowtie2_unmatched_contam_1.fastq",
+        unmatched1=results
+        + "01_READ_PREPROCESSING/03_kneaddata/{group_sample}_unmatched_1.fastq",
+        unmatched2=results
+        + "01_READ_PREPROCESSING/03_kneaddata/{group_sample}_unmatched_2.fastq",
     # conda:
     #     "../envs/kneaddata:0.10.0--pyhdfd78af_0.yml"
     container:
@@ -280,12 +303,15 @@ rule kneaddata:
         --bypass-trim \
         --bypass-trf \
         --log {output.log} \
-        --run-fastqc-end \
         {params.extra_args}
 
 
         gzip {params.R1}
         gzip {params.R2}
+        gzip {params.unmatched1}
+        gzip {params.unmatched2}
+
+        rm {params.hg37_paired1} {params.hg37_paired2} {params.hg37_unmatched1} {params.hg37_unmatched2}
         """
 
 

@@ -45,7 +45,7 @@ rule symlink_vls:
             "vls"
         ].iloc[0],
     output:
-        results + "00_INPUT/{group_sample}_vls.fasta",
+        temp(results + "00_INPUT/{group_sample}_vls.fasta"),
     benchmark:
         "benchmark/05_VIRUS_QUALITY/symlink_vls_{group_sample}.tsv"
     resources:
@@ -104,11 +104,15 @@ rule checkv:
         checkv_db=resources + "checkv/checkv-db-v1.4/genome_db/checkv_reps.dmnd",
         virus_contigs=vls,
     output:
-        checkv_results=results
-        + "05_VIRUS_QUALITY/01_checkv/{group_sample}/quality_summary.tsv",
-        checkv_viruses=results + "05_VIRUS_QUALITY/01_checkv/{group_sample}/viruses.fna",
-        checkv_proviruses=results
-        + "05_VIRUS_QUALITY/01_checkv/{group_sample}/proviruses.fna",
+        checkv_results=temp(
+            results + "05_VIRUS_QUALITY/01_checkv/{group_sample}/quality_summary.tsv"
+        ),
+        checkv_viruses=temp(
+            results + "05_VIRUS_QUALITY/01_checkv/{group_sample}/viruses.fna"
+        ),
+        checkv_proviruses=temp(
+            results + "05_VIRUS_QUALITY/01_checkv/{group_sample}/proviruses.fna"
+        ),
     params:
         checkv_dir=results + "05_VIRUS_QUALITY/01_checkv/{group_sample}/",
         checkv_db=resources + "checkv/checkv-db-v1.4",
@@ -127,7 +131,8 @@ rule checkv:
         # run checkv to determine virus quality
         checkv end_to_end {input.virus_contigs} {params.checkv_dir} \
         -d {params.checkv_db} \
-        -t {threads}
+        -t {threads} \
+        --remove_tmp
 
         # add sample column to each checkv output
         s={wildcards.group_sample}
@@ -151,8 +156,10 @@ rule quality_filter_viruses:
         checkv_proviruses=results
         + "05_VIRUS_QUALITY/01_checkv/{group_sample}/proviruses.fna",
     output:
-        results
-        + "05_VIRUS_QUALITY/02_quality_filter/{group_sample}/quality_filtered_viruses.fna",
+        temp(
+            results
+            + "05_VIRUS_QUALITY/02_quality_filter/{group_sample}/quality_filtered_viruses.fna"
+        ),
     params:
         min_completeness=config["virus_quality"]["min_completeness"],
         min_viral_genes=config["virus_quality"]["min_viral_genes"],
@@ -183,6 +190,8 @@ rule combine_checkv_reports:
         ),
     output:
         results + "05_VIRUS_QUALITY/virus_quality_report.tsv",
+    params:
+        checkv_dirs=results + "05_VIRUS_QUALITY/01_checkv/",
     benchmark:
         "benchmark/05_VIRUS_QUALITY/combine_checkv_reports.tsv"
     resources:
@@ -192,6 +201,8 @@ rule combine_checkv_reports:
         """
         # combine all outputs, only keeping header from one file
         awk 'FNR>1 || NR==1' {input} > {output}
+
+        rm -rf {params.checkv_dirs}
         """
 
 

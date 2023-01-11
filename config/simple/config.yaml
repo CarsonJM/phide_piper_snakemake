@@ -18,11 +18,11 @@ restart-times: 1
 max-jobs-per-second: 1
 max-status-checks-per-second: 1
 latency-wait: 60
-jobs: 25
+jobs: 30
 keep-going: True
 rerun-incomplete: True
 printshellcmds: True
-scheduler: greedy
+scheduler: ilp
 use-conda: True
 conda-prefix: /gscratch/scrubbed/carsonjm/conda_envs
 use-singularity: True
