@@ -23,9 +23,9 @@ derep_rep_sequences = []
 for record in SeqIO.parse(str(snakemake.input.viruses), "fasta"):
     record_id_base = record.id
     if len(record_id_base.split('|provirus')) > 1:
-        record_id_base = record.id.split('|provirus')[0]
+        record_id_base = record_id_base.split('|provirus')[0]
     if len(record_id_base.split('|checkv_provirus')) > 1:
-        record_id_base = record.id.split('|checkv_provirus')[0]
+        record_id_base = record_id_base.split('|checkv_provirus')[0]
     if record_id_base in derep_reps_set:
         derep_rep_sequences.append(record)
 

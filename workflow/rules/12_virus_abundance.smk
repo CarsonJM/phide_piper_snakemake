@@ -43,7 +43,7 @@ if (
 ):
     viruses = (
         results
-        + "06_VIRUS_DEREPLICATION/02_dereplicate_viruses/dereplicate_reps_viruses.fasta",
+        + "06_VIRUS_DEREPLICATION/01_combine_viruses/filtered_viruses.fasta",
     )
 elif config["input_data"] == "viruses":
     viruses = results + "00_INPUT/{group_sample}_viruses.fasta"
@@ -70,7 +70,7 @@ rule build_viruses_bowtie2db:
     message:
         "Building a bowtie2 db of vOTU representative viruses"
     input:
-        results + "07_VIRUS_DIVERSITY/01_votu_clustering/votu_representatives.fasta",
+        viruses
     output:
         results + "12_VIRUS_ABUNDANCE/01_align_viruses/virus_catalog.1.bt2",
     params:
@@ -105,6 +105,7 @@ rule align_reads_to_viruses:
         log=results + "12_VIRUS_ABUNDANCE/01_align_viruses/{group_sample}.log",
     params:
         db=results + "12_VIRUS_ABUNDANCE/01_align_viruses/virus_catalog",
+        extra_args=config["virus_analysis"]["bowtie2_arguments"],
     # conda:
     #     "../envs/kneaddata:0.10.0--pyhdfd78af_0.yml"
     container:
@@ -123,6 +124,7 @@ rule align_reads_to_viruses:
         -x {params.db} \
         -1 {input.R1} \
         -2 {input.R2} \
+        {params.extra_args} \
         -S {output.sam} > {output.log} 2>&1
         """
 
@@ -172,7 +174,7 @@ rule make_stb_file:
     message:
         "Making scaffold to bin file for inStrain"
     input:
-        results + "07_VIRUS_DIVERSITY/01_votu_clustering/votu_representatives.fasta",
+        viruses
     output:
         results + "12_VIRUS_ABUNDANCE/02_instrain_profile/stb_file.tsv",
     conda:
@@ -186,16 +188,42 @@ rule make_stb_file:
         "../scripts/12_generate_stb_file.py"
 
 
+# prodigal-gv
+rule prodigal_gv:
+    input:
+        viruses,
+    output:
+        faa=results + "12_VIRUS_ABUNDANCE/02_instrain_profile/instrain_proteins.faa",
+        fna=results + "12_VIRUS_ABUNDANCE/02_instrain_profile/instrain_proteins.fna",
+    params:
+        extra_args=config['virus_diversity']['prodigal_gv_arguments']
+    conda:
+        "../envs/prodigal_gv.yml"
+    benchmark:
+        "benchmark/12_VIRUS_ANALYSIS/prodigal_gv.tsv"
+    resources:
+        runtime=config["virus_diversity"]["prodigal_gv_runtime"],
+        mem_mb=config["virus_diversity"]["prodigal_gv_memory"],
+    shell:
+        """
+        # create gene2genome file for vcontact2
+        prodigal-gv \
+        -p meta \
+        -i {input} \
+        -d {output.fna} \
+        -a {output.faa} \
+        {params.extra_args}
+        """
+
+
 # Run instrain to preprocess and analyze alignments
 rule instrain_profile:
     message:
         "Running inStrain to preprocess alignments and calculate diversity metrics"
     input:
         sam=results + "12_VIRUS_ABUNDANCE/01_align_viruses/{group_sample}.sam",
-        fasta=results
-        + "07_VIRUS_DIVERSITY/01_votu_clustering/votu_representatives.fasta",
-        genes=results
-        + "07_VIRUS_DIVERSITY/02_proteins/votu_representatives_proteins.fna",
+        fasta=viruses,
+        genes=results + "12_VIRUS_ABUNDANCE/02_instrain_profile/instrain_proteins.fna",
         stb=results + "12_VIRUS_ABUNDANCE/02_instrain_profile/stb_file.tsv",
     output:
         sorted_bam=results

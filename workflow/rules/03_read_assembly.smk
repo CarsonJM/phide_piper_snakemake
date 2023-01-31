@@ -45,7 +45,7 @@ rule metaspades:
         R2=results
         + "01_READ_PREPROCESSING/03_kneaddata/{group_sample}_paired_2.fastq.gz",
     output:
-        temp(results + "03_READ_ASSEMBLY/01_spades/meta/{group_sample}/contigs.fasta"),
+        results + "03_READ_ASSEMBLY/01_spades/meta/{group_sample}/contigs.fasta",
     params:
         output_dir=results + "03_READ_ASSEMBLY/01_spades/meta/{group_sample}",
         extra_args=config["read_assembly"]["spades_arguments"],
@@ -82,10 +82,7 @@ rule metaviralspades:
         R2=results
         + "01_READ_PREPROCESSING/03_kneaddata/{group_sample}_paired_2.fastq.gz",
     output:
-        temp(
-            results
-            + "03_READ_ASSEMBLY/01_spades/metaviral/{group_sample}/contigs.fasta"
-        ),
+        results + "03_READ_ASSEMBLY/01_spades/metaviral/{group_sample}/contigs.fasta",
     params:
         output_dir=results + "03_READ_ASSEMBLY/01_spades/metaviral/{group_sample}",
         extra_args=config["read_assembly"]["spades_arguments"],
@@ -124,10 +121,7 @@ rule rnaviralspades:
         R2=results
         + "01_READ_PREPROCESSING/03_kneaddata/{group_sample}_paired_2.fastq.gz",
     output:
-        temp(
-            results
-            + "03_READ_ASSEMBLY/01_spades/rnaviral/{group_sample}/contigs.fasta"
-        ),
+        results + "03_READ_ASSEMBLY/01_spades/rnaviral/{group_sample}/contigs.fasta",
     params:
         output_dir=results + "03_READ_ASSEMBLY/01_spades/rnaviral/{group_sample}",
         extra_args=config["read_assembly"]["spades_arguments"],
@@ -192,7 +186,7 @@ rule combine_spades_assemblies:
         # combine assemblies from different assemblers
         cat {input} > {output}
 
-        rm -rf {params.assemblies}
+        # rm -rf {params.assemblies}
         """
 
 
@@ -232,7 +226,7 @@ rule quast:
         results
         + "03_READ_ASSEMBLY/02_contig_filters/{group_sample}/{group_sample}_contigs.fasta",
     output:
-        temp(results + "03_READ_ASSEMBLY/03_quast/{group_sample}/transposed_report.tsv"),
+        results + "03_READ_ASSEMBLY/03_quast/{group_sample}/transposed_report.tsv",
     params:
         output_dir=results + "03_READ_ASSEMBLY/03_quast/{group_sample}",
         min_len=config["read_assembly"]["min_contig_length"],

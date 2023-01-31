@@ -18,7 +18,7 @@ restart-times: 1
 max-jobs-per-second: 1
 max-status-checks-per-second: 1
 latency-wait: 60
-jobs: 30
+jobs: 20
 keep-going: True
 rerun-incomplete: True
 printshellcmds: True

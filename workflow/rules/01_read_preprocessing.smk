@@ -62,8 +62,8 @@ rule symlink_input_reads:
             == wildcards.group_sample_replicate
         ]["R2"].iloc[0],
     output:
-        R1=temp(results + "00_INPUT/{group_sample_replicate}.R1.fastq.gz"),
-        R2=temp(results + "00_INPUT/{group_sample_replicate}.R2.fastq.gz"),
+        R1=results + "00_INPUT/{group_sample_replicate}.R1.fastq.gz",
+        R2=results + "00_INPUT/{group_sample_replicate}.R2.fastq.gz",
     benchmark:
         "benchmark/01_READ_PREPROCESSING/symlink_reads_{group_sample_replicate}.tsv"
     resources:
@@ -106,14 +106,10 @@ rule merge_input_replicates:
             replicate=group_sample_replicate_dictionary[wildcards.group_sample],
         ),
     output:
-        R1=temp(
-            results
-            + "01_READ_PREPROCESSING/01_merge_replicates/{group_sample}.R1.fastq.gz"
-        ),
-        R2=temp(
-            results
-            + "01_READ_PREPROCESSING/01_merge_replicates/{group_sample}.R2.fastq.gz"
-        ),
+        R1=results
+        + "01_READ_PREPROCESSING/01_merge_replicates/{group_sample}.R1.fastq.gz",
+        R2=results
+        + "01_READ_PREPROCESSING/01_merge_replicates/{group_sample}.R2.fastq.gz",
     benchmark:
         "benchmark/01_READ_PREPROCESSING/merge_replicates_{group_sample}.tsv"
     resources:
@@ -140,12 +136,10 @@ rule fastp:
         R2=results
         + "01_READ_PREPROCESSING/01_merge_replicates/{group_sample}.R2.fastq.gz",
     output:
-        R1=temp(results + "01_READ_PREPROCESSING/02_fastp/{group_sample}.R1.fastq.gz"),
-        R2=temp(results + "01_READ_PREPROCESSING/02_fastp/{group_sample}.R2.fastq.gz"),
-        report=temp(
-            results + "01_READ_PREPROCESSING/02_fastp/{group_sample}_fastp.json"
-        ),
-        html=temp(results + "01_READ_PREPROCESSING/02_fastp/{group_sample}_fastp.html"),
+        R1=results + "01_READ_PREPROCESSING/02_fastp/{group_sample}.R1.fastq.gz",
+        R2=results + "01_READ_PREPROCESSING/02_fastp/{group_sample}.R2.fastq.gz",
+        report=results + "01_READ_PREPROCESSING/02_fastp/{group_sample}_fastp.json",
+        html=results + "01_READ_PREPROCESSING/02_fastp/{group_sample}_fastp.html",
     params:
         extra_args=config["read_preprocessing"]["fastp_arguments"],
         html=results + "01_READ_PREPROCESSING/02_fastp/{group_sample}_fastp.html",
@@ -308,10 +302,10 @@ rule kneaddata:
 
         gzip {params.R1}
         gzip {params.R2}
-        gzip {params.unmatched1}
-        gzip {params.unmatched2}
+        # gzip {params.unmatched1}
+        # gzip {params.unmatched2}
 
-        rm {params.hg37_paired1} {params.hg37_paired2} {params.hg37_unmatched1} {params.hg37_unmatched2}
+        # rm {params.hg37_paired1} {params.hg37_paired2} {params.hg37_unmatched1} {params.hg37_unmatched2}
         """
 
 

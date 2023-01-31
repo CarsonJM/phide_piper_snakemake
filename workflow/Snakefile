@@ -104,7 +104,7 @@ def get_final_output(wildcards):
         final_output.append(results + "12_VIRUS_ABUNDANCE/bowtie2_multiqc.html")
         final_output.append(
             results
-            + "12_VIRUS_ABUNDANCE/02_instrain_profile/combined_genome_info_w_abundance.tsv"
+            # + "12_VIRUS_ABUNDANCE/02_instrain_profile/combined_genome_info_w_abundance.tsv"
         )
         final_output += expand(
             results

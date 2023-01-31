@@ -45,7 +45,7 @@ rule symlink_vls:
             "vls"
         ].iloc[0],
     output:
-        temp(results + "00_INPUT/{group_sample}_vls.fasta"),
+        results + "00_INPUT/{group_sample}_vls.fasta",
     benchmark:
         "benchmark/05_VIRUS_QUALITY/symlink_vls_{group_sample}.tsv"
     resources:
@@ -62,7 +62,7 @@ rule symlink_vls:
 if config["input_data"] == "reads" or config["input_data"] == "contigs":
     vls = (
         results
-        + "04_VIRUS_IDENTIFICATION/03_combine_outputs/{group_sample}/combined_viral_contigs.fna",
+        + "04_VIRUS_IDENTIFICATION/02_genomad/{group_sample}/virusdb_hits_w_assembly_summary/virusdb_hits_w_assembly_virus.fna",
     )
 # if input is vls, use symlinked vls
 elif config["input_data"] == "vls":
@@ -77,7 +77,7 @@ rule download_checkv:
     message:
         "Downloading CheckV database"
     output:
-        resources + "checkv/checkv-db-v1.4/genome_db/checkv_reps.dmnd",
+        resources + "checkv/checkv-db-v1.5/genome_db/checkv_reps.dmnd",
     params:
         checkv_dir=resources + "checkv/",
     # conda:
@@ -101,21 +101,17 @@ rule checkv:
     message:
         "Running CheckV to determine virus quality and contamination for {wildcards.group_sample}"
     input:
-        checkv_db=resources + "checkv/checkv-db-v1.4/genome_db/checkv_reps.dmnd",
+        checkv_db=resources + "checkv/checkv-db-v1.5/genome_db/checkv_reps.dmnd",
         virus_contigs=vls,
     output:
-        checkv_results=temp(
-            results + "05_VIRUS_QUALITY/01_checkv/{group_sample}/quality_summary.tsv"
-        ),
-        checkv_viruses=temp(
-            results + "05_VIRUS_QUALITY/01_checkv/{group_sample}/viruses.fna"
-        ),
-        checkv_proviruses=temp(
-            results + "05_VIRUS_QUALITY/01_checkv/{group_sample}/proviruses.fna"
-        ),
+        checkv_results=results
+        + "05_VIRUS_QUALITY/01_checkv/{group_sample}/quality_summary.tsv",
+        checkv_viruses=results + "05_VIRUS_QUALITY/01_checkv/{group_sample}/viruses.fna",
+        checkv_proviruses=results
+        + "05_VIRUS_QUALITY/01_checkv/{group_sample}/proviruses.fna",
     params:
         checkv_dir=results + "05_VIRUS_QUALITY/01_checkv/{group_sample}/",
-        checkv_db=resources + "checkv/checkv-db-v1.4",
+        checkv_db=resources + "checkv/checkv-db-v1.5",
     # conda:
     #     "../envs/checkv:1.0.1--pyhdfd78af_0.yml"
     container:
@@ -128,6 +124,8 @@ rule checkv:
     threads: config["virus_quality"]["checkv_threads"]
     shell:
         """
+        if [ -s {input.virus_contigs} ]; then
+        # The file is not-empty.
         # run checkv to determine virus quality
         checkv end_to_end {input.virus_contigs} {params.checkv_dir} \
         -d {params.checkv_db} \
@@ -139,6 +137,11 @@ rule checkv:
         sed -i "s/$/\t$s/" {output.checkv_results}
         sample="sample"
         sed -i "1s/$s/$sample/" {output.checkv_results}
+        else
+            touch {output.checkv_results}
+            touch {output.checkv_viruses}
+            touch {output.checkv_proviruses}
+        fi
         """
 
 
@@ -156,12 +159,11 @@ rule quality_filter_viruses:
         checkv_proviruses=results
         + "05_VIRUS_QUALITY/01_checkv/{group_sample}/proviruses.fna",
     output:
-        temp(
-            results
-            + "05_VIRUS_QUALITY/02_quality_filter/{group_sample}/quality_filtered_viruses.fna"
-        ),
+        results
+        + "05_VIRUS_QUALITY/02_quality_filter/{group_sample}/quality_filtered_viruses.fna",
     params:
         min_completeness=config["virus_quality"]["min_completeness"],
+        min_length=config["virus_quality"]["min_length"],
         min_viral_genes=config["virus_quality"]["min_viral_genes"],
         max_bacterial_genes=config["virus_quality"]["max_bacterial_genes"],
         remove_proviruses=config["virus_quality"]["remove_proviruses"],
@@ -202,7 +204,7 @@ rule combine_checkv_reports:
         # combine all outputs, only keeping header from one file
         awk 'FNR>1 || NR==1' {input} > {output}
 
-        rm -rf {params.checkv_dirs}
+        # rm -rf {params.checkv_dirs}
         """
 
 

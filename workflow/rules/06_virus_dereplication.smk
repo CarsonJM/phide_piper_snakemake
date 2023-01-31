@@ -29,6 +29,7 @@ report: "../report/workflow.rst"
 # -----------------------------------------------------
 localrules:
     combine_viruses,
+    filter_combined_viruses,
     virus_dereplication_analysis,
 
 
@@ -92,8 +93,8 @@ rule filter_combined_viruses:
     benchmark:
         "benchmark/06_VIRUS_DEREPLICATION/filter_combined_viruses.tsv"
     resources:
-        runtime="00:10:00",
-        mem_mb="10000",
+        runtime="10:00:00",
+        mem_mb="100000",
     script:
         "../scripts/06_filter_combined_viruses.py"
 

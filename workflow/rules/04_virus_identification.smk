@@ -30,6 +30,7 @@ report: "../report/workflow.rst"
 localrules:
     symlink_contigs,
     symlink_preprocessed_reads,
+    extract_external_hits,
     combine_reports_across_samples,
     merge_reports_within_samples,
     rename_contigs_within_samples,
@@ -47,11 +48,11 @@ rule symlink_contigs:
             == wildcards.group_sample
         ]["contigs"].iloc[0],
     output:
-        temp(results + "00_INPUT/{group_sample}_contigs_symlink.fasta"),
+        results + "00_INPUT/{group_sample}_contigs_symlink.fasta",
     benchmark:
         "benchmark/04_VIRUS_IDENTIFICATION/symlink_contigs_{group_sample}.tsv"
     resources:
-        runtime="00:10:00",
+        runtime="00:30:00",
         mem_mb="1000",
     shell:
         """
@@ -65,7 +66,7 @@ rule filter_symlinked_contigs:
     input:
         results + "00_INPUT/{group_sample}_contigs_symlink.fasta",
     output:
-        temp(results + "00_INPUT/{group_sample}_contigs.fasta"),
+        results + "00_INPUT/{group_sample}_contigs.fasta",
     params:
         min_length=config["read_assembly"]["min_contig_length"],
     conda:
@@ -73,7 +74,7 @@ rule filter_symlinked_contigs:
     benchmark:
         "benchmark/04_VIRUS_IDENTIFICATION/filter_symlinked_contigs_{group_sample}.tsv"
     resources:
-        runtime="00:10:00",
+        runtime="00:30:00",
         mem_mb="10000",
     script:
         "../scripts/03_contig_length_filter.py"
@@ -116,12 +117,12 @@ rule symlink_preprocessed_reads:
             == wildcards.group_sample_replicate
         ]["R2"].iloc[0],
     output:
-        R1=temp(results + "00_INPUT/{group_sample_replicate}.preprocessed_R1.fastq.gz"),
-        R2=temp(results + "00_INPUT/{group_sample_replicate}.preprocessed_R2.fastq.gz"),
+        R1=results + "00_INPUT/{group_sample_replicate}.preprocessed_R1.fastq.gz",
+        R2=results + "00_INPUT/{group_sample_replicate}.preprocessed_R2.fastq.gz",
     benchmark:
         "benchmark/01_READ_PREPROCESSING/symlink_preprocessed_reads_{group_sample_replicate}.tsv"
     resources:
-        runtime="00:10:00",
+        runtime="00:30:00",
         mem_mb="10000",
     shell:
         """
@@ -157,18 +158,14 @@ rule merge_preprocesssed_replicates:
             replicate=group_sample_replicate_dictionary[wildcards.group_sample],
         ),
     output:
-        R1=temp(
-            results
-            + "00_INPUT/01_merge_repicates/{group_sample}.preprocessed_R1.fastq.gz"
-        ),
-        R2=temp(
-            results
-            + "00_INPUT/01_merge_repicates/{group_sample}.preprocessed_R2.fastq.gz"
-        ),
+        R1=results
+        + "00_INPUT/01_merge_repicates/{group_sample}.preprocessed_R1.fastq.gz",
+        R2=results
+        + "00_INPUT/01_merge_repicates/{group_sample}.preprocessed_R2.fastq.gz",
     benchmark:
         "benchmark/01_READ_PREPROCESSING/merge_preprocessed_replicates_{group_sample}.tsv"
     resources:
-        runtime="00:10:00",
+        runtime="00:30:00",
         mem_mb="10000",
     shell:
         """
@@ -234,10 +231,8 @@ rule screen_reads_against_virusdb:
         external_input=external_input,
         sketch=config["virus_db"] + ".msh",
     output:
-        temp(
-            results
-            + "04_VIRUS_IDENTIFICATION/01_external_hits/{group_sample}/virusdb_mash_screen.tab"
-        ),
+        results
+        + "04_VIRUS_IDENTIFICATION/01_external_hits/{group_sample}/virusdb_mash_screen.tab",
     params:
         combined=results
         + "04_VIRUS_IDENTIFICATION/01_external_hits/{group_sample}/combined_reads.fastq",
@@ -275,15 +270,15 @@ rule extract_external_hits:
         read_screen=results
         + "04_VIRUS_IDENTIFICATION/01_external_hits/{group_sample}/virusdb_mash_screen.tab",
         virusdb=config["virus_db"],
+        contigs=assembly,
     output:
-        temp(
-            results
-            + "04_VIRUS_IDENTIFICATION/01_external_hits/{group_sample}/virusdb_hits.fna"
-        ),
+        results
+        + "04_VIRUS_IDENTIFICATION/01_external_hits/{group_sample}/virusdb_hits_w_assembly.fna",
     params:
         min_mash_score=config["virus_identification"]["min_mash_score"],
         min_mash_hashes=config["virus_identification"]["min_mash_hashes"],
         min_mash_multiplicity=config["virus_identification"]["min_mash_multiplicity"],
+        assembly="{group_sample}",
     conda:
         "../envs/jupyter.yml"
     benchmark:
@@ -293,30 +288,6 @@ rule extract_external_hits:
         mem_mb="10000",
     script:
         "../scripts/04_extract_virusdb_hits.py"
-
-
-# combine external hits with assembly contigs
-rule combine_external_with_assembly:
-    message:
-        "Combining external hits in {wildcards.group_sample} with assembled contigs"
-    input:
-        contigs=assembly,
-        external_hits=results
-        + "04_VIRUS_IDENTIFICATION/01_external_hits/{group_sample}/virusdb_hits.fna",
-    output:
-        temp(
-            results
-            + "04_VIRUS_IDENTIFICATION/01_external_hits/{group_sample}/virusdb_hits_w_assembly.fna"
-        ),
-    benchmark:
-        "benchmark/04_VIRUS_IDENTIFICATION/combine_external_with_assembly_{group_sample}.tsv"
-    resources:
-        runtime="00:10:00",
-        mem_mb="10000",
-    shell:
-        """
-        cat {input} > {output}
-        """
 
 
 # -----------------------------------------------------
@@ -356,14 +327,10 @@ rule genomad:
         contigs=results
         + "04_VIRUS_IDENTIFICATION/01_external_hits/{group_sample}/virusdb_hits_w_assembly.fna",
     output:
-        report=temp(
-            results
-            + "04_VIRUS_IDENTIFICATION/02_genomad/{group_sample}/virusdb_hits_w_assembly_summary/virusdb_hits_w_assembly_virus_summary.tsv"
-        ),
-        sequences=temp(
-            results
-            + "04_VIRUS_IDENTIFICATION/02_genomad/{group_sample}/virusdb_hits_w_assembly_summary/virusdb_hits_w_assembly_virus.fna"
-        ),
+        report=results
+        + "04_VIRUS_IDENTIFICATION/02_genomad/{group_sample}/virusdb_hits_w_assembly_summary/virusdb_hits_w_assembly_virus_summary.tsv",
+        sequences=results
+        + "04_VIRUS_IDENTIFICATION/02_genomad/{group_sample}/virusdb_hits_w_assembly_summary/virusdb_hits_w_assembly_virus.fna",
     params:
         out_dir=results + "04_VIRUS_IDENTIFICATION/02_genomad/{group_sample}/",
         genomad_dir=resources + "genomad/genomad_db",
@@ -405,10 +372,8 @@ rule merge_reports_within_samples:
         external_results=results
         + "04_VIRUS_IDENTIFICATION/01_external_hits/{group_sample}/virusdb_mash_screen.tab",
     output:
-        temp(
-            results
-            + "04_VIRUS_IDENTIFICATION/03_combine_outputs/{group_sample}/combined_report.tsv"
-        ),
+        results
+        + "04_VIRUS_IDENTIFICATION/03_combine_outputs/{group_sample}/combined_report.tsv",
     params:
         min_mash_score=config["virus_identification"]["min_mash_score"],
         min_mash_hashes=config["virus_identification"]["min_mash_hashes"],
@@ -452,34 +417,7 @@ rule combine_reports_across_samples:
         """
         # combine all outputs, only keeping header from one file
         awk 'FNR>1 || NR==1' {input} > {output}
-
-        # remove 
-        rm -rf {params.external_dirs}
-        rm -rf {params.genomad_dirs}
         """
-
-
-# combine virus reports across samples
-rule rename_contigs_within_samples:
-    message:
-        "Renaming viral contigs for {wildcards.group_sample}"
-    input:
-        results
-        + "04_VIRUS_IDENTIFICATION/02_genomad/{group_sample}/virusdb_hits_w_assembly_summary/virusdb_hits_w_assembly_virus.fna",
-    output:
-        results
-        + "04_VIRUS_IDENTIFICATION/03_combine_outputs/{group_sample}/combined_viral_contigs.fna",
-    params:
-        assembly="{group_sample}",
-    conda:
-        "../envs/jupyter.yml"
-    benchmark:
-        "benchmark/04_VIRUS_IDENTIFICATION/rename_contigs_within_samples_{group_sample}.tsv"
-    resources:
-        runtime="00:10:00",
-        mem_mb="10000",
-    script:
-        "../scripts/04_merge_viral_contigs_within_samples.py"
 
 
 # plot virus counts by tool

@@ -152,33 +152,6 @@ rule get_votu_representatives:
         seqkit grep -f {output.representatives_list} {input.fasta} > {output.representatives_fasta}
         """
 
-# prodigal-gv
-rule prodigal_gv:
-    input:
-        results + "07_VIRUS_DIVERSITY/01_votu_clustering/votu_representatives.fasta",
-    output:
-        faa=results + "07_VIRUS_DIVERSITY/02_proteins/votu_representatives_proteins.faa",
-        fna=results + "07_VIRUS_DIVERSITY/02_proteins/votu_representatives_proteins.fna",
-    params:
-        extra_args=config['virus_diversity']['prodigal_gv_arguments']
-    conda:
-        "../envs/prodigal_gv.yml"
-    benchmark:
-        "benchmark/07_VIRUS_DIVERSITY/prodigal_gv.tsv"
-    resources:
-        runtime=config["virus_diversity"]["prodigal_gv_runtime"],
-        mem_mb=config["virus_diversity"]["prodigal_gv_memory"],
-    shell:
-        """
-        # create gene2genome file for vcontact2
-        prodigal-gv \
-        -p meta \
-        -i {input} \
-        -d {output.fna} \
-        -a {output.faa} \
-        {params.extra_args}
-        """
-
 # -----------------------------------------------------
 # Analyze clustering
 # -----------------------------------------------------
