@@ -84,7 +84,7 @@ rule extract_hq_for_bacphlip:
     conda:
         "../envs/jupyter.yml"
     benchmark:
-        "benchmark/10_VIRUS_LIFESTYLE/bacpextract_hq_for_bacphliphlip.tsv"
+        "benchmark/10_VIRUS_LIFESTYLE/extract_hq_for_bacphliphlip.tsv"
     resources:
         runtime="00:10:00",
         mem_mb="10000",
