@@ -100,8 +100,8 @@ rule votu_anicalc:
     benchmark:
         "benchmark/07_VIRUS_DIVERSITY/votu_anicalc.tsv"
     resources:
-        runtime="00:10:00",
-        mem_mb="10000",
+        runtime="10m",
+        mem_mb="10GB",
     script:
         "../scripts/06_anicalc.py"
 
@@ -123,8 +123,8 @@ rule votu_aniclust:
     benchmark:
         "benchmark/07_VIRUS_DIVERSITY/votu_aniclust.tsv"
     resources:
-        runtime="00:10:00",
-        mem_mb="10000",
+        runtime="10m",
+        mem_mb="10GB",
     script: 
         "../scripts/06_aniclust.py"
 
@@ -144,8 +144,8 @@ rule get_votu_representatives:
     benchmark:
         "benchmark/07_VIRUS_DIVERSITY/get_votu_representatives.tsv"
     resources:
-        runtime="00:10:00",
-        mem_mb="10000",
+        runtime="10m",
+        mem_mb="10GB",
     shell:
         """
         awk '{{print $1}}' {input.clusters} > {output.representatives_list} && \
@@ -172,7 +172,7 @@ rule virus_diversity_votu_anlysis:
     benchmark:
         "benchmark/07_VIRUS_DIVERSITY/votu_anlysis.tsv"
     resources:
-        runtime="00:10:00",
-        mem_mb="10000",
+        runtime="10m",
+        mem_mb="10GB",
     script:
         "../scripts/06_virus_dereplication_analysis.py"

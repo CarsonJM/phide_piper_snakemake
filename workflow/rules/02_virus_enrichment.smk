@@ -52,8 +52,8 @@ rule build_viromeqc:
     benchmark:
         "benchmark/02_VIRUS_ENRICHMENT/build_viromeqc.tsv"
     resources:
-        runtime="04:00:00",
-        mem_mb="10000",
+        runtime="4h",
+        mem_mb="10GB",
     shell:
         """
         # clone viromeqc
@@ -145,8 +145,8 @@ rule combine_viromeqc_across_samples:
     benchmark:
         "benchmark/02_VIRUS_ENRICHMENT/combine_viromeqc_across_samples.tsv"
     resources:
-        runtime="00:10:00",
-        mem_mb="10000",
+        runtime="10m",
+        mem_mb="10GB",
     shell:
         """
         # combine all viromeqc outputs, only keeping header from one file
@@ -173,7 +173,7 @@ rule virus_enrichment_analysis:
     benchmark:
         "benchmark/02_VIRUS_ENRICHMENT/virus_enrichment_analysis.tsv"
     resources:
-        runtime="00:10:00",
-        mem_mb="10000",
+        runtime="10m",
+        mem_mb="10GB",
     script:
         "../scripts/02_virus_enrichment_analysis.py"

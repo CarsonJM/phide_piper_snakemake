@@ -49,8 +49,8 @@ rule symlink_vls:
     benchmark:
         "benchmark/05_VIRUS_QUALITY/symlink_vls_{group_sample}.tsv"
     resources:
-        runtime="00:10:00",
-        mem_mb="10000",
+        runtime="10m",
+        mem_mb="10GB",
     shell:
         """
         # symlink input vls to renamed files
@@ -87,8 +87,8 @@ rule download_checkv:
     benchmark:
         "benchmark/05_VIRUS_QUALITY/download_checkv.tsv"
     resources:
-        runtime="01:00:00",
-        mem_mb="10000",
+        runtime="1h",
+        mem_mb="10GB",
     shell:
         """
         # download checkv database
@@ -172,8 +172,8 @@ rule quality_filter_viruses:
     benchmark:
         "benchmark/05_VIRUS_QUALITY/quality_filter_viruses_{group_sample}.tsv"
     resources:
-        runtime="00:10:00",
-        mem_mb="10000",
+        runtime="10m",
+        mem_mb="10GB",
     script:
         "../scripts/05_quality_filter_viruses.py"
 
@@ -197,8 +197,8 @@ rule combine_checkv_reports:
     benchmark:
         "benchmark/05_VIRUS_QUALITY/combine_checkv_reports.tsv"
     resources:
-        runtime="00:10:00",
-        mem_mb="10000",
+        runtime="10m",
+        mem_mb="10GB",
     shell:
         """
         # combine all outputs, only keeping header from one file
@@ -224,7 +224,7 @@ rule virus_quality_analysis:
     benchmark:
         "benchmark/05_VIRUS_QUALITY/virus_quality_analysis.tsv"
     resources:
-        runtime="00:10:00",
-        mem_mb="10000",
+        runtime="10m",
+        mem_mb="10GB",
     script:
         "../scripts/05_virus_quality_analysis.py"

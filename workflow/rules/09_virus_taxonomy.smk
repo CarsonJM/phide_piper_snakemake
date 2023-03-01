@@ -102,8 +102,8 @@ rule virus_taxonomy_analysis:
     benchmark:
         "benchmark/09_VIRUS_TAXONOMY/virus_taxonomy_analysis.tsv"
     resources:
-        runtime="00:10:00",
-        mem_mb="10000",
+        runtime="10m",
+        mem_mb="10GB",
     conda:
         "../envs/jupyter.yml"
     script:

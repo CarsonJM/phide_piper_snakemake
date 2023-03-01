@@ -115,8 +115,8 @@ rule download_virsorter2:
     benchmark:
         "benchmark/04_VIRUS_IDENTIFICATION/download_virsorter2.tsv"
     resources:
-        runtime="00:30:00",
-        mem_mb="10000",
+        runtime="30m",
+        mem_mb="10GB",
     threads: config["virus_function"]["virsorter2_threads"]
     shell:
         """
@@ -224,8 +224,8 @@ rule dramv_distill:
     # container:
     #     "docker://quay.io/biocontainers/dram:1.3.4--pyhdfd78af_0"
     resources:
-        runtime="00:10:00",
-        mem_mb="10000",
+        runtime="10m",
+        mem_mb="10GB",
     threads: config["virus_function"]["dramv_threads"]
     shell:
         """

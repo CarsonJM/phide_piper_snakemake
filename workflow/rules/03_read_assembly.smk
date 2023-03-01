@@ -179,8 +179,8 @@ rule combine_spades_assemblies:
     benchmark:
         "benchmark/03_READ_ASSEMBLY/combine_spades_assemblies_{group_sample}.tsv"
     resources:
-        runtime="00:10:00",
-        mem_mb="10000",
+        runtime="10m",
+        mem_mb="10GB",
     shell:
         """
         # combine assemblies from different assemblers
@@ -209,8 +209,8 @@ rule contig_length_filter:
     benchmark:
         "benchmark/03_READ_ASSEMBLY/contig_length_filter_{group_sample}.tsv"
     resources:
-        runtime="00:10:00",
-        mem_mb="10000",
+        runtime="10m",
+        mem_mb="10GB",
     script:
         "../scripts/03_contig_length_filter.py"
 
@@ -239,8 +239,8 @@ rule quast:
     benchmark:
         "benchmark/03_READ_ASSEMBLY/quast_{group_sample}.tsv"
     resources:
-        runtime="00:10:00",
-        mem_mb="10000",
+        runtime="10m",
+        mem_mb="10GB",
     shell:
         """
         # assembly analysis using quast
@@ -280,8 +280,8 @@ rule quast_multiqc:
     benchmark:
         "benchmark/03_READ_ASSEMBLY/quast_multiqc.tsv"
     resources:
-        runtime="00:10:00",
-        mem_mb="10000",
+        runtime="10m",
+        mem_mb="10GB",
     shell:
         """
         # Generate MULTIQC report from QUAST results
@@ -309,8 +309,8 @@ rule combine_quast_across_samples:
     benchmark:
         "benchmark/03_READ_ASSEMBLY/combine_quast.tsv"
     resources:
-        runtime="00:10:00",
-        mem_mb="10000",
+        runtime="10m",
+        mem_mb="10GB",
     shell:
         """
         # combine all outputs, only keeping header from one file

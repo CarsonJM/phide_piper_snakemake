@@ -73,8 +73,8 @@ rule build_propagate:
     benchmark:
         "benchmark/14_PROVIRUS_ACTIVITY/build_propagate.tsv"
     resources:
-        runtime="00:10:00",
-        mem_mb="10000",
+        runtime="10m",
+        mem_mb="10GB",
     shell:
         """
         # clone propagate
@@ -115,8 +115,8 @@ rule identify_integrated_prophages:
     benchmark:
         "benchmark/14_PROVIRUS_ACTIVITY/identify_integrated_prophages_{group}.tsv"
     resources:
-        runtime="00:10:00",
-        mem_mb="10000",
+        runtime="10m",
+        mem_mb="10GB",
     script:
         "../scripts/14_identify_integrated_prophages.py"
 
@@ -144,8 +144,8 @@ rule propagate:
     benchmark:
         "benchmark/14_PROVIRUS_ACTIVITY/propagate_{group}_{group_sample}.tsv"
     resources:
-        runtime="00:10:00",
-        mem_mb="10000",
+        runtime="10m",
+        mem_mb="10GB",
     threads: config["provirus_activity"]["propagate_threads"]
     shell:
         """

@@ -52,7 +52,7 @@ rule symlink_contigs:
     benchmark:
         "benchmark/04_VIRUS_IDENTIFICATION/symlink_contigs_{group_sample}.tsv"
     resources:
-        runtime="00:30:00",
+        runtime="30m",
         mem_mb="1000",
     shell:
         """
@@ -74,8 +74,8 @@ rule filter_symlinked_contigs:
     benchmark:
         "benchmark/04_VIRUS_IDENTIFICATION/filter_symlinked_contigs_{group_sample}.tsv"
     resources:
-        runtime="00:30:00",
-        mem_mb="10000",
+        runtime="30m",
+        mem_mb="10GB",
     script:
         "../scripts/03_contig_length_filter.py"
 
@@ -122,8 +122,8 @@ rule symlink_preprocessed_reads:
     benchmark:
         "benchmark/01_READ_PREPROCESSING/symlink_preprocessed_reads_{group_sample_replicate}.tsv"
     resources:
-        runtime="00:30:00",
-        mem_mb="10000",
+        runtime="30m",
+        mem_mb="10GB",
     shell:
         """
         # symlink input reads to renamed files
@@ -165,8 +165,8 @@ rule merge_preprocesssed_replicates:
     benchmark:
         "benchmark/01_READ_PREPROCESSING/merge_preprocessed_replicates_{group_sample}.tsv"
     resources:
-        runtime="00:30:00",
-        mem_mb="10000",
+        runtime="30m",
+        mem_mb="10GB",
     shell:
         """
         # symlink replicates into one combined file
@@ -284,8 +284,8 @@ rule extract_external_hits:
     benchmark:
         "benchmark/04_VIRUS_IDENTIFICATION/extract_virusdb_hits_{group_sample}.tsv"
     resources:
-        runtime="00:10:00",
-        mem_mb="10000",
+        runtime="10m",
+        mem_mb="10GB",
     script:
         "../scripts/04_extract_virusdb_hits.py"
 
@@ -306,8 +306,8 @@ rule download_genomad:
     benchmark:
         "benchmark/04_VIRUS_IDENTIFICATION/download_genomad.tsv"
     resources:
-        runtime="01:00:00",
-        mem_mb="10000",
+        runtime="1h",
+        mem_mb="10GB",
     shell:
         """
         # change to genomad directory
@@ -384,8 +384,8 @@ rule merge_reports_within_samples:
     benchmark:
         "benchmark/04_VIRUS_IDENTIFICATION/merge_reports_within_samples_{group_sample}.tsv"
     resources:
-        runtime="00:10:00",
-        mem_mb="10000",
+        runtime="10m",
+        mem_mb="10GB",
     script:
         "../scripts/04_merge_reports_within_samples.py"
 
@@ -411,8 +411,8 @@ rule combine_reports_across_samples:
     benchmark:
         "benchmark/04_VIRUS_IDENTIFICATION/combine_reports_across_samples.tsv"
     resources:
-        runtime="00:10:00",
-        mem_mb="10000",
+        runtime="10m",
+        mem_mb="10GB",
     shell:
         """
         # combine all outputs, only keeping header from one file
@@ -442,7 +442,7 @@ rule virus_identification_analysis:
     benchmark:
         "benchmark/04_VIRUS_IDENTIFICATION/virus_identification_analysis.tsv"
     resources:
-        runtime="00:10:00",
-        mem_mb="10000",
+        runtime="10m",
+        mem_mb="10GB",
     script:
         "../scripts/04_virus_identification_analysis.py"

@@ -76,8 +76,8 @@ rule download_metaphlan_db:
     benchmark:
         "benchmark/13_HOST_ABUNDANCE/download_metaphlan_db.tsv"
     resources:
-        runtime="04:00:00",
-        mem_mb="100000",
+        runtime="4h",
+        mem_mb="100GB",
     threads: config["host_abundance"]["metaphlan_threads"]
     shell:
         """
@@ -145,8 +145,8 @@ rule sgb_to_gtdb_taxonomy:
     benchmark:
         "benchmark/13_HOST_ABUNDANCE/sgb_to_gtdb_taxonomy_{group_sample}.tsv"
     resources:
-        runtime="00:10:00",
-        mem_mb="10000",
+        runtime="10m",
+        mem_mb="10GB",
     shell:
         """
         # convert sgb to gtdb taxonomy
@@ -181,8 +181,8 @@ rule merge_metaphlan_profiles:
     benchmark:
         "benchmark/13_HOST_ABUNDANCE/merge_metaphlan_profiles.tsv"
     resources:
-        runtime="00:10:00",
-        mem_mb="10000",
+        runtime="10m",
+        mem_mb="10GB",
     shell:
         """
         # merge metaphlan profiles

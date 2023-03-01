@@ -154,8 +154,8 @@ rule bowtie2_multiqc:
     benchmark:
         "benchmark/12_VIRUS_ABUNDANCE/bowtie2_multiqc.tsv"
     resources:
-        runtime="00:10:00",
-        mem_mb="10000",
+        runtime="10m",
+        mem_mb="10GB",
     shell:
         """
         # run multiqc on bowtie2 outputs
@@ -182,8 +182,8 @@ rule make_stb_file:
     benchmark:
         "benchmark/12_VIRUS_ABUNDANCE/make_stb_file.tsv"
     resources:
-        runtime="00:10:00",
-        mem_mb="10000",
+        runtime="10m",
+        mem_mb="10GB",
     script:
         "../scripts/12_generate_stb_file.py"
 
@@ -284,8 +284,8 @@ rule compute_virus_abundances:
     benchmark:
         "benchmark/12_VIRUS_ABUNDANCE/compute_virus_abundances_{group_sample}.tsv"
     resources:
-        runtime="00:10:00",
-        mem_mb="10000",
+        runtime="10m",
+        mem_mb="10GB",
     conda:
         "../envs/jupyter.yml"
     script:
@@ -308,8 +308,8 @@ rule combine_instrain_profiles:
     benchmark:
         "benchmark/12_VIRUS_ABUNDANCE/combine_instrain_profiles.tsv"
     resources:
-        runtime="00:10:00",
-        mem_mb="10000",
+        runtime="10m",
+        mem_mb="10GB",
     conda:
         "../envs/jupyter.yml"
     script:

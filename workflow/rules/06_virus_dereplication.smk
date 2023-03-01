@@ -59,8 +59,8 @@ rule combine_viruses:
     benchmark:
         "benchmark/06_VIRUS_DEREPLICATION/combine_viruses.tsv"
     resources:
-        runtime="00:10:00",
-        mem_mb="10000",
+        runtime="10m",
+        mem_mb="10GB",
     shell:
         """
         cat {input.untrimmed} > {output.untrimmed}
@@ -93,8 +93,8 @@ rule filter_combined_viruses:
     benchmark:
         "benchmark/06_VIRUS_DEREPLICATION/filter_combined_viruses.tsv"
     resources:
-        runtime="10:00:00",
-        mem_mb="100000",
+        runtime="1h",
+        mem_mb="100GB",
     script:
         "../scripts/06_filter_combined_viruses.py"
 
@@ -175,8 +175,8 @@ rule dereplicate_anicalc:
     benchmark:
         "benchmark/06_VIRUS_DEREPLICATION/dereplicate_anicalc.tsv"
     resources:
-        runtime="04:00:00",
-        mem_mb="100000",
+        runtime="04h",
+        mem_mb="100GB",
     script:
         "../scripts/06_anicalc.py"
 
@@ -201,8 +201,8 @@ rule dereplicate_aniclust:
     benchmark:
         "benchmark/06_VIRUS_DEREPLICATION/dereplicate_aniclust.tsv"
     resources:
-        runtime="04:00:00",
-        mem_mb="100000",
+        runtime="04h",
+        mem_mb="100GB",
     script:
         "../scripts/06_aniclust.py"
 
@@ -225,8 +225,8 @@ rule get_untrimmed_replicate_representatives:
     benchmark:
         "benchmark/06_VIRUS_DEREPLICATION/get_replicate_representatives.tsv"
     resources:
-        runtime="00:10:00",
-        mem_mb="10000",
+        runtime="10m",
+        mem_mb="10GB",
     shell:
         """
         awk '{{print $1}}' {input.clusters} > {output.representatives_list} && \
@@ -248,8 +248,8 @@ rule get_replicate_representative_viruses:
     benchmark:
         "benchmark/06_VIRUS_DEREPLICATION/get_replicate_representative_viruses.tsv"
     resources:
-        runtime="00:10:00",
-        mem_mb="10000",
+        runtime="10m",
+        mem_mb="10GB",
     script:
         "../scripts/06_get_replicate_representative_viruses.py"
 
@@ -275,7 +275,7 @@ rule virus_dereplication_analysis:
     benchmark:
         "benchmark/06_VIRUS_DEREPLICATION/virus_dereplication_anlysis.tsv"
     resources:
-        runtime="00:10:00",
-        mem_mb="10000",
+        runtime="10m",
+        mem_mb="10GB",
     script:
         "../scripts/06_virus_dereplication_analysis.py"

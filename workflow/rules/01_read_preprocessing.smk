@@ -67,8 +67,8 @@ rule symlink_input_reads:
     benchmark:
         "benchmark/01_READ_PREPROCESSING/symlink_reads_{group_sample_replicate}.tsv"
     resources:
-        runtime="00:10:00",
-        mem_mb="10000",
+        runtime="10m",
+        mem_mb="10GB",
     shell:
         """
         # symlink input reads to specified paths
@@ -113,8 +113,8 @@ rule merge_input_replicates:
     benchmark:
         "benchmark/01_READ_PREPROCESSING/merge_replicates_{group_sample}.tsv"
     resources:
-        runtime="00:10:00",
-        mem_mb="10000",
+        runtime="10m",
+        mem_mb="10GB",
     shell:
         """
         # symlink replicates into one combined file
@@ -195,7 +195,7 @@ rule fastp_multiqc:
     benchmark:
         "benchmark/01_READ_PREPROCESSING/fastp_multiqc.tsv"
     resources:
-        runtime="00:10:00",
+        runtime="10m",
         mem_mb="1000",
     shell:
         """
@@ -229,8 +229,8 @@ rule download_kneaddata_database:
     benchmark:
         "benchmark/01_READ_PREPROCESSING/download_kneaddata_database.tsv"
     resources:
-        runtime="00:30:00",
-        mem_mb="10000",
+        runtime="30m",
+        mem_mb="10GB",
     shell:
         """
         # download human genome reference to desired directory
@@ -329,8 +329,8 @@ rule kneaddata_read_counts:
     benchmark:
         "benchmark/01_READ_PREPROCESSING/kneaddata_read_counts.tsv"
     resources:
-        runtime="00:10:00",
-        mem_mb="10000",
+        runtime="10m",
+        mem_mb="10GB",
     shell:
         """
         # generate read counts from kneaddata log files
@@ -360,7 +360,7 @@ rule kneaddata_analysis:
     benchmark:
         "benchmark/01_READ_PREPROCESSING/kneaddata_analysis.tsv"
     resources:
-        runtime="00:10:00",
-        mem_mb="10000",
+        runtime="10m",
+        mem_mb="10GB",
     script:
         "../scripts/01_kneaddata_analysis.py"

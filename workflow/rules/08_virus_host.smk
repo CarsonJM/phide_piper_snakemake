@@ -45,8 +45,8 @@ rule symlink_preprocessed_viruses:
     benchmark:
         "benchmark/06_VIRUS_HOST/symlink_preprocessed_viruses_{sample}.tsv"
     resources:
-        runtime="00:10:00",
-        mem_mb="10000",
+        runtime="10m",
+        mem_mb="10GB",
     shell:
         """
         # symlink input viruses to renamed files
@@ -85,8 +85,8 @@ rule download_iphop:
     benchmark:
         "benchmark/08_VIRUS_HOST/download_iphop.tsv"
     resources:
-        runtime="4:00:00",
-        mem_mb="10000",
+        runtime="4h",
+        mem_mb="10GB",
     shell:
         """
         # download iphop test database
@@ -116,8 +116,8 @@ rule verify_iphop_db:
     benchmark:
         "benchmark/08_VIRUS_HOST/verify_iphop_db.tsv"
     resources:
-        runtime="4:00:00",
-        mem_mb="10000",
+        runtime="4h",
+        mem_mb="10GB",
     shell:
         """
         # verify iphop download
@@ -147,8 +147,8 @@ checkpoint iphop_split:
     benchmark:
         "benchmark/08_VIRUS_HOST/iphop_split.tsv"
     resources:
-        runtime="00:10:00",
-        mem_mb="10000",
+        runtime="10m",
+        mem_mb="10GB",
     shell:
         """
         rm -rf {params.out_dir}
@@ -227,8 +227,8 @@ rule combine_iphop_reports:
     benchmark:
         "benchmark/08_VIRUS_HOST/combine_iphop_reports.csv"
     resources:
-        runtime="00:10:00",
-        mem_mb="10000",
+        runtime="10m",
+        mem_mb="10GB",
     shell:
         """
         # combine all outputs, only keeping header from one file
@@ -256,8 +256,8 @@ rule virus_host_analysis:
     benchmark:
         "benchmark/08_VIRUS_HOST/virus_host_analysis.tsv"
     resources:
-        runtime="00:10:00",
-        mem_mb="10000",
+        runtime="10m",
+        mem_mb="10GB",
     conda:
         "../envs/jupyter.yml"
     script:
